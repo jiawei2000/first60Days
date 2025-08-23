@@ -4,6 +4,7 @@ const cors = require('cors')
 const dotenv = require('dotenv')
 const morgan = require('morgan')
 const db = require('./database');
+const authRouter = require('./functions/auth');
 
 // Load env variables
 dotenv.config()
@@ -16,6 +17,9 @@ app.use(morgan('tiny'))
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
+
+// Authentication routes
+app.use(authRouter);
 
 //get all users
 app.get('/users', async (req, res) => {
