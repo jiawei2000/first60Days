@@ -1,0 +1,42 @@
+name: Dart CI
+
+on: push
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+env:
+  flutter_channel: 'stable' # or: 'dev' or 'beta'
+  flutter_version: '3.32.7'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    # No additional steps needed here; actions/checkout@v4 is already the latest major version.
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable' # or: 'beta', 'dev' or 'master'
+
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu' # Or 'temurin', 'oracle', etc.
+        java-version: '17'
+
+    - run: flutter pub get
+      working-directory: best_flutter_ui_templates
+    # - run: flutter test
+
+    - name: build APK
+      run: flutter build apk
+      working-directory: best_flutter_ui_templates
+
+    - name: upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: apk
+        path: best_flutter_ui_templates/build/app/outputs/apk/release/app-release.apk
