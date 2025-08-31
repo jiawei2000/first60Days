@@ -33,139 +33,244 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView.builder(
-        controller: _controller,
-        itemCount: pages.length + 2, // +2: one for custom start, one for login
-        onPageChanged: (index) {
-          setState(() => _currentPage = index);
-        },
-        itemBuilder: (_, index) {
-          if (index == 0) {
-            // ✅ Custom first page (Start 2 style)
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Spacer(flex: 2),
-                  Image.asset(
-                    'assets/images/baby_icon.jpg',
-                    height: 120,
-                    color: Colors.blue,
-                  ),
-                  const SizedBox(height: 32),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blue, width: 2),
-                      borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(60),
-                        bottomLeft: Radius.circular(60),
-                      ),
-                    ),
+      backgroundColor: const Color(0xFFF5F7FB),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _controller,
+              itemCount: pages.length + 2,
+              onPageChanged: (index) => setState(() => _currentPage = index),
+              itemBuilder: (_, index) {
+                if (index == 0) {
+                  return _OnboardCard(
                     child: Column(
                       children: [
-                        const Text(
-                          'Digital Nanny',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
+                        const SizedBox(height: 32),
+                        Image.asset(
+                          'assets/images/baby_icon.jpg',
+                          height: 160,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(height: 28),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 28, horizontal: 20),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.blue, width: 2),
+                            color: Colors.white,
+                            borderRadius: const BorderRadius.only(
+                              topRight: Radius.circular(60),
+                              bottomLeft: Radius.circular(60),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              const Text(
+                                'Digital Nanny',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text('by',
+                                  style: TextStyle(color: Colors.black54)),
+                              const SizedBox(height: 10),
+                              Image.asset(
+                                'assets/images/first60days_logo.jpg',
+                                height: 52,
+                                fit: BoxFit.contain,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text('by'),
-                        const SizedBox(height: 8),
-                        Image.asset(
-                          'assets/images/first60days_logo.jpg', 
-                          height: 40,
+                        const Spacer(),
+                        _PrimaryButton(
+                          label: 'GET STARTED',
+                          onPressed: () {
+                            _controller.nextPage(
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.ease,
+                            );
+                          },
                         ),
+                        const SizedBox(height: 20),
                       ],
                     ),
+                  );
+                }
+
+                if (index == pages.length + 1) {
+                  return const LoginScreen();
+                }
+
+                final page = pages[index - 1];
+                return _OnboardCard(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Image.asset(
+                              page['image']!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Text(
+                        page["title"]!,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          page["subtitle"]!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          children: [
+                            TextButton(
+                              onPressed: () => _controller.jumpToPage(pages.length + 1),
+                              child: const Text("Skip", style: TextStyle(fontSize: 16)),
+                            ),
+                            const Spacer(),
+                            SizedBox(
+                              width: 160,
+                              child: _PrimaryButton(
+                                label: 'Next',
+                                onPressed: () {
+                                  _controller.nextPage(
+                                    duration: const Duration(milliseconds: 400),
+                                    curve: Curves.ease,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _controller.nextPage(
-                          duration: const Duration(milliseconds: 400),
-                          curve: Curves.ease,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
+                );
+              },
+            ),
+
+            // page indicator
+            Positioned(
+              bottom: 28,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(
+                    pages.length + 1,
+                    (i) {
+                      final isActive = _currentPage == i;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        height: 10,
+                        width: isActive ? 28 : 10,
+                        decoration: BoxDecoration(
+                          color: isActive ? const Color(0xFF2F6BFF) : Colors.black26,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      child: const Text(
-                        'GET STARTED',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 40),
-                ],
+                ),
               ),
-            );
-          }
-
-          if (index == pages.length + 1) {
-            // ✅ Final page — go to Login screen
-            return const LoginScreen();
-          }
-
-          final page = pages[index - 1]; // shift index by 1 due to custom page
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(page["image"]!, height: 250),
-                const SizedBox(height: 32),
-                Text(
-                  page["title"]!,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  page["subtitle"]!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        _controller.jumpToPage(pages.length + 1);
-                      },
-                      child: const Text("Skip"),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        _controller.nextPage(
-                          duration: const Duration(milliseconds: 400),
-                          curve: Curves.ease,
-                        );
-                      },
-                      child: const Text("Next"),
-                    ),
-                  ],
-                ),
-              ],
             ),
-          );
-        },
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OnboardCard extends StatelessWidget {
+  const _OnboardCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.85, // bigger card
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0xFFE0E6F5)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x22000000),
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryButton extends StatelessWidget {
+  const _PrimaryButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 58,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          elevation: 3,
+          backgroundColor: const Color(0xFF2F6BFF),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        child: Text(label),
       ),
     );
   }
