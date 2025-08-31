@@ -2,53 +2,58 @@ import 'dart:io';
 import 'package:best_flutter_ui_templates/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'navigation_home_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+
+import 'screens/onboarding_screen.dart'; // 👈 You'll create this
+// import 'login_screen.dart';           // no longer needed here
+// import 'navigation_home_screen.dart'; // called later from login
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-  ]).then((_) => runApp(MyApp()));
+  ]).then((_) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: !kIsWeb && Platform.isAndroid
-            ? Brightness.dark
-            : Brightness.light,
+        statusBarBrightness:
+            !kIsWeb && Platform.isAndroid ? Brightness.dark : Brightness.light,
         systemNavigationBarColor: Colors.white,
         systemNavigationBarDividerColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
     return MaterialApp(
-      title: 'Flutter UI',
+      title: 'Digital Nanny',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         textTheme: AppTheme.textTheme,
         platform: TargetPlatform.iOS,
-        dividerTheme: DividerThemeData(color: Color(0xFFE0E0E0)),
+        dividerTheme: const DividerThemeData(color: Color(0xFFE0E0E0)),
       ),
-      home: NavigationHomeScreen(),
+      home: const OnboardingScreen(), // 👈 Starts at onboarding
     );
   }
 }
 
+// 👇 Keep HexColor class here
 class HexColor extends Color {
   HexColor(final String hexColor) : super(_getColorFromHex(hexColor));
 
   static int _getColorFromHex(String hexColor) {
     hexColor = hexColor.toUpperCase().replaceAll('#', '');
     if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
+      hexColor = 'FF$hexColor';
     }
     return int.parse(hexColor, radix: 16);
   }
