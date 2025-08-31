@@ -30,6 +30,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
   ];
 
+  void _goToLogin(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,10 +46,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             PageView.builder(
               controller: _controller,
-              itemCount: pages.length + 2,
+              itemCount: pages.length + 1, // 0 = custom; 1..pages.length = content
               onPageChanged: (index) => setState(() => _currentPage = index),
               itemBuilder: (_, index) {
                 if (index == 0) {
+                  // ---- Custom first page ----
                   return _OnboardCard(
                     child: Column(
                       children: [
@@ -56,7 +64,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                              vertical: 28, horizontal: 20),
+                            vertical: 28,
+                            horizontal: 20,
+                          ),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.blue, width: 2),
                             color: Colors.white,
@@ -103,11 +113,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   );
                 }
 
-                if (index == pages.length + 1) {
-                  return const LoginScreen();
-                }
-
+                // ---- Standard pages (index: 1..pages.length) ----
                 final page = pages[index - 1];
+                final bool isLast = index == pages.length;
+
                 return _OnboardCard(
                   child: Column(
                     children: [
@@ -152,19 +161,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: Row(
                           children: [
                             TextButton(
-                              onPressed: () => _controller.jumpToPage(pages.length + 1),
-                              child: const Text("Skip", style: TextStyle(fontSize: 16)),
+                              onPressed: () => _goToLogin(context),
+                              child: const Text(
+                                "Skip",
+                                style: TextStyle(fontSize: 16),
+                              ),
                             ),
                             const Spacer(),
                             SizedBox(
                               width: 160,
                               child: _PrimaryButton(
-                                label: 'Next',
+                                label: isLast ? 'Done' : 'Next',
                                 onPressed: () {
-                                  _controller.nextPage(
-                                    duration: const Duration(milliseconds: 400),
-                                    curve: Curves.ease,
-                                  );
+                                  if (isLast) {
+                                    _goToLogin(context);
+                                  } else {
+                                    _controller.nextPage(
+                                      duration:
+                                          const Duration(milliseconds: 400),
+                                      curve: Curves.ease,
+                                    );
+                                  }
                                 },
                               ),
                             ),
@@ -178,7 +195,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               },
             ),
 
-            // page indicator
+            // Page indicator (only for onboarding pages)
             Positioned(
               bottom: 28,
               left: 0,
@@ -187,7 +204,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(
-                    pages.length + 1,
+                    pages.length + 1, // 0..pages.length
                     (i) {
                       final isActive = _currentPage == i;
                       return AnimatedContainer(
@@ -196,7 +213,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 10,
                         width: isActive ? 28 : 10,
                         decoration: BoxDecoration(
-                          color: isActive ? const Color(0xFF2F6BFF) : Colors.black26,
+                          color: isActive
+                              ? const Color(0xFF2F6BFF)
+                              : Colors.black26,
                           borderRadius: BorderRadius.circular(12),
                         ),
                       );
@@ -222,7 +241,7 @@ class _OnboardCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.85, // bigger card
+        height: MediaQuery.of(context).size.height * 0.85,
         width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
