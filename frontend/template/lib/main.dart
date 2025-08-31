@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'screens/onboarding_screen.dart'; // 👈 You'll create this
-// import 'login_screen.dart';           // no longer needed here
-// import 'navigation_home_screen.dart'; // called later from login
+import 'screens/onboarding_screen.dart'; 
+import 'screens/landing_page.dart';
+import 'screens/create_journal_entry.dart';
+import 'model/baby.dart';
+import '../routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +43,23 @@ class MyApp extends StatelessWidget {
         platform: TargetPlatform.iOS,
         dividerTheme: const DividerThemeData(color: Color(0xFFE0E0E0)),
       ),
-      home: const OnboardingScreen(), // 👈 Starts at onboarding
+      home: const OnboardingScreen(),
+      routes:{
+            Routes.landing: (_) => const LandingPage(), // from the canvas
+            Routes.journal: (_) => const JournalEntryPage(), // from the canvas
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == Routes.landing && settings.arguments is Baby) {
+          final b = settings.arguments as Baby;
+          return MaterialPageRoute(
+            builder: (_) => LandingPage(
+              babyName: b.name,
+              avatarUrl: b.avatarUrl,
+            ),
+          );
+        }
+        return null;
+      },
     );
   }
 }

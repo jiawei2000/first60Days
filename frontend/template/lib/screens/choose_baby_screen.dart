@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../model/baby.dart';
+import '../routes.dart';
 
 class ChooseBabyScreen extends StatelessWidget {
   const ChooseBabyScreen({super.key});
@@ -36,22 +38,36 @@ class ChooseBabyScreen extends StatelessWidget {
               itemBuilder: (_, index) {
                 if (index < babies.length) {
                   final baby = babies[index];
-                  return Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundImage: AssetImage(baby["image"]!),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(baby["name"]!),
-                    ],
+                  return InkWell(
+                    onTap: () {
+                      final selectedBaby = Baby(
+                        id: index.toString(),
+                        name: baby["name"]!,
+                        avatarUrl: baby["image"],
+                      );
+
+                      Navigator.pushReplacementNamed(
+                        context,
+                        Routes.landing,
+                        arguments: selectedBaby,
+                      );
+                    },
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundImage: AssetImage(baby["image"]!),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(baby["name"]!),
+                      ],
+                    ),
                   );
                 } else {
                   return Column(
                     children: [
                       InkWell(
                         onTap: () {
-                          // TODO: Add profile flow
                         },
                         child: Container(
                           width: 80,
