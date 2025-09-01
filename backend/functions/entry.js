@@ -1,12 +1,10 @@
 const express = require('express');
 const db = require('../database');
 const router = express.Router()
-const babyID = "mRt9Y0gFtv6gvJYKrp6g"; //need baby ID 
-
-//include jwt, have a dummy jwt token 
+const authenticateToken = require('./auth');
 
 //Create Entry 
-router.post('/journal/newEntry', async (req, res) => {
+router.post('/journal/newEntry', authenticateToken, async (req, res) => {
     //create a new entry for a particular baby 
     try {
         const {
@@ -44,7 +42,7 @@ router.post('/journal/newEntry', async (req, res) => {
 
 
 //Edit Entry
-router.put('/journal/editEntry/:babyId/:entryId', async (req, res) => {
+router.put('/journal/editEntry/:babyId/:entryId', authenticateToken, async (req, res) => {
     try {
         const { babyId, entryId } = req.params;
         const body = req.body;
@@ -87,7 +85,7 @@ router.put('/journal/editEntry/:babyId/:entryId', async (req, res) => {
 })
 
 //View Entries 
-router.get('/journal/entries/:babyId', async (req, res) => {
+router.get('/journal/entries/:babyId', authenticateToken, async (req, res) => {
     //get all journal entries from a particular document ID of baby
     try {
         const { babyId } = req.params;
@@ -118,7 +116,7 @@ router.get('/journal/entries/:babyId', async (req, res) => {
 })
 
 //View Entry 
-router.get('/journal/entry/:babyId/:entryId', async (req, res) => {
+router.get('/journal/entry/:babyId/:entryId',authenticateToken, async (req, res) => {
     //retreive a single journal entry from a particular baby 
     try {
         const { babyId, entryId } = req.params;
