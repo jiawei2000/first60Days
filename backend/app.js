@@ -5,6 +5,7 @@ const dotenv = require('dotenv')
 const morgan = require('morgan')
 const db = require('./database');
 const authRouter = require('./functions/auth');
+const entryRouter = require('./functions/entry');
 
 // Load env variables
 dotenv.config()
@@ -20,6 +21,9 @@ app.get('/', (req, res) => {
 
 // Authentication routes
 app.use(authRouter);
+
+// Journal entries routes 
+app.use(entryRouter);
 
 //get all users
 app.get('/users', async (req, res) => {
