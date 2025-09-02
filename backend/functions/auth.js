@@ -3,6 +3,7 @@ const db = require('../database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
+const { Timestamp } = require('firebase-admin/firestore');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'no_jwt_in_env';
 
@@ -15,27 +16,112 @@ function authenticateToken(req, res, next) {
 		return next();
 	}
 	
-	if (!token) return res.status(401).json({ error: 'No token provided' });
+	if (!token) {
+		return res.status(401).json({ error: 'No token provided' });
+	}
 	jwt.verify(token, JWT_SECRET, (err, user) => {
-		if (err) return res.status(403).json({ error: 'Invalid token' });
+		if (err) {
+			return res.status(403).json({ error: 'Invalid token' });
+		}
 		req.user = user;
 		next();
 	});
 }
 
-// Register
-router.post('/users/register', async (req, res) => {
-	const { email, password } = req.body;
+// Register new account, done by Trainers
+router.post('/users/registerNew', async (req, res) => {
+	const { email, password, phoneNo, username } = req.body;
 	try {
 		const usersRef = db.collection('users');
-		console.log(usersRef);
 		const snapshot = await usersRef.where('email', '==', email).get();
 		if (!snapshot.empty) {
 			return res.status(400).json({ error: 'User already exists' });
 		}
+
 		const hashedPassword = await bcrypt.hash(password, 10);
-		const userRef = await usersRef.add({ email, password: hashedPassword });
-		res.status(201).json({ id: userRef.id, email });
+
+		const userData = {
+			createdAt: Timestamp.now(),
+			deletedAt: null,
+			email,
+			lastLoginAt: null,
+			password: hashedPassword,
+			phoneNo: phoneNo,
+			username: username,
+		};
+
+		// Create user document
+		const userRef = await usersRef.add(userData);
+
+		// Create permissions subcollection entry
+		const permissionData = {
+			babyIDRef: null,
+			createdAt: Timestamp.now(),
+			deletedAt: null,
+			permissionType: "main",
+			userIDRef: userRef.id
+		};
+
+		await userRef.collection("permissions").add(permissionData);
+
+		res.status(201).json({ id: userRef.id, ...userData, permission: permissionData });
+	} 
+	catch (error) {
+		res.status(400).json({ error: error.message });
+	}
+});
+
+// Register sub account
+router.post('/users/registerSub', authenticateToken, async (req, res) => {
+	const { email, password, phoneNo, username } = req.body;
+
+	try {
+		const currentUserId = req.user.id;
+
+		// Check permission
+		const permissionsRef = db.collection('users').doc(currentUserId).collection('permissions');
+		const permSnapshot = await permissionsRef.where('permissionType', '==', 'main').get();
+
+		if (permSnapshot.empty) {
+			return res.status(403).json({ error: 'Only users with "main" permission can create sub accounts' });
+		}
+
+		const usersRef = db.collection('users');
+
+		// Check email not taken
+		const snapshot = await usersRef.where('email', '==', email).get();
+		if (!snapshot.empty) {
+			return res.status(400).json({ error: 'User already exists' });
+		}
+
+		const hashedPassword = await bcrypt.hash(password, 10);
+
+		const userData = {
+			createdAt: Timestamp.now(),
+			deletedAt: null,
+			email,
+			lastLoginAt: null,
+			password: hashedPassword,
+			phoneNo,
+			username,
+		};
+
+		// Create user document
+		const userRef = await usersRef.add(userData);
+
+		const permissionData = {
+			babyIDRef: null,
+			createdAt: Timestamp.now(),
+			deletedAt: null,
+			permissionType: "sub",
+			userIDRef: userRef.id
+		};
+
+		// Create permissions subcollection entry
+		await userRef.collection("permissions").add(permissionData);
+
+		res.status(201).json({ id: userRef.id, ...userData, permission: permissionData });
+
 	} catch (error) {
 		res.status(400).json({ error: error.message });
 	}
@@ -56,12 +142,18 @@ router.post('/users/login', async (req, res) => {
 		if (!isMatch) {
 			return res.status(400).json({ error: 'Invalid credentials' });
 		}
+
+		// Update lastLoginAt
+		await usersRef.doc(userDoc.id).update({ lastLoginAt: Timestamp.now() });
+
 		const token = jwt.sign({ id: userDoc.id, email: user.email }, JWT_SECRET, { expiresIn: '1d' });
 		res.json({ token });
-	} catch (error) {
+	} 
+	catch (error) {
 		res.status(400).json({ error: error.message });
 	}
 });
+
 
 // Update password
 router.put('/users/updatePassword', authenticateToken, async (req, res) => {
@@ -72,7 +164,8 @@ router.put('/users/updatePassword', authenticateToken, async (req, res) => {
 		const hashedPassword = await bcrypt.hash(newPassword, 10);
 		await usersRef.update({ password: hashedPassword });
 		res.json({ message: 'Password updated' });
-	} catch (error) {
+	} 
+	catch (error) {
 		res.status(400).json({ error: error.message });
 	}
 });
@@ -81,12 +174,21 @@ router.put('/users/updatePassword', authenticateToken, async (req, res) => {
 router.delete('/users/delete', authenticateToken, async (req, res) => {
 	const userId = req.user.id;
 	try {
-		await db.collection('users').doc(userId).delete();
+		const usersRef = db.collection('users').doc(userId);
+
+		await usersRef.update({
+			deletedAt: Timestamp.now()
+		});
+
 		res.json({ message: 'User deleted' });
-	} catch (error) {
+	} 
+	catch (error) {
 		res.status(400).json({ error: error.message });
 	}
 });
 
-module.exports = router;
-module.exports = authenticateToken;
+
+module.exports = {
+    router,
+    authenticateToken
+};

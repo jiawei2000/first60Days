@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../database');
 const router = express.Router()
-const authenticateToken = require('./auth');
+const { authenticateToken } = require('./auth');
 
 //Create Entry 
 router.post('/journal/newEntry', authenticateToken, async (req, res) => {

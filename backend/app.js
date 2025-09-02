@@ -4,7 +4,8 @@ const cors = require('cors')
 const dotenv = require('dotenv')
 const morgan = require('morgan')
 const db = require('./database');
-const authRouter = require('./functions/auth');
+// const authRouter = require('./functions/auth');
+const { router: authRouter, authenticateToken } = require('./functions/auth');
 const entryRouter = require('./functions/entry');
 
 // Load env variables
