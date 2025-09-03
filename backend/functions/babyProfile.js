@@ -3,6 +3,7 @@ const db = require('../database');
 const router = express.Router()
 const { authenticateToken } = require('./auth');
 const { Timestamp } = require('firebase-admin/firestore');
+const admin = require("firebase-admin");
 
 //user create new baby profile and permission 
 router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
@@ -34,8 +35,9 @@ router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
         }
-        const permissionRef = userSnap.data().permissionRef;
-        //continue here
+        
+        //reference to permission doc
+        const permissionRef = userSnap.data().permissionID;
 
         if (!permissionRef) {
             return res.status(404).json({ message: "Permission reference not found for this user" });
