@@ -45,7 +45,6 @@ class MyApp extends StatelessWidget {
       ),
       home: const OnboardingScreen(),
       routes:{
-            Routes.landing: (_) => const LandingPage(), // from the canvas
             Routes.journal: (_) => const JournalEntryPage(), // from the canvas
       },
       onGenerateRoute: (settings) {

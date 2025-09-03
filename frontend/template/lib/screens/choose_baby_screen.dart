@@ -26,11 +26,11 @@ class ChooseBabyScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            GridView.builder(
-              shrinkWrap: true,
-              itemCount: babies.length + 1,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
+            Expanded(
+              child: GridView.builder(
+                itemCount: babies.length + 1,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 childAspectRatio: 0.75,
@@ -87,6 +87,7 @@ class ChooseBabyScreen extends StatelessWidget {
                   );
                 }
               },
+            ),
             ),
           ],
         ),

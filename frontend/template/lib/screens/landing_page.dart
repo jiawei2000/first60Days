@@ -16,7 +16,7 @@ class LandingPage extends StatefulWidget {
 
   const LandingPage({
     super.key,
-    this.babyName = 'Baby Chloe',
+    required this.babyName,
     this.avatarUrl,
     this.onLogEntry,
     this.onViewCalendar,
@@ -29,6 +29,7 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
+  static const double _homeBarHeight = 56;
   late final PageController _pageController;
   int _page = 0;
 
@@ -46,13 +47,18 @@ class _LandingPageState extends State<LandingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          padding: EdgeInsets.fromLTRB(
+            16, 12, 16, 
+            _homeBarHeight + bottomInset + 16,
+          ),
           children: [
             _header(context),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _ctaButton(
               context,
               label: 'Log Baby Journal Entry',
@@ -142,7 +148,7 @@ class _LandingPageState extends State<LandingPage> {
   Widget _faqCarousel(BuildContext context) {
     final items = widget.faqs;
     return SizedBox(
-      height: 190,
+      height: 200,
       child: PageView.builder(
         controller: _pageController,
         itemCount: items.length,
@@ -183,16 +189,19 @@ class _HomeBar extends StatelessWidget {
   const _HomeBar();
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      height: 64,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.home_outlined),
-            SizedBox(height: 4),
-            Text('Home', style: TextStyle(fontSize: 12)),
-          ],
+    return SafeArea(
+      top: false,
+      child: BottomAppBar(
+        child: SizedBox(
+          height: 56, // standard height; avoids overflow on small screens
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.home_outlined),
+              SizedBox(height: 4),
+              Text('Home', style: TextStyle(fontSize: 12)),
+            ],
+          ),
         ),
       ),
     );
@@ -209,15 +218,15 @@ class FaqItem {
 const kDummyFaqs = <FaqItem>[
   FaqItem(
     title: 'What to do if my baby is not sleeping?',
-    imageUrl: '',
+    imageUrl: 'assets/images/baby1.jpg',
   ),
   FaqItem(
     title: 'Play time activities for 2 month olds',
-    imageUrl: '',
+    imageUrl: 'assets/images/baby2.jpg',
   ),
   FaqItem(
     title: 'How often should I feed?',
-    imageUrl: '',
+    imageUrl: 'assets/images/baby1.jpg',
   ),
 ];
 
@@ -229,31 +238,24 @@ class _FaqCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 12),
-      child: GestureDetector(
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Open: ${item.title}')),
-        ),
-        child: Material(
-          elevation: 1,
+      child: Material(
+        elevation: 1,
+        borderRadius: BorderRadius.circular(14),
+        color: Theme.of(context).colorScheme.surface,
+        child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          color: Theme.of(context).colorScheme.surface,
+          onTap: () {
+            // TODO: navigate to FAQ detail
+          },
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Image.network(
-                      item.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => Container(
-                        color: Colors.grey.shade200,
-                        child: const Center(child: Icon(Icons.image_not_supported)),
-                      ),
-                    ),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _faqImage(item.imageUrl),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -271,6 +273,22 @@ class _FaqCard extends StatelessWidget {
   }
 }
 
+Widget _faqImage(String url) {
+    final isNetwork = url.startsWith('http');
+    return isNetwork
+        ? Image.network(
+            url,
+            fit: BoxFit.cover,
+            errorBuilder: (c, e, s) => Container(
+              color: Colors.grey.shade200,
+              child: const Center(child: Icon(Icons.image_not_supported)),
+            ),
+          )
+        : Image.asset(
+            url,
+            fit: BoxFit.cover,
+          );
+  }
 // ---------------- Quick demo scaffold ----------------
 /// OPTIONAL: run this widget as your home to preview quickly.
 class DemoApp extends StatelessWidget {
@@ -279,6 +297,7 @@ class DemoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: LandingPage(
+        babyName: 'Test Baby',   // 👈 required now
         onLogEntry: () {
           // TODO: Navigate to your JournalEntryPage()
         },
