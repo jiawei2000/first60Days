@@ -3,7 +3,8 @@ const db = require('../database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
-const { Timestamp } = require('firebase-admin/firestore');
+const { Timestamp, FieldValue } = require('firebase-admin/firestore');
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'no_jwt_in_env';
 
@@ -30,101 +31,125 @@ function authenticateToken(req, res, next) {
 
 // Register new account, done by Trainers
 router.post('/users/registerNew', async (req, res) => {
-	const { email, password, phoneNo, username } = req.body;
-	try {
-		const usersRef = db.collection('users');
-		const snapshot = await usersRef.where('email', '==', email).get();
-		if (!snapshot.empty) {
-			return res.status(400).json({ error: 'User already exists' });
-		}
+    const { email, password, phoneNo, username } = req.body;
 
-		const hashedPassword = await bcrypt.hash(password, 10);
+    try {
+        const usersRef = db.collection('users');
 
-		const userData = {
-			createdAt: Timestamp.now(),
-			deletedAt: null,
-			email,
-			lastLoginAt: null,
-			password: hashedPassword,
-			phoneNo: phoneNo,
-			username: username,
-		};
+        // Check if email exists
+        const snapshot = await usersRef.where('email', '==', email).get();
+        if (!snapshot.empty) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
 
-		// Create user document
-		const userRef = await usersRef.add(userData);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-		// Create permissions subcollection entry
-		const permissionData = {
-			babyIDRef: null,
-			createdAt: Timestamp.now(),
-			deletedAt: null,
-			permissionType: "main",
-			userIDRef: userRef.id
-		};
+        await db.runTransaction(async (t) => {
+            // Create user document
+            const userRef = usersRef.doc();
 
-		await userRef.collection("permissions").add(permissionData);
+            // Create permissions document
+            const permissionRef = db.collection("permissions").doc();
+            const permissionData = {
+                userID: userRef.id,
+                babyIDArr: null,
+                permissionType: "main",
+                createdAt: Timestamp.now(),
+                deletedAt: null,
+                subAccArr: []
+            };
+            t.set(permissionRef, permissionData);
 
-		res.status(201).json({ id: userRef.id, ...userData, permission: permissionData });
-	} 
-	catch (error) {
-		res.status(400).json({ error: error.message });
-	}
+            const userData = {
+                createdAt: Timestamp.now(),
+                deletedAt: null,
+                email,
+                lastLoginAt: null,
+                password: hashedPassword,
+                phoneNo,
+                username,
+                permissionID: permissionRef.id
+            };
+            t.set(userRef, userData);
+
+            res.status(201).json({ id: userRef.id, ...userData, permissions: permissionData });
+        });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 // Register sub account
 router.post('/users/registerSub', authenticateToken, async (req, res) => {
-	const { email, password, phoneNo, username } = req.body;
+    const { email, password, phoneNo, username, babyIDArr } = req.body;
 
-	try {
-		const currentUserId = req.user.id;
+    try {
+        const currentUserId = req.user.id;
 
-		// Check permission
-		const permissionsRef = db.collection('users').doc(currentUserId).collection('permissions');
-		const permSnapshot = await permissionsRef.where('permissionType', '==', 'main').get();
+        const userDoc = await db.collection("users").doc(currentUserId).get();
+		const permissionId = userDoc.data().permissionID;
+		const permissionDoc = await db.collection("permissions").doc(permissionId).get();
 
-		if (permSnapshot.empty) {
+		if (!permissionDoc.exists || permissionDoc.data().permissionType !== "main") {
 			return res.status(403).json({ error: 'Only users with "main" permission can create sub accounts' });
 		}
 
-		const usersRef = db.collection('users');
+		const mainPermissionRef = permissionDoc.ref;
 
-		// Check email not taken
-		const snapshot = await usersRef.where('email', '==', email).get();
-		if (!snapshot.empty) {
-			return res.status(400).json({ error: 'User already exists' });
-		}
+        // Check email not taken
+        const usersRef = db.collection('users');
+        const snapshot = await usersRef.where('email', '==', email).get();
+        if (!snapshot.empty) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
 
-		const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-		const userData = {
-			createdAt: Timestamp.now(),
-			deletedAt: null,
-			email,
-			lastLoginAt: null,
-			password: hashedPassword,
-			phoneNo,
-			username,
-		};
+        // Convert baby IDs into references
+        let babyRefs = null;
+        if (babyIDArr) {
+            const ids = Array.isArray(babyIDArr) ? babyIDArr : [babyIDArr];
+            babyRefs = ids.map(id => db.collection('babies').doc(id));
+        }
 
-		// Create user document
-		const userRef = await usersRef.add(userData);
+        await db.runTransaction(async (t) => {
+            // Create sub user
+            const userRef = usersRef.doc();
 
-		const permissionData = {
-			babyIDRef: null,
-			createdAt: Timestamp.now(),
-			deletedAt: null,
-			permissionType: "sub",
-			userIDRef: userRef.id
-		};
+            // Create permission for sub user
+            const permissionRef = db.collection("permissions").doc();
+            const permissionData = {
+                userID: userRef.id,
+                babyIDArr: babyRefs,
+                permissionType: "sub",
+                createdAt: Timestamp.now(),
+                deletedAt: null,
+                subAccArr: null,
+            };
+            t.set(permissionRef, permissionData);
 
-		// Create permissions subcollection entry
-		await userRef.collection("permissions").add(permissionData);
+            const userData = {
+                createdAt: Timestamp.now(),
+                deletedAt: null,
+                email,
+                lastLoginAt: null,
+                password: hashedPassword,
+                phoneNo,
+                username,
+                permissionsID: permissionRef.id
+            };
+            t.set(userRef, userData);
 
-		res.status(201).json({ id: userRef.id, ...userData, permission: permissionData });
+            // Update main user's permission to include new sub account
+            t.update(mainPermissionRef, {
+                subAccArr: FieldValue.arrayUnion(userRef.id)
+            });
 
-	} catch (error) {
-		res.status(400).json({ error: error.message });
-	}
+            res.status(201).json({ id: userRef.id, ...userData, permissions: permissionData });
+        });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 // Login
