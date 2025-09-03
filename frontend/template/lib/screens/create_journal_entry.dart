@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+class Feed {
+  String type;   // e.g. EBM / FM / BF(L) / BF(R)
+  String unit;   // mL or minutes
+  double? value; // numeric value
+
+  Feed({this.type = '', this.unit = 'mL', this.value});
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'unit': unit,
+    'value': value,
+  };
+  bool get isEmpty => type.isEmpty && (value == null);
+}
+
 class JournalEntry {
   DateTime date;
   String? cycle; // e.g., "First Feed"
@@ -22,6 +37,8 @@ class JournalEntry {
   bool pee;
   bool poo;
 
+  List<Feed> feeds;
+
   JournalEntry({
     required this.date,
     this.cycle,
@@ -40,6 +57,7 @@ class JournalEntry {
     this.sleepDuration,
     this.pee = false,
     this.poo = false,
+    this.feeds = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -60,6 +78,7 @@ class JournalEntry {
         'sleepDuration': sleepDuration?.inSeconds,
         'pee': pee,
         'poo': poo,
+        'feeds': feeds.map((f) => f.toJson()).toList(),
       };
 
   static String? _fmtTOD(TimeOfDay? t) => t == null ? null : _formatTimeOfDay(t);
@@ -99,6 +118,10 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   bool _pee = false;
   bool _poo = false;
 
+  final List<TextEditingController> _feedTypeCtrls = [];
+  final List<TextEditingController> _feedValueCtrls = [];
+  final List<String> _feedUnits = []; // 'mL' or 'minutes'
+
   @override
   void initState() {
     super.initState();
@@ -129,6 +152,13 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     _startSleepTime = init?.startSleepTime;
     _pee = init?.pee ?? false;
     _poo = init?.poo ?? false;
+
+    final seeds = init?.feeds ?? [Feed()];
+    for (final f in seeds) {
+      _feedTypeCtrls.add(TextEditingController(text: f.type));
+      _feedValueCtrls.add(TextEditingController(text: f.value?.toString() ?? ''));
+      _feedUnits.add(f.unit);
+    }
   }
 
   @override
@@ -137,6 +167,12 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     _totalLeftCtrl.dispose();
     _feedAmountCtrl.dispose();
     _sleepDurationCtrl.dispose();
+    for (final c in _feedTypeCtrls) {
+      c.dispose();
+    }
+    for (final c in _feedValueCtrls) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -166,42 +202,49 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
               _timeField(context, label: 'Wake time', value: _wakeTime,
                   onPicked: (t) => setState(() => _wakeTime = t)),
               const SizedBox(height: 12),
-              _timeField(context, label: 'Feed time', value: _feedTime,
+              _timeField(context, label: 'Start of Feed time', value: _feedTime,
                   onPicked: (t) => setState(() => _feedTime = t)),
               const SizedBox(height: 12),
-              _timeField(context, label: 'Play time', value: _playTime,
+              _section('Feed(s)'),
+              for (int i = 0; i < _feedTypeCtrls.length; i++) ...[
+                _feedGroup(i),
+                const SizedBox(height: 8),
+              ],
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: _addFeed,
+                  child: const Text('+ Add new feed',
+                      style: TextStyle(color: Colors.deepOrange)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _timeField(context, label: 'Start of Play time', value: _playTime,
                   onPicked: (t) => setState(() => _playTime = t)),
               const SizedBox(height: 12),
-              _timeField(context, label: 'Sleep time', value: _sleepTime,
+              _timeField(context, label: 'Start of Sleep time', value: _sleepTime,
                   onPicked: (t) => setState(() => _sleepTime = t)),
+              Row(
+                children: [
+                  Checkbox(value: _pee, onChanged: (v) => setState(() => _pee = v ?? false)),
+                  const Text('Pee'),
+                  const SizedBox(width: 24),
+                  Checkbox(value: _poo, onChanged: (v) => setState(() => _poo = v ?? false)),
+                  const Text('Poo'),
+                ],
+              ),
               if (_showAllFields) ...[
                 const SizedBox(height: 24),
-                _section('All fields'),
+                _section('Advanced (legacy)'),
                 _textField(label: 'Cycle', onChanged: (v) => _cycle = v),
-                _timeField(context, label: 'Wake Up time', value: _wakeUpTime,
+                _timeField(context, label: 'Wake time (legacy field)', value: _wakeUpTime,
                     onPicked: (t) => setState(() => _wakeUpTime = t)),
-                _timeField(context, label: 'Start of Feed Time', value: _startFeedTime,
+                _timeField(context, label: 'Start of Feed Time (legacy)', value: _startFeedTime,
                     onPicked: (t) => setState(() => _startFeedTime = t)),
-                _textField(label: 'Type of Feed', onChanged: (v) => _typeOfFeed = v,
-                    hintText: 'EBM / FM / Direct Latch'),
+                _textField(label: 'Type of Feed (legacy)', onChanged: (v) => _typeOfFeed = v),
                 _numberField('Total Feed Time in Mins (R)', _totalRightCtrl),
                 _numberField('Total Feed Time in Mins (L)', _totalLeftCtrl),
                 _numberField('Feed Amount (mL)', _feedAmountCtrl),
-                _timeField(context, label: 'Start of Play Time', value: _startPlayTime,
-                    onPicked: (t) => setState(() => _startPlayTime = t)),
-                _timeField(context, label: 'Start of Sleep Time', value: _startSleepTime,
-                    onPicked: (t) => setState(() => _startSleepTime = t)),
-                _durationField(),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Checkbox(value: _pee, onChanged: (v) => setState(() => _pee = v ?? false)),
-                    const Text('Pee'),
-                    const SizedBox(width: 24),
-                    Checkbox(value: _poo, onChanged: (v) => setState(() => _poo = v ?? false)),
-                    const Text('Poo'),
-                  ],
-                ),
               ],
               const SizedBox(height: 80), // spacing for bottom button
             ],
@@ -212,12 +255,103 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
         minimum: const EdgeInsets.all(16),
         child: ElevatedButton(
           onPressed: _onSave,
-          style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: const StadiumBorder()),
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+            shape: const StadiumBorder(),
+          ),
           child: const Text('Save'),
         ),
       ),
     );
   }
+
+  Widget _feedGroup(int index) {
+      final typeCtrl  = _feedTypeCtrls[index];
+      final valueCtrl = _feedValueCtrls[index];
+      final unitValue = _feedUnits[index];
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Feed Type ${index + 1}',
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+
+          TextFormField(
+            controller: typeCtrl,
+            decoration: const InputDecoration(
+              hintText: 'EBM / FM / BF (L/R)',
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                flex: 1,
+                child: DropdownButtonFormField<String>(
+                  initialValue: _feedUnits[index],
+                  items: const [
+                    DropdownMenuItem(value: 'mL', child: Text('mL')),
+                  ],
+                  onChanged: (v) => setState(() => _feedUnits[index] = v ?? 'mL'),
+                  decoration: const InputDecoration(labelText: 'Unit', isDense: true),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Value field
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: valueCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                  decoration: const InputDecoration(labelText: 'Value', isDense: true),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return null;
+                    return double.tryParse(v) == null ? 'Numeric' : null;
+                  },
+                ),
+              ),
+              // Remove feed button (show if >1)
+              if (_feedTypeCtrls.length > 1) ...[
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    iconSize: 20,
+                    splashRadius: 18,
+                    constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () => _removeFeed(index),
+                    tooltip: 'Remove',
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      );
+    }
+
+  void _addFeed() {
+      setState(() {
+        _feedTypeCtrls.add(TextEditingController());
+        _feedValueCtrls.add(TextEditingController());
+        _feedUnits.add('mL');
+      });
+    }
+
+  void _removeFeed(int i) {
+    setState(() {
+      _feedTypeCtrls.removeAt(i).dispose();
+      _feedValueCtrls.removeAt(i).dispose();
+      _feedUnits.removeAt(i);
+    });
+  }
+
 
   Widget _weekHeader() {
     final week = _weekNumber(_date);
@@ -306,6 +440,16 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
 
   void _onSave() {
     if (!_formKey.currentState!.validate()) return;
+    
+    final feeds = <Feed>[];
+    for (var i = 0; i < _feedTypeCtrls.length; i++) {
+      final type = _feedTypeCtrls[i].text.trim();
+      final unit = _feedUnits[i];
+      final vTxt = _feedValueCtrls[i].text.trim();
+      final value = vTxt.isEmpty ? null : double.tryParse(vTxt);
+      final f = Feed(type: type, unit: unit, value: value);
+      if (!f.isEmpty) feeds.add(f);
+    }
 
     final entry = JournalEntry(
       date: _date,
@@ -325,6 +469,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
       sleepDuration: _parseDuration(_sleepDurationCtrl.text),
       pee: _pee,
       poo: _poo,
+      feeds: feeds,
     );
 
     widget.onSave?.call(entry);
