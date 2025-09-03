@@ -19,7 +19,6 @@ router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
 
         // Reference to the baby and permission collection 
         const babyRef = db.collection("babies");
-        const permissionRef = db.collection("permissions");
 
         // Create a new baby document with auto-generated ID
         const newBabyDoc = await babyRef.add({
@@ -29,23 +28,31 @@ router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
             feedSchedule: null,
         });
 
-        //create a new permission document with auto-generated ID 
-        const newPermissionDoc = await permissionRef.add({
-            permissionType: "main",
-            createdAt: Timestamp.now(),
-            deletedAt: null,
-            userID: db.collection("users").doc(userId),
-            babyID: db.collection("babies").doc(newBabyDoc.id)
-        })
+        //add babyRef into babyIDArr field (array data type) in permission doc 
+        const babyDocRef = babyRef.doc(newBabyDoc.id)
+        const userSnap = await db.collection("users").doc(userId).get();
+        if (!userSnap.exists) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const permissionRef = userSnap.data().permissionRef;
+        //continue here
+
+        if (!permissionRef) {
+            return res.status(404).json({ message: "Permission reference not found for this user" });
+        }
+
+        // Update the permission document to include babyDocRef in babyIDArr
+        await permissionRef.update({
+            babyIDArr: admin.firestore.FieldValue.arrayUnion(babyDocRef),
+        });
+
 
         res.status(201).json({
-            message: "Journal entry created successfully",
+            message: "Baby created and added to permissions",
             babyId: newBabyDoc.id,
-            permissionId: newPermissionDoc.id
         });
 
     } catch (error) {
-        console.error("Error creating journal entry:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 })
