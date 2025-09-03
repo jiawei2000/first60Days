@@ -51,7 +51,7 @@ router.post('/users/registerNew', async (req, res) => {
             // Create permissions document
             const permissionRef = db.collection("permissions").doc();
             const permissionData = {
-                userID: userRef.id,
+                userID: userRef,
                 babyIDArr: null,
                 permissionType: "main",
                 createdAt: Timestamp.now(),
@@ -68,7 +68,7 @@ router.post('/users/registerNew', async (req, res) => {
                 password: hashedPassword,
                 phoneNo,
                 username,
-                permissionID: permissionRef.id
+                permissionID: permissionRef
             };
             t.set(userRef, userData);
 
@@ -79,22 +79,22 @@ router.post('/users/registerNew', async (req, res) => {
     }
 });
 
-// Register sub account
 router.post('/users/registerSub', authenticateToken, async (req, res) => {
     const { email, password, phoneNo, username, babyIDArr } = req.body;
 
     try {
         const currentUserId = req.user.id;
 
+        // Get current user's permission
         const userDoc = await db.collection("users").doc(currentUserId).get();
-		const permissionId = userDoc.data().permissionID;
-		const permissionDoc = await db.collection("permissions").doc(permissionId).get();
+        const permissionRef = userDoc.data().permissionID;
+        const permissionDoc = await permissionRef.get();
 
-		if (!permissionDoc.exists || permissionDoc.data().permissionType !== "main") {
-			return res.status(403).json({ error: 'Only users with "main" permission can create sub accounts' });
-		}
+        if (!permissionDoc.exists || permissionDoc.data().permissionType !== "main") {
+            return res.status(403).json({ error: 'Only users with "main" permission can create sub accounts' });
+        }
 
-		const mainPermissionRef = permissionDoc.ref;
+        const mainPermissionRef = permissionDoc.ref;
 
         // Check email not taken
         const usersRef = db.collection('users');
@@ -119,7 +119,7 @@ router.post('/users/registerSub', authenticateToken, async (req, res) => {
             // Create permission for sub user
             const permissionRef = db.collection("permissions").doc();
             const permissionData = {
-                userID: userRef.id,
+                userID: userRef,
                 babyIDArr: babyRefs,
                 permissionType: "sub",
                 createdAt: Timestamp.now(),
@@ -136,13 +136,13 @@ router.post('/users/registerSub', authenticateToken, async (req, res) => {
                 password: hashedPassword,
                 phoneNo,
                 username,
-                permissionsID: permissionRef.id
+                permissionID: permissionRef
             };
             t.set(userRef, userData);
 
-            // Update main user's permission to include new sub account
+            // Update main user's permission with new sub
             t.update(mainPermissionRef, {
-                subAccArr: FieldValue.arrayUnion(userRef.id)
+                subAccArr: FieldValue.arrayUnion(userRef)
             });
 
             res.status(201).json({ id: userRef.id, ...userData, permissions: permissionData });
