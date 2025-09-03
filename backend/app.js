@@ -7,6 +7,7 @@ const db = require('./database');
 // const authRouter = require('./functions/auth');
 const { router: authRouter, authenticateToken } = require('./functions/auth');
 const entryRouter = require('./functions/entry');
+const babyProfileRouter = require('./functions/babyProfile');
 
 // Load env variables
 dotenv.config()
@@ -25,6 +26,9 @@ app.use(authRouter);
 
 // Journal entries routes 
 app.use(entryRouter);
+
+//Baby profile routes 
+app.use(babyProfileRouter);
 
 //get all users
 app.get('/users', async (req, res) => {
