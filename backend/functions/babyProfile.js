@@ -35,7 +35,7 @@ router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
         }
-        
+
         //reference to permission doc
         const permissionRef = userSnap.data().permissionID;
 
@@ -93,38 +93,59 @@ router.put('/babyProfile/editBaby', authenticateToken, async (req, res) => {
 })
 
 //delete baby profile
-//what happens to the sub Account if main deletes baby profile?
-//Do we actually delete the baby records in the database?? soft delete. 
-//v1: if delete baby profile, both permission and baby doc needs to be deleted. 
-//v2: if delete baby profile, baby doc and all permission doc related to the baby needs to be deleted 
 router.delete('/babyProfile/delete', authenticateToken, async (req, res) => {
     try {
-        const babyId = req.body.babyId;
+        const { userId, babyId } = req.body;
         const batch = db.batch();
 
         // Validate required fields
         if (!babyId) {
             return res.status(400).json({ error: "babyId is required" });
         }
-        //Optional: security check if baby belongs to the main user 
-        //Delete baby profile doc with matching babyID
-        const babyRef = db.collection('babies').doc(babyId);
-        batch.update(babyRef, { deletedAt: Timestamp.now() })
 
-        //Delete permission docs with matching babyID 
-        const permissionsRef = db.collection("permissions");
-        const snapshot = await permissionsRef.where("babyID", "==", babyId).get();
+        // Baby reference
+        const babyRef = db.collection("babies").doc(babyId);
 
-        snapshot.forEach((doc) => {
-            const docRef = permissionsRef.doc(doc.id);
-            batch.update(docRef, { deletedAt: Timestamp.now() });
+        // Soft-delete baby profile
+        batch.update(babyRef, { deletedAt: Timestamp.now() });
+
+        // Find all permissions with access to this baby
+        const userSnap = await db.collection('users').doc(userId).get()
+        const permissionRef = userSnap.data().permissionID; //permission reference of main user 
+
+        const permissionSnap = await permissionRef.get();
+        if (!permissionSnap.exists) {
+            return res.status(404).json({ error: "Main user's permission not found" });
+        }
+
+        // Remove babyRef from main user's permission doc
+        batch.update(permissionRef, {
+            babyIdArr: admin.firestore.FieldValue.arrayRemove(babyRef),
         });
+
+        // Get sub-users from the main user's permission doc
+        const { subUserId } = permissionSnap.data(); // this is an array of userRefs
+        if (Array.isArray(subUserId) && subUserId.length > 0) {
+            for (const subUserRef of subUserId) {
+                // Get sub-user's permission doc
+                const subUserSnap = await db
+                    .collection("permissions")
+                    .where("userId", "==", subUserRef) // userId is stored as a Reference
+                    .get();
+
+                subUserSnap.forEach((doc) => {
+                    batch.update(doc.ref, {
+                        babyIdArr: admin.firestore.FieldValue.arrayRemove(babyRef),
+                    });
+                });
+            }
+        }
 
         await batch.commit();
 
-        res.json({ message: 'Baby profile deleted' });
-    }
-    catch (error) {
+        res.json({ message: "Baby profile and permissions updated successfully" });
+    } catch (error) {
+        console.error("Error deleting baby profile:", error);
         res.status(400).json({ error: error.message });
     }
 });
@@ -135,34 +156,32 @@ router.get('/babyProfiles/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
         // Reference to baby's journalEntries subcollection
-        const permissionRef = db.collection("permissions");
-        const snapshot = await permissionsRef.where("userID", "==", userId).get();
+        const userSnap = await db.collection("users").doc(userId).get();
+        if (!userSnap.exists) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        const permissionRef = userSnap.data().permissionID; //permission reference of main user 
+        if (!permissionSnap.exists) {
+            return res.status(404).json({ error: "Permission document does not exist" });
+        }
 
-        if (snapshot.empty) {
-            return res.status(404).json({ message: "No permissions found" });
+        const { babyIdArr } = permissionSnap.data();
+        if (!babyIdArr || babyIdArr.length === 0) {
+            return res.status(200).json({ babyProfiles: [] });
         }
 
         const babyProfiles = [];
-        //each permissions have a babyID field which is a reference data type 
-        //add the get the baby document and add it into baby profiles 
-        const babyPromises = snapshot.docs.map(async (doc) => {
-            const permissionData = doc.data();
-
-            // Assuming babyID is a Firestore DocumentReference
-            if (permissionData.babyID) {
-                const babySnap = await permissionData.babyID.get();
-                if (babySnap.exists) {
-                    babyProfiles.push({
-                        id: babySnap.id,
-                        ...babySnap.data()
-                    });
-                }
+        for (const babyRef of babyIdArr) {
+            const babySnap = await babyRef.get();
+            if (babySnap.exists) {
+                babyProfiles.push({
+                    id: babySnap.id,
+                    ...babySnap.data(),
+                });
             }
-        });
+        }
 
-        await Promise.all(babyPromises);
-
-        res.status(200).json(babyProfiles);
+        res.status(200).json({ babyProfiles });
 
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
