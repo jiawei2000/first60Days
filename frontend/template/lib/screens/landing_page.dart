@@ -145,18 +145,22 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  Widget _faqCarousel(BuildContext context) {
-    final items = widget.faqs;
-    return SizedBox(
-      height: 200,
-      child: PageView.builder(
-        controller: _pageController,
-        itemCount: items.length,
-        onPageChanged: (i) => setState(() => _page = i),
-        itemBuilder: (context, i) => _FaqCard(item: items[i]),
-      ),
-    );
-  }
+Widget _faqCarousel(BuildContext context) {
+  final items = widget.faqs;
+  return SizedBox(
+    height: 200,
+    child: PageView.builder(
+      controller: _pageController,
+      physics: const PageScrollPhysics(),
+      padEnds: false,
+      onPageChanged: (i) => setState(() => _page = i),
+      itemCount: items.length,
+      // IMPORTANT: child must NOT capture gestures → see _FaqCardPlain below
+      itemBuilder: (context, i) => _FaqCardPlain(item: items[i]),
+    ),
+  );
+}
+
 
   Widget _dotIndicator() {
     final len = widget.faqs.length;
@@ -230,9 +234,9 @@ const kDummyFaqs = <FaqItem>[
   ),
 ];
 
-class _FaqCard extends StatelessWidget {
+class _FaqCardPlain extends StatelessWidget {
   final FaqItem item;
-  const _FaqCard({required this.item});
+  const _FaqCardPlain({required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -242,30 +246,24 @@ class _FaqCard extends StatelessWidget {
         elevation: 1,
         borderRadius: BorderRadius.circular(14),
         color: Theme.of(context).colorScheme.surface,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () {
-            // TODO: navigate to FAQ detail
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _faqImage(item.imageUrl),
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: _faqImage(item.imageUrl),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  item.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                item.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ),
