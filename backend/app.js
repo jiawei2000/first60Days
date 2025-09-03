@@ -8,6 +8,7 @@ const db = require('./database');
 const { router: authRouter, authenticateToken } = require('./functions/auth');
 const entryRouter = require('./functions/entry');
 const babyProfileRouter = require('./functions/babyProfile');
+const permissionRouter = require('./functions/permission');
 
 // Load env variables
 dotenv.config()
@@ -18,7 +19,7 @@ app.use(morgan('tiny'))
 
 // Define routes
 app.get('/', (req, res) => {
-    res.send('Hello World!')
+  res.send('Hello World!')
 })
 
 // Authentication routes
@@ -27,8 +28,11 @@ app.use(authRouter);
 // Journal entries routes 
 app.use(entryRouter);
 
-//Baby profile routes 
+// Baby profile routes 
 app.use(babyProfileRouter);
+
+// Permission routes 
+app.use(permissionRouter);
 
 //get all users
 app.get('/users', async (req, res) => {
@@ -45,13 +49,13 @@ app.get('/users', async (req, res) => {
 
 // Error handling middleware
 app.use((req, res, next) => {
-    res.status(404).send('Not Found')
+  res.status(404).send('Not Found')
 })
 
 // Global error handler
 app.use((err, req, res, next) => {
-    console.error(err.stack)
-    res.status(500).send('Something went wrong!')
+  console.error(err.stack)
+  res.status(500).send('Something went wrong!')
 })
 
 module.exports = app; 

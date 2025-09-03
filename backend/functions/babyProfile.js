@@ -121,7 +121,7 @@ router.delete('/babyProfile/delete', authenticateToken, async (req, res) => {
 });
 
 //get a list of baby profile permitted to user  
-router.get('/babyProfile/profiles/:userId', authenticateToken, async (req, res) => {
+router.get('/babyProfiles/:userId', authenticateToken, async (req, res) => {
     //get all journal entries from a particular document ID of baby
     try {
         const { userId } = req.params;
@@ -161,7 +161,7 @@ router.get('/babyProfile/profiles/:userId', authenticateToken, async (req, res) 
 })
 
 //get a particular baby profile
-router.get('/babyProfile/profile/:babyId', authenticateToken, async (req, res) => {
+router.get('/babyProfile/:babyId', authenticateToken, async (req, res) => {
     //get all journal entries from a particular document ID of baby
     try {
         const { babyId } = req.params;
