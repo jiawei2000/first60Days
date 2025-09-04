@@ -108,7 +108,7 @@ router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
             babyId: result.babyId,
         });
 
-    } 
+    }
     catch (error) {
         console.error("Error in /babyProfile/newBaby:", error.message);
         if (error.message === "User not found" || error.message === "Permission reference not found") {
@@ -121,7 +121,6 @@ router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
 //update baby profile 
 router.put('/babyProfile/editBaby', authenticateToken, async (req, res) => {
     try {
-        // const { babyId } = req.params;
         const babyId = req.body.babyId;
         const body = req.body;
 
@@ -143,10 +142,10 @@ router.put('/babyProfile/editBaby', authenticateToken, async (req, res) => {
         // Update the document
         await babyDoc.update(updateData);
 
-        res.status(200).json({ message: "Journal entry updated successfully" });
+        res.status(200).json({ message: "Baby profile updated successfully" });
 
     } catch (error) {
-        console.error("Error updating journal entry:", error);
+        console.error("Error updating baby profile:", error);
         res.status(500).json({ error: error.message });
     }
 })
@@ -154,7 +153,8 @@ router.put('/babyProfile/editBaby', authenticateToken, async (req, res) => {
 //delete baby profile
 router.delete('/babyProfile/delete', authenticateToken, async (req, res) => {
     try {
-        const { userId, babyId } = req.body;
+        const userId = req.user.id;
+        const { babyId } = req.body;
         const batch = db.batch();
 
         // Validate required fields
@@ -179,7 +179,7 @@ router.delete('/babyProfile/delete', authenticateToken, async (req, res) => {
 
         // Remove babyRef from main user's permission doc
         batch.update(permissionRef, {
-            babyIdArr: admin.firestore.FieldValue.arrayRemove(babyRef),
+            babyIDArr: admin.firestore.FieldValue.arrayRemove(babyRef),
         });
 
         // Get sub-users from the main user's permission doc
@@ -202,35 +202,37 @@ router.delete('/babyProfile/delete', authenticateToken, async (req, res) => {
 
         await batch.commit();
 
-        res.json({ message: "Baby profile and permissions updated successfully" });
+        res.json({ message: "Baby profile deleted successfully" });
     } catch (error) {
         console.error("Error deleting baby profile:", error);
         res.status(400).json({ error: error.message });
     }
 });
 
-//get a list of baby profile permitted to user  
-router.get('/babyProfiles/:userId', authenticateToken, async (req, res) => {
+//get baby profiles permitted to user  
+router.get('/babyProfiles', authenticateToken, async (req, res) => {
     //get all journal entries from a particular document ID of baby
     try {
-        const { userId } = req.params;
+        const userId = req.user.id;
+        console.log(userId);
         // Reference to baby's journalEntries subcollection
         const userSnap = await db.collection("users").doc(userId).get();
         if (!userSnap.exists) {
             return res.status(404).json({ error: "User not found" });
         }
         const permissionRef = userSnap.data().permissionID; //permission reference of main user 
+        const permissionSnap = await permissionRef.get();
         if (!permissionSnap.exists) {
             return res.status(404).json({ error: "Permission document does not exist" });
         }
 
-        const { babyIdArr } = permissionSnap.data();
-        if (!babyIdArr || babyIdArr.length === 0) {
+        const { babyIDArr } = permissionSnap.data();
+        if (!babyIDArr || babyIDArr.length === 0) {
             return res.status(200).json({ babyProfiles: [] });
         }
 
         const babyProfiles = [];
-        for (const babyRef of babyIdArr) {
+        for (const babyRef of babyIDArr) {
             const babySnap = await babyRef.get();
             if (babySnap.exists) {
                 babyProfiles.push({
