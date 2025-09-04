@@ -6,58 +6,117 @@ const { Timestamp } = require('firebase-admin/firestore');
 const admin = require("firebase-admin");
 
 //user create new baby profile and permission 
+// router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
+//     //create a new baby profile
+//     try {
+//         const {
+//             name, dob,
+//         } = req.body;
+
+//         // Validate required fields
+//         if (!userId) {
+//             return res.status(400).json({ error: "userId required" });
+//         }
+
+//         // Reference to the baby and permission collection 
+//         const babyRef = db.collection("babies");
+
+//         // Create a new baby document with auto-generated ID
+//         const newBabyDoc = await babyRef.add({
+//             name, dob,
+//             createdAt: Timestamp.now(),
+//             deletedAt: null,
+//             feedSchedule: null,
+//         });
+
+//         //add babyRef into babyIDArr field (array data type) in permission doc 
+//         const babyDocRef = babyRef.doc(newBabyDoc.id)
+//         const userSnap = await db.collection("users").doc(userId).get();
+//         if (!userSnap.exists) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
+
+//         //reference to permission doc
+//         const permissionRef = userSnap.data().permissionID;
+
+//         if (!permissionRef) {
+//             return res.status(404).json({ message: "Permission reference not found for this user" });
+//         }
+
+//         // Update the permission document to include babyDocRef in babyIDArr
+//         await permissionRef.update({
+//             babyIDArr: admin.firestore.FieldValue.arrayUnion(babyDocRef),
+//         });
+
+
+//         res.status(201).json({
+//             message: "Baby created and added to permissions",
+//             babyId: newBabyDoc.id,
+//         });
+
+//     } catch (error) {
+//         res.status(500).json({ error: "Internal Server Error" });
+//     }
+// })
 router.post('/babyProfile/newBaby', authenticateToken, async (req, res) => {
-    //create a new baby profile
+    const userId = req.user.id;
+
     try {
-        const {
-            userId, name, dob,
-        } = req.body;
+        const { name, dob } = req.body;
 
-        // Validate required fields
-        if (!userId) {
-            return res.status(400).json({ error: "userId required" });
+        if (!name || !dob) {
+            return res.status(400).json({ error: "Name and DOB are required" });
         }
 
-        // Reference to the baby and permission collection 
-        const babyRef = db.collection("babies");
+        const result = await db.runTransaction(async (t) => {
+            // Get user doc
+            const userRef = db.collection("users").doc(userId);
+            const userSnap = await t.get(userRef);
 
-        // Create a new baby document with auto-generated ID
-        const newBabyDoc = await babyRef.add({
-            name, dob,
-            createdAt: Timestamp.now(),
-            deletedAt: null,
-            feedSchedule: null,
+            if (!userSnap.exists) {
+                throw new Error("User not found");
+            }
+
+            const permissionRef = userSnap.data().permissionID;
+            if (!permissionRef) {
+                throw new Error("Permission reference not found");
+            }
+
+            // Create baby doc reference
+            const babyRef = db.collection("babies").doc();
+
+            // Create baby inside transaction
+            t.set(babyRef, {
+                name,
+                dob,
+                createdAt: Timestamp.now(),
+                deletedAt: null,
+                feedSchedule: null,
+            });
+
+            // Update permission doc with new baby ref
+            t.update(permissionRef, {
+                babyIDArr: admin.firestore.FieldValue.arrayUnion(babyRef),
+            });
+
+            // Return babyId so we can use it outside
+            return { babyId: babyRef.id };
         });
-
-        //add babyRef into babyIDArr field (array data type) in permission doc 
-        const babyDocRef = babyRef.doc(newBabyDoc.id)
-        const userSnap = await db.collection("users").doc(userId).get();
-        if (!userSnap.exists) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        //reference to permission doc
-        const permissionRef = userSnap.data().permissionID;
-
-        if (!permissionRef) {
-            return res.status(404).json({ message: "Permission reference not found for this user" });
-        }
-
-        // Update the permission document to include babyDocRef in babyIDArr
-        await permissionRef.update({
-            babyIDArr: admin.firestore.FieldValue.arrayUnion(babyDocRef),
-        });
-
 
         res.status(201).json({
             message: "Baby created and added to permissions",
-            babyId: newBabyDoc.id,
+            babyId: result.babyId,
         });
 
-    } catch (error) {
+    } 
+    catch (error) {
+        console.error("Error in /babyProfile/newBaby:", error.message);
+        if (error.message === "User not found" || error.message === "Permission reference not found") {
+            return res.status(404).json({ error: error.message });
+        }
         res.status(500).json({ error: "Internal Server Error" });
     }
-})
+});
 
 //update baby profile 
 router.put('/babyProfile/editBaby', authenticateToken, async (req, res) => {
@@ -213,7 +272,5 @@ router.get('/babyProfile/:babyId', authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 })
-
-
 
 module.exports = router;

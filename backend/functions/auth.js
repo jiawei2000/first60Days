@@ -44,7 +44,7 @@ router.post('/users/registerNew', async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await db.runTransaction(async (t) => {
+        const result = await db.runTransaction(async (t) => {
             // Create user document
             const userRef = usersRef.doc();
 
@@ -52,7 +52,7 @@ router.post('/users/registerNew', async (req, res) => {
             const permissionRef = db.collection("permissions").doc();
             const permissionData = {
                 userID: userRef,
-                babyIDArr: null,
+                babyIDArr: [],
                 permissionType: "main",
                 createdAt: Timestamp.now(),
                 deletedAt: null,
@@ -72,9 +72,12 @@ router.post('/users/registerNew', async (req, res) => {
             };
             t.set(userRef, userData);
 
-            res.status(201).json({ id: userRef.id, ...userData, permissions: permissionData });
+            return { id: userRef.id, ...userData, permissions: permissionData };
         });
-    } catch (error) {
+        res.status(201).json(result);
+    } 
+
+    catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
@@ -112,7 +115,7 @@ router.post('/users/registerSub', authenticateToken, async (req, res) => {
             babyRefs = ids.map(id => db.collection('babies').doc(id));
         }
 
-        await db.runTransaction(async (t) => {
+        const result = await db.runTransaction(async (t) => {
             // Create sub user
             const userRef = usersRef.doc();
 
@@ -124,7 +127,7 @@ router.post('/users/registerSub', authenticateToken, async (req, res) => {
                 permissionType: "sub",
                 createdAt: Timestamp.now(),
                 deletedAt: null,
-                subAccArr: null,
+                subAccArr: [],
             };
             t.set(permissionRef, permissionData);
 
@@ -145,9 +148,12 @@ router.post('/users/registerSub', authenticateToken, async (req, res) => {
                 subAccArr: FieldValue.arrayUnion(userRef)
             });
 
-            res.status(201).json({ id: userRef.id, ...userData, permissions: permissionData });
+            return { id: userRef.id, ...userData, permissions: permissionData };
         });
-    } catch (error) {
+        res.status(201).json(result);
+    } 
+    
+    catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
