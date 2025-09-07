@@ -3,12 +3,13 @@ const app = express()
 const cors = require('cors')
 const dotenv = require('dotenv')
 const morgan = require('morgan')
-const db = require('./database');
+
 // const authRouter = require('./functions/auth');
-const { router: authRouter, authenticateToken } = require('./functions/auth');
-const entryRouter = require('./functions/entry');
-const babyProfileRouter = require('./functions/babyProfile');
-const permissionRouter = require('./functions/permission');
+// const { router: authRouter, authenticateToken } = require('./functions/auth');
+// const entryRouter = require('./functions/entry');
+// const babyProfileRouter = require('./functions/babyProfile');
+// const permissionRouter = require('./functions/permission');
+const userRoutes = require('./routes/userRoutes');
 
 // Load env variables
 dotenv.config()
@@ -22,30 +23,10 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
-// Authentication routes
-app.use(authRouter);
+//routes 
+app.use('/users', userRoutes);
 
-// Journal entries routes 
-app.use(entryRouter);
 
-// Baby profile routes 
-app.use(babyProfileRouter);
-
-// Permission routes 
-app.use(permissionRouter);
-
-//get all users
-app.get('/users', async (req, res) => {
-  try {
-    const snapshot = await db.collection('users').get();
-    const users = [];
-    snapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
-    // console.log(users);
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // Error handling middleware
 app.use((req, res, next) => {
