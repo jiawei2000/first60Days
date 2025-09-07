@@ -12,6 +12,8 @@ import 'screens/profile_page.dart';
 import 'screens/choose_baby_screen.dart';
 import 'screens/chat_page.dart';
 import 'model/baby.dart';
+import 'screens/calendar/calendar_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +54,7 @@ class MyApp extends StatelessWidget {
             Routes.profile: (_) => const ProfilePage(),
             Routes.chooseBaby: (_) => const ChooseBabyScreen(),
             Routes.chat: (_) => const ChatPage(),
+            Routes.calendar: (_) => const CalendarScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == Routes.landing && settings.arguments is Baby) {

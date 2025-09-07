@@ -172,7 +172,7 @@ class _HomeTabs extends StatelessWidget {
             case 0:
               break;
             case 1:
-              // Navigator.pushNamed(context, Routes.calendar);
+              Navigator.pushNamed(context, Routes.calendar);
               break;
             case 2:
               //home
