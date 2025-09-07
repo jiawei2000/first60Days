@@ -1,8 +1,10 @@
 const db = require('../config/database');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { Timestamp } = require('firebase-admin/firestore');
 const User = require('../models/User');
 const Permission = require('../models/Permission');
+const { JWT_SECRET } = require('../config/authMiddleware');
 
 class UserService {
     static async registerNew({ email, password, phoneNo, username }) {
@@ -48,6 +50,160 @@ class UserService {
 
             return { user, permission };
         });
+    }
+
+    static async login({ email, password }) {
+        const usersRef = db.collection('users');
+        const snapshot = await usersRef.where('email', '==', email).get();
+
+        if (snapshot.empty) {
+            throw new Error('Invalid credentials');
+        }
+
+        const userDoc = snapshot.docs[0];
+        const user = User.fromFirestore(userDoc);
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            throw new Error('Invalid credentials');
+        }
+
+        // Update lastLoginAt
+        await usersRef.doc(user.id).update({ lastLoginAt: Timestamp.now() });
+        user.lastLoginAt = Timestamp.now();
+
+        // Load permission object
+        const permissionDoc = await user.permissionID.get();
+        const permission = Permission.fromFirestore(permissionDoc);
+
+        // Issue JWT
+        const token = jwt.sign(
+            { id: user.id, email: user.email },
+            JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+
+        return { token, user, permission };
+    }
+
+    static async registerSub({ currentUserId, email, password, phoneNo, username, babyIDArr }) {
+        const usersRef = db.collection('users');
+
+        // Get current main user’s permission
+        const mainUserDoc = await usersRef.doc(currentUserId).get();
+        if (!mainUserDoc.exists) {
+            throw new Error('Main user not found');
+        }
+
+        const mainUser = User.fromFirestore(mainUserDoc);
+        const mainPermissionDoc = await mainUser.permissionID.get();
+        const mainPermission = Permission.fromFirestore(mainPermissionDoc);
+
+        if (mainPermission.permissionType !== "main") {
+            throw new Error('Only users with "main" permission can create sub accounts');
+        }
+
+        // Ensure email not taken
+        const snapshot = await usersRef.where('email', '==', email).get();
+        if (!snapshot.empty) {
+            throw new Error('User already exists');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Convert baby IDs to references
+        const babyRefs = (babyIDArr || []).map(id => db.collection('babies').doc(id));
+
+        // Transaction for atomic writes
+        const result = await db.runTransaction(async (t) => {
+            const subUserRef = usersRef.doc();
+
+            // Create sub permission
+            const subPermissionRef = db.collection('permissions').doc();
+            const subPermission = new Permission(subPermissionRef.id, {
+                userID: subUserRef,
+                babyIDArr: babyRefs,
+                permissionType: "sub",
+                createdAt: Timestamp.now(),
+                deletedAt: null,
+                subAccArr: []
+            });
+            t.set(subPermissionRef, subPermission.toFirestore());
+
+            // Create sub user
+            const subUser = new User(subUserRef.id, {
+                email,
+                password: hashedPassword,
+                phoneNo,
+                username,
+                createdAt: Timestamp.now(),
+                lastLoginAt: null,
+                deletedAt: null,
+                permissionID: subPermissionRef
+            });
+            t.set(subUserRef, subUser.toFirestore());
+
+            // Update main permission with new sub user
+            t.update(mainPermissionDoc.ref, {
+                subAccArr: FieldValue.arrayUnion(subUserRef)
+            });
+
+            return { subUser, subPermission };
+        });
+
+        return {
+            id: result.subUser.id,
+            email: result.subUser.email,
+            phoneNo: result.subUser.phoneNo,
+            username: result.subUser.username,
+            permission: result.subPermission
+        };
+    }
+
+    static async updatePassword(userId, newPassword) {
+        const userDoc = await db.collection('users').doc(userId).get();
+
+        if (!userDoc.exists) {
+            throw new Error('User not found');
+        }
+
+        const user = User.fromFirestore(userDoc);
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await db.collection('users').doc(userId).update({
+            password: hashedPassword
+        });
+
+        // Update the user instance (optional)
+        user.password = hashedPassword;
+
+        return {
+            message: 'Password updated successfully',
+            userId: user.id
+        };
+    }
+
+    static async deleteUser(userId) {
+        const userDoc = await db.collection('users').doc(userId).get();
+
+        if (!userDoc.exists) {
+            throw new Error('User not found');
+        }
+
+        const user = User.fromFirestore(userDoc);
+
+        await db.collection('users').doc(userId).update({
+            deletedAt: Timestamp.now()
+        });
+
+        // Optionally update the user instance
+        user.deletedAt = Timestamp.now();
+
+        return {
+            message: 'User deleted successfully',
+            userId: user.id
+        };
     }
 }
 
