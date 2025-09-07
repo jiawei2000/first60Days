@@ -1,27 +1,18 @@
 import 'package:flutter/material.dart';
 import '../routes.dart';
 
-/// Landing / Home page matching the provided mock.
-/// - Header: Baby name + circular avatar
-/// - 3 big CTAs: Log Entry, View Calendar, Chat with Trainer
-/// - FAQ carousel with dots
-/// - Minimal bottom bar with "Home"
 class LandingPage extends StatefulWidget {
   final String babyName;
   final String? avatarUrl;
-  final VoidCallback? onLogEntry;
-  final VoidCallback? onViewCalendar;
-  final VoidCallback? onChatWithTrainer;
-  final List<FaqItem> faqs;
+  final int currentWeek;
+  final int totalWeeks;
 
   const LandingPage({
     super.key,
     required this.babyName,
     this.avatarUrl,
-    this.onLogEntry,
-    this.onViewCalendar,
-    this.onChatWithTrainer,
-    this.faqs = kDummyFaqs,
+    this.currentWeek = 8,
+    this.totalWeeks = 10,
   });
 
   @override
@@ -29,68 +20,43 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
-  static const double _homeBarHeight = 56;
-  late final PageController _pageController;
-  int _page = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(viewportFraction: 0.82);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
+  static const double _tabBarHeight = 56;
+  bool _showTip = true;
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
-      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: ListView(
           padding: EdgeInsets.fromLTRB(
-            16, 12, 16, 
-            _homeBarHeight + bottomInset + 16,
+            16,
+            12,
+            16,
+            _tabBarHeight + bottomInset + 16,
           ),
           children: [
             _header(context),
-            const SizedBox(height: 12),
-            _ctaButton(
-              context,
+            const SizedBox(height: 16),
+            if (_showTip) ...[
+              _tipBanner(onClose: () => setState(() => _showTip = false)),
+              const SizedBox(height: 24),
+            ],
+            _progressSection(
+              week: widget.currentWeek,
+              total: widget.totalWeeks,
+            ),
+            const SizedBox(height: 32),
+            _primaryCta(
               label: 'Log Baby Journal Entry',
-              onPressed: () {
-                  Navigator.pushNamed(context, Routes.journal);
-                },
+              onPressed: () => Navigator.pushNamed(context, Routes.journal),
             ),
-            const SizedBox(height: 12),
-            _ctaButton(
-              context,
-              label: 'View Calendar',
-              onPressed: () {
-                Navigator.pushNamed(context, Routes.calendar);
-              },
-            ),
-            const SizedBox(height: 12),
-            _ctaButton(
-              context,
-              label: 'Chat with Trainer',
-              onPressed: widget.onChatWithTrainer ?? () => _fallbackSnack('Chat with Trainer'),
-            ),
-            const SizedBox(height: 20),
-            _faqHeader(context),
-            const SizedBox(height: 12),
-            _faqCarousel(context),
-            const SizedBox(height: 8),
-            _dotIndicator(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
           ],
         ),
       ),
-      bottomNavigationBar: const _HomeBar(),
+      bottomNavigationBar: const _HomeTabs(),
     );
   }
 
@@ -107,9 +73,8 @@ class _LandingPageState extends State<LandingPage> {
         CircleAvatar(
           radius: 18,
           backgroundColor: Colors.blue.shade50,
-          backgroundImage: widget.avatarUrl == null
-              ? null
-              : NetworkImage(widget.avatarUrl!),
+          backgroundImage:
+              widget.avatarUrl == null ? null : NetworkImage(widget.avatarUrl!),
           child: widget.avatarUrl == null
               ? const Icon(Icons.child_care, color: Colors.blue)
               : null,
@@ -117,190 +82,121 @@ class _LandingPageState extends State<LandingPage> {
       ],
     );
   }
+}
 
-  Widget _ctaButton(BuildContext context, {required String label, required VoidCallback onPressed}) {
-    return SizedBox(
-      height: 56,
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-        child: Text(label, style: const TextStyle(fontSize: 16)),
-      ),
-    );
-  }
-
-  Widget _faqHeader(BuildContext context) {
-    return Row(
-      children: [
-        Text('FAQ', style: Theme.of(context).textTheme.titleMedium),
-        const Spacer(),
-        IconButton(
-          onPressed: () => _fallbackSnack('Open all FAQs'),
-          icon: const Icon(Icons.chevron_right),
-        )
+Widget _tipBanner({required VoidCallback onClose}) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: const [
+        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
       ],
-    );
-  }
-
-Widget _faqCarousel(BuildContext context) {
-  final items = widget.faqs;
-  return SizedBox(
-    height: 200,
-    child: PageView.builder(
-      controller: _pageController,
-      physics: const PageScrollPhysics(),
-      padEnds: false,
-      onPageChanged: (i) => setState(() => _page = i),
-      itemCount: items.length,
-      // IMPORTANT: child must NOT capture gestures → see _FaqCardPlain below
-      itemBuilder: (context, i) => _FaqCardPlain(item: items[i]),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const CircleAvatar(
+          radius: 14,
+          backgroundColor: Color(0xFFEAF0FF),
+          child: Icon(Icons.chat_bubble, size: 16, color: Color(0xFF6C8FF5)),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Text(
+            'This week your baby will learn to…..',
+            style: TextStyle(fontSize: 14),
+          ),
+        ),
+        InkWell(onTap: onClose, child: const Icon(Icons.close, size: 18)),
+      ],
     ),
   );
 }
 
-
-  Widget _dotIndicator() {
-    final len = widget.faqs.length;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(len, (i) {
-        final active = i == _page;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          height: 6,
-          width: active ? 18 : 6,
-          decoration: BoxDecoration(
-            color: active ? Colors.blue : Colors.blue.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
-          ),
-        );
-      }),
-    );
-  }
-
-  void _fallbackSnack(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature tapped')),
-    );
-  }
+Widget _progressSection({required int week, required int total}) {
+  final pct = total == 0 ? 0.0 : (week / total).clamp(0.0, 1.0);
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Progression',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      const SizedBox(height: 8),
+      Text('Week $week / $total', style: TextStyle(color: Colors.grey[700])),
+      const SizedBox(height: 8),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: LinearProgressIndicator(
+          value: pct,
+          minHeight: 14,
+          backgroundColor: const Color(0xFFE6EAF2),
+          valueColor: const AlwaysStoppedAnimation(Color(0xFF2F80ED)),
+        ),
+      ),
+    ],
+  );
 }
 
-class _HomeBar extends StatelessWidget {
-  const _HomeBar();
+Widget _primaryCta({required String label, required VoidCallback onPressed}) {
+  return SizedBox(
+    height: 56,
+    width: double.infinity,
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF2F80ED),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Text(label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+    ),
+  );
+}
+
+class _HomeTabs extends StatelessWidget {
+  const _HomeTabs();
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: BottomAppBar(
-        child: SizedBox(
-          height: 56, // standard height; avoids overflow on small screens
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.home_outlined),
-              SizedBox(height: 4),
-              Text('Home', style: TextStyle(fontSize: 12)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------- FAQ ----------------
-class FaqItem {
-  final String title;
-  final String imageUrl;
-  const FaqItem({required this.title, required this.imageUrl});
-}
-
-const kDummyFaqs = <FaqItem>[
-  FaqItem(
-    title: 'What to do if my baby is not sleeping?',
-    imageUrl: 'assets/images/baby1.jpg',
-  ),
-  FaqItem(
-    title: 'Play time activities for 2 month olds',
-    imageUrl: 'assets/images/baby2.jpg',
-  ),
-  FaqItem(
-    title: 'How often should I feed?',
-    imageUrl: 'assets/images/baby1.jpg',
-  ),
-];
-
-class _FaqCardPlain extends StatelessWidget {
-  final FaqItem item;
-  const _FaqCardPlain({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: Material(
-        elevation: 1,
-        borderRadius: BorderRadius.circular(14),
-        color: Theme.of(context).colorScheme.surface,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: _faqImage(item.imageUrl),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                item.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-Widget _faqImage(String url) {
-    final isNetwork = url.startsWith('http');
-    return isNetwork
-        ? Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (c, e, s) => Container(
-              color: Colors.grey.shade200,
-              child: const Center(child: Icon(Icons.image_not_supported)),
-            ),
-          )
-        : Image.asset(
-            url,
-            fit: BoxFit.cover,
-          );
-  }
-// ---------------- Quick demo scaffold ----------------
-/// OPTIONAL: run this widget as your home to preview quickly.
-class DemoApp extends StatelessWidget {
-  const DemoApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: LandingPage(
-        babyName: 'Test Baby',   // 👈 required now
-        onLogEntry: () {
-          // TODO: Navigate to your JournalEntryPage()
+      child: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: 2, // Home
+        onTap: (i) {
+          switch (i) {
+            case 0:
+              break;
+            case 1:
+              Navigator.pushNamed(context, Routes.calendar);
+              break;
+            case 2:
+              //home
+              break;
+            case 3:
+              //chat
+              break;
+            case 4:
+              //profile
+              break;
+          }
         },
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.event_note_outlined), label: 'Plan'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today_outlined), label: 'Calendar'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline), label: 'Profile'),
+        ],
       ),
-      debugShowCheckedModeBanner: false,
     );
   }
 }
