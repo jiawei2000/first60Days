@@ -31,61 +31,63 @@ class _DayViewState extends State<DayView> {
             ),
           ),
         Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Time Column
-              Column(
-                children: List.generate(17, (i) {
-                  final hour = 8 + i;
-                  return SizedBox(
-                    height: 60,
-                    child: Text(
-                      "${hour.toString().padLeft(2, '0')}:00",
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(width: 12),
-              // Event Timeline
-              Expanded(
-                child: SizedBox(
-                  height: 1020, // 17 slots * 60px
-                  child: Stack(
-                    children: _cycles.map((cycle) {
-                      final topOffset = (cycle['startHour'] - 8) * 60.0;
-                      final height = (cycle['endHour'] - cycle['startHour']) * 60.0;
+          child: SingleChildScrollView(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Time Column
+                Column(
+                  children: List.generate(17, (i) {
+                    final hour = 8 + i;
+                    return SizedBox(
+                      height: 60,
+                      child: Text(
+                        "${hour.toString().padLeft(2, '0')}:00",
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(width: 12),
+                // Event Timeline
+                Expanded(
+                  child: SizedBox(
+                    height: 17 * 60.0, // 1020px
+                    child: Stack(
+                      children: _cycles.map((cycle) {
+                        final topOffset = (cycle['startHour'] - 8) * 60.0;
+                        final height = (cycle['endHour'] - cycle['startHour']) * 60.0;
 
-                      return Positioned(
-                        top: topOffset,
-                        left: 0,
-                        right: 0,
-                        height: height,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2F80ED),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              cycle['title'],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                        return Positioned(
+                          top: topOffset,
+                          left: 0,
+                          right: 0,
+                          height: height,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2F80ED),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.all(12),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                cycle['title'],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

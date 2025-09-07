@@ -27,29 +27,28 @@ class _WeekViewState extends State<WeekView> {
             child: _warningBanner(() => setState(() => _showWarning = false)),
           ),
         Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Time Column (08:00 - 24:00)
-              Column(
-                children: List.generate(17, (i) {
-                  final hour = 8 + i;
-                  return SizedBox(
-                    height: 60,
-                    child: Text(
-                      "${hour.toString().padLeft(2, '0')}:00",
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  );
-                }),
-              ),
+          child: SingleChildScrollView(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Time Column
+                Column(
+                  children: List.generate(17, (i) {
+                    final hour = 8 + i;
+                    return SizedBox(
+                      height: 60,
+                      child: Text(
+                        "${hour.toString().padLeft(2, '0')}:00",
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }),
+                ),
 
-              // Scrollable Week View
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    height: 1020, // 17 slots * 60px
+                // Scrollable Day Columns
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: days.map((date) {
@@ -61,8 +60,8 @@ class _WeekViewState extends State<WeekView> {
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -132,9 +131,8 @@ class _DayColumn extends StatelessWidget {
           Text(day, style: const TextStyle(fontWeight: FontWeight.bold)),
           Text(weekday, style: const TextStyle(color: Colors.grey)),
           const SizedBox(height: 8),
-
-          // Event Stack
-          Expanded(
+          SizedBox(
+            height: 17 * 60.0,
             child: Stack(
               children: [
                 Container(width: double.infinity), // fill space
