@@ -10,6 +10,7 @@ import 'screens/landing_page.dart';
 import 'screens/create_journal_entry.dart';
 import 'screens/profile_page.dart';
 import 'screens/choose_baby_screen.dart';
+import 'screens/chat_page.dart';
 import 'model/baby.dart';
 
 void main() async {
@@ -50,6 +51,7 @@ class MyApp extends StatelessWidget {
             Routes.journal: (_) => const JournalEntryPage(),
             Routes.profile: (_) => const ProfilePage(),
             Routes.chooseBaby: (_) => const ChooseBabyScreen(),
+            Routes.chat: (_) => const ChatPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == Routes.landing && settings.arguments is Baby) {

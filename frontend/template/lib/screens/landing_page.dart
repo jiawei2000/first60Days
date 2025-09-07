@@ -172,13 +172,13 @@ class _HomeTabs extends StatelessWidget {
             case 0:
               break;
             case 1:
-              Navigator.pushNamed(context, Routes.calendar);
+              // Navigator.pushNamed(context, Routes.calendar);
               break;
             case 2:
               //home
               break;
             case 3:
-              //chat
+              Navigator.pushNamed(context, Routes.chat);
               break;
             case 4:
               Navigator.pushNamed(context, Routes.profile);

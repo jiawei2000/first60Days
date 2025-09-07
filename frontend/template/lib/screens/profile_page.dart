@@ -244,7 +244,7 @@ class _ProfileTabs extends StatelessWidget {
               Navigator.popUntil(context, (r) => r.isFirst);
               break;
             case 3:
-              // Navigator.pushNamed(context, Routes.chat);
+              Navigator.pushNamed(context, Routes.chat);
               break;
             case 4:
               // already on profile
