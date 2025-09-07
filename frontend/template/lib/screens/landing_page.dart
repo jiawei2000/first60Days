@@ -181,7 +181,7 @@ class _HomeTabs extends StatelessWidget {
               //chat
               break;
             case 4:
-              //profile
+              Navigator.pushNamed(context, Routes.profile);
               break;
           }
         },

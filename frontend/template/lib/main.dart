@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'routes.dart';
 import 'screens/onboarding_screen.dart'; 
 import 'screens/landing_page.dart';
 import 'screens/create_journal_entry.dart';
+import 'screens/profile_page.dart';
+import 'screens/choose_baby_screen.dart';
 import 'model/baby.dart';
-import '../routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,8 +46,10 @@ class MyApp extends StatelessWidget {
         dividerTheme: const DividerThemeData(color: Color(0xFFE0E0E0)),
       ),
       home: const OnboardingScreen(),
-      routes:{
-            Routes.journal: (_) => const JournalEntryPage(), // from the canvas
+      routes: {
+            Routes.journal: (_) => const JournalEntryPage(),
+            Routes.profile: (_) => const ProfilePage(),
+            Routes.chooseBaby: (_) => const ChooseBabyScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == Routes.landing && settings.arguments is Baby) {
