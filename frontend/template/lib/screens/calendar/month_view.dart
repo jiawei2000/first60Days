@@ -1,4 +1,3 @@
-// screens/calendar/month_view.dart
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -19,6 +18,7 @@ class MonthView extends StatefulWidget {
 class _MonthViewState extends State<MonthView> {
   late DateTime _focusedDay;
   late DateTime _selectedDay;
+  bool _showWarning = true;
 
   @override
   void initState() {
@@ -31,6 +31,11 @@ class _MonthViewState extends State<MonthView> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        if (_showWarning)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: _warningBanner(() => setState(() => _showWarning = false)),
+          ),
         TableCalendar(
           firstDay: DateTime.utc(2020, 1, 1),
           lastDay: DateTime.utc(2030, 12, 31),
@@ -63,7 +68,6 @@ class _MonthViewState extends State<MonthView> {
           ),
           calendarBuilders: CalendarBuilders(
             markerBuilder: (context, date, events) {
-              // Show dots under certain dates
               if (date.day % 3 == 0) {
                 return const Positioned(
                   bottom: 4,
@@ -81,7 +85,6 @@ class _MonthViewState extends State<MonthView> {
   }
 
   Widget _eventListForDay(DateTime day) {
-    // Mock example
     if (day.day % 2 == 0) {
       return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
@@ -100,5 +103,32 @@ class _MonthViewState extends State<MonthView> {
         child: Text("No events", style: TextStyle(color: Colors.grey)),
       );
     }
+  }
+
+  Widget _warningBanner(VoidCallback onClose) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              "Multiple cycles this month may overlap with feeding times. Tap on days to review.",
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+          GestureDetector(
+            onTap: onClose,
+            child: const Icon(Icons.close, size: 18),
+          ),
+        ],
+      ),
+    );
   }
 }
