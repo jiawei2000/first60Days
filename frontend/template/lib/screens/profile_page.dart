@@ -91,6 +91,19 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
+  void _addCaregiver() {
+    setState(() {
+      _caregivers.add(CaregiverInfo());
+    });
+  }
+
+  void _removeCaregiver(int index) {
+    final removed = _caregivers.removeAt(index);
+    removed.name.dispose();
+    removed.detail.dispose();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
@@ -136,23 +149,55 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ],
 
-            // Caregiver section header
             _sectionHeader(
-              title: 'Caregiver Information',
+              title: 'Caregiver',
               open: _caregiverOpen,
               onTap: () => setState(() => _caregiverOpen = !_caregiverOpen),
             ),
             if (_caregiverOpen) ...[
               const SizedBox(height: 8),
+
               for (int i = 0; i < _caregivers.length; i++) ...[
-                Text('Caregiver ${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                Row(
+                  children: [
+                    Text('Caregiver ${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                    const Spacer(),
+                    if (_editing && _caregivers.length > 1)
+                      IconButton(
+                        tooltip: 'Remove caregiver',
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () => _removeCaregiver(i),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 6),
-                _labeledBox('Name', _caregivers[i].name, enabled: _editing),
+
+                _labeledBox(
+                  'Name',
+                  _caregivers[i].name,
+                  enabled: _editing,
+                ),
                 const SizedBox(height: 12),
-                _labeledBox('Detail', _caregivers[i].detail, enabled: _editing, hint: 'Nanny / Grandmother'),
+
+                _labeledBox(
+                  'Detail',
+                  _caregivers[i].detail,
+                  enabled: _editing,
+                  hint: 'Nanny / Grandmother',
+                ),
                 const SizedBox(height: 16),
               ],
-            ],
+
+              if (_editing)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: _addCaregiver,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add caregiver'),
+                  ),
+                ),
+            ]
           ],
         ),
       ),
