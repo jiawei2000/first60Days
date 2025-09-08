@@ -11,7 +11,7 @@ const morgan = require('morgan')
 // const permissionRouter = require('./functions/permission');
 const userRoutes = require('./routes/userRoutes');
 const babyRoutes = require('./routes/babyRoutes');
-
+const journalEntryRoutes = require('./routes/journalRoutes');
 // Load env variables
 dotenv.config()
 
@@ -27,6 +27,7 @@ app.get('/', (req, res) => {
 //routes 
 app.use('/users', userRoutes);
 app.use('/babies', babyRoutes);
+app.use('/journalEntries', journalEntryRoutes);
 
 
 

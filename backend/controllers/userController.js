@@ -1,8 +1,3 @@
-// const db = require('../config/database');
-// const bcrypt = require('bcryptjs');
-// const jwt = require('jsonwebtoken');
-// const { Timestamp, FieldValue } = require('firebase-admin/firestore');
-// const JWT_SECRET = process.env.JWT_SECRET || 'no_jwt_in_env';
 const UserService = require('../services/userService');
 
 const userController = {
