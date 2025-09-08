@@ -129,6 +129,7 @@ router.put('/babyProfile/editBaby', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: "babyId is required" });
         }
         //Optional: Check if baby belongs to the main user 
+        
         // Reference to the baby document
         const babyDoc = db.collection("babies").doc(babyId)
 
@@ -214,7 +215,6 @@ router.get('/babyProfiles', authenticateToken, async (req, res) => {
     //get all journal entries from a particular document ID of baby
     try {
         const userId = req.user.id;
-        console.log(userId);
         // Reference to baby's journalEntries subcollection
         const userSnap = await db.collection("users").doc(userId).get();
         if (!userSnap.exists) {
@@ -251,7 +251,6 @@ router.get('/babyProfiles', authenticateToken, async (req, res) => {
 
 //get a particular baby profile
 router.get('/babyProfile/:babyId', authenticateToken, async (req, res) => {
-    //get all journal entries from a particular document ID of baby
     try {
         const { babyId } = req.params;
 
