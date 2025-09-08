@@ -1,19 +1,12 @@
 import 'dart:io';
-import 'package:best_flutter_ui_templates/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'app_theme.dart';
+import 'router.dart';
 import 'routes.dart';
-import 'screens/onboarding_screen.dart'; 
-import 'screens/landing_page.dart';
-import 'screens/create_journal_entry.dart';
-import 'screens/profile_page.dart';
-import 'screens/choose_baby_screen.dart';
-import 'screens/chat_page.dart';
-import 'model/baby.dart';
-import 'screens/calendar/calendar_screen.dart';
-
+import 'screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +32,7 @@ class MyApp extends StatelessWidget {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
+
     return MaterialApp(
       title: 'Digital Nanny',
       debugShowCheckedModeBanner: false,
@@ -49,30 +43,12 @@ class MyApp extends StatelessWidget {
         dividerTheme: const DividerThemeData(color: Color(0xFFE0E0E0)),
       ),
       home: const OnboardingScreen(),
-      routes: {
-            Routes.journal: (_) => const JournalEntryPage(),
-            Routes.profile: (_) => const ProfilePage(),
-            Routes.chooseBaby: (_) => const ChooseBabyScreen(),
-            Routes.chat: (_) => const ChatPage(),
-            Routes.calendar: (_) => const CalendarScreen(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == Routes.landing && settings.arguments is Baby) {
-          final b = settings.arguments as Baby;
-          return MaterialPageRoute(
-            builder: (_) => LandingPage(
-              babyName: b.name,
-              avatarUrl: b.avatarUrl,
-            ),
-          );
-        }
-        return null;
-      },
+      onGenerateRoute: AppRouter.generateRoute, // All routes handled here
     );
   }
 }
 
-// 👇 Keep HexColor class here
+// 👇 Utility to support hex colors in app
 class HexColor extends Color {
   HexColor(final String hexColor) : super(_getColorFromHex(hexColor));
 
