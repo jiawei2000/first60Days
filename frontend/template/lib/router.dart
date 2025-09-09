@@ -11,20 +11,26 @@ import 'screens/calendar/calendar_screen.dart';
 import 'model/baby.dart';
 
 class AppRouter {
-  static Route<dynamic>? generateRoute(RouteSettings settings) {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case Routes.journal:
-        return MaterialPageRoute(builder: (_) => const JournalEntryPage());
+      case Routes.journal: {
+        // expects: { 'babyId': String }
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null || args['babyId'] == null) {
+          return _badArgs('Routes.journal expects { babyId }');
+        }
+        final String babyId = args['babyId'] as String;
+        return MaterialPageRoute(
+          builder: (_) => JournalEntryPage(babyId: babyId),
+        );
+      }
 
       case Routes.profile:
-        return MaterialPageRoute(
-          builder: (_) =>  ProfilePage(),
-        );
+        return MaterialPageRoute(builder: (_) => const ProfilePage());
 
       case Routes.chooseBaby:
-        return MaterialPageRoute(
-          builder: (_) => ChooseBabyScreen(),
-        );
+        // no arguments; token comes from AuthProvider globally
+        return MaterialPageRoute(builder: (_) => const ChooseBabyScreen());
 
       case Routes.chat:
         return MaterialPageRoute(builder: (_) => const ChatPage());
@@ -32,17 +38,27 @@ class AppRouter {
       case Routes.calendar:
         return MaterialPageRoute(builder: (_) => const CalendarScreen());
 
-      case Routes.landing:
-        final baby = settings.arguments as Baby;
+      case Routes.landing: {
+        // expects: { 'baby': Baby }
+        final args = settings.arguments as Map<String, dynamic>?;
+        final baby = args?['baby'] as Baby?;
+        if (baby == null) return _badArgs('Routes.landing expects { baby }');
         return MaterialPageRoute(
-          builder: (_) => LandingPage(
-            babyName: baby.name,
-            avatarUrl: baby.avatarUrl,
-          ),
+          builder: (_) => LandingPage(baby: baby),
         );
+      }
 
       default:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
     }
+  }
+
+  static Route<dynamic> _badArgs(String message) {
+    return MaterialPageRoute(
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: const Text('Routing error')),
+        body: Center(child: Text(message)),
+      ),
+    );
   }
 }

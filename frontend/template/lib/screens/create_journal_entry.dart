@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../network/journal_api.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart'; // path relative to /screens
 
 class Feed {
   String type;   // e.g. EBM / FM / BF(L) / BF(R)
@@ -19,6 +22,7 @@ class Feed {
 class JournalEntry {
   DateTime date;
   String? cycle; // e.g., "First Feed"
+  int?cycleNo;
   TimeOfDay? wakeTime;
   TimeOfDay? feedTime;
   TimeOfDay? playTime;
@@ -42,6 +46,7 @@ class JournalEntry {
   JournalEntry({
     required this.date,
     this.cycle,
+    this.cycleNo,
     this.wakeTime,
     this.feedTime,
     this.playTime,
@@ -63,6 +68,7 @@ class JournalEntry {
   Map<String, dynamic> toJson() => {
         'date': date.toIso8601String(),
         'cycle': cycle,
+        'cycleNo': cycleNo,
         'wakeTime': _fmtTOD(wakeTime),
         'feedTime': _fmtTOD(feedTime),
         'playTime': _fmtTOD(playTime),
@@ -91,9 +97,15 @@ String _unitForType(String? t) {
 }
 
 class JournalEntryPage extends StatefulWidget {
+  final String babyId;
   final JournalEntry? initial;
   final ValueChanged<JournalEntry>? onSave;
-  const JournalEntryPage({super.key, this.initial, this.onSave});
+  const JournalEntryPage({
+    super.key,
+    required this.babyId,
+    this.initial,
+    this.onSave,
+  });
   @override
   State<JournalEntryPage> createState() => _JournalEntryPageState();
 }
@@ -111,6 +123,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
 
   // Advanced state
   String? _cycle;
+  final _cycleNoCtrl = TextEditingController();
   TimeOfDay? _wakeUpTime;
   TimeOfDay? _startFeedTime;
   String? _typeOfFeed;
@@ -138,6 +151,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     _sleepTime = init?.sleepTime;
 
     _cycle = init?.cycle;
+    if (init?.cycleNo != null) _cycleNoCtrl.text = init!.cycleNo.toString();
     _wakeUpTime = init?.wakeUpTime;
     _startFeedTime = init?.startFeedTime;
     _typeOfFeed = init?.typeOfFeed;
@@ -178,6 +192,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     for (final c in _feedValueCtrls) {
       c.dispose();
     }
+    _cycleNoCtrl.dispose();
     super.dispose();
   }
 
@@ -242,6 +257,16 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
                 const SizedBox(height: 24),
                 _section('Advanced (legacy)'),
                 _textField(label: 'Cycle', onChanged: (v) => _cycle = v),
+                _LabeledField(
+                  label: 'Cycle No',
+                  child: TextFormField(
+                    controller: _cycleNoCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(hintText: 'e.g. 4'),
+                    onChanged: (v) => _cycle = v,
+                  ),
+                ),
                 _timeField(context, label: 'Wake time (legacy field)', value: _wakeUpTime,
                     onPicked: (t) => setState(() => _wakeUpTime = t)),
                 _timeField(context, label: 'Start of Feed Time (legacy)', value: _startFeedTime,
@@ -460,9 +485,9 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     );
   }
 
-  void _onSave() {
+  void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final feeds = <Feed>[];
     for (var i = 0; i < _feedTypeCtrls.length; i++) {
       final type = _feedTypeCtrls[i].text.trim();
@@ -476,6 +501,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     final entry = JournalEntry(
       date: _date,
       cycle: _cycle,
+      cycleNo: _tryParseInt(_cycleNoCtrl.text),
       wakeTime: _wakeTime,
       feedTime: _feedTime,
       playTime: _playTime,
@@ -494,9 +520,34 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
       feeds: feeds,
     );
 
-    widget.onSave?.call(entry);
-    // For now, pop and return the entry
-    Navigator.of(context).pop(entry);
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token == null || token.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No auth token. Please sign in again.')),
+      );
+      return;
+    }
+
+    try {
+      final api = JournalApi(token);
+      final newId = await api.createEntry(
+        babyId: widget.babyId,
+        entry: entry,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('✅ Saved entry $newId')),
+      );
+
+      widget.onSave?.call(entry);
+      Navigator.of(context).pop(entry);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Save failed: $e')),
+      );
+    }
   }
 }
 

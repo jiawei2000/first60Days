@@ -113,7 +113,10 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
                               Navigator.pushReplacementNamed(
                                 context,
                                 Routes.landing,
-                                arguments: selectedBaby,
+                                arguments: {
+                                  'baby': selectedBaby,
+                                  'token': Provider.of<AuthProvider>(context, listen: false).token!,
+                                },
                               );
                             },
                             child: Column(
