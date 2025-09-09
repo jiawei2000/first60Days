@@ -1,6 +1,10 @@
 // lib/screens/profile_page.dart
 import 'package:flutter/material.dart';
 import '../routes.dart';
+import 'manage_babies_page.dart';
+import 'manage_caregivers_page.dart';
+import '../model/profile_models.dart';
+import '../model/baby.dart';
 
 class BabyInfo {
   TextEditingController name;
@@ -45,17 +49,46 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // edit mode
   bool _editing = false;
 
-  // main fields
   late final TextEditingController _nameCtrl;
   late final TextEditingController _emailCtrl;
   late final TextEditingController _trainerCtrl;
 
-  // sections
-  bool _babyOpen = false;
-  bool _caregiverOpen = false;
+  Widget _navButton(BuildContext context,
+      {required String title,
+      String? subtitle,
+      required IconData icon,
+      required VoidCallback onTap}) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    if (subtitle != null)
+                      Text(subtitle, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   final List<BabyInfo> _babies = [];
   final List<CaregiverInfo> _caregivers = [];
@@ -91,19 +124,6 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  void _addCaregiver() {
-    setState(() {
-      _caregivers.add(CaregiverInfo());
-    });
-  }
-
-  void _removeCaregiver(int index) {
-    final removed = _caregivers.removeAt(index);
-    removed.name.dispose();
-    removed.detail.dispose();
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
@@ -132,89 +152,73 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
 
             // Baby section header
-            _sectionHeader(
-              title: 'Baby Information',
-              open: _babyOpen,
-              onTap: () => setState(() => _babyOpen = !_babyOpen),
-            ),
-            if (_babyOpen) ...[
-              const SizedBox(height: 8),
-              for (int i = 0; i < _babies.length; i++) ...[
-                Text('Baby ${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 6),
-                _labeledBox('Name', _babies[i].name, enabled: _editing),
-                const SizedBox(height: 12),
-                _labeledBox('Age', _babies[i].age, enabled: _editing, hint: 'e.g. 6 Weeks'),
-                const SizedBox(height: 16),
-              ],
-            ],
-
-            _sectionHeader(
-              title: 'Caregiver',
-              open: _caregiverOpen,
-              onTap: () => setState(() => _caregiverOpen = !_caregiverOpen),
-            ),
-            if (_caregiverOpen) ...[
-              const SizedBox(height: 8),
-
-              for (int i = 0; i < _caregivers.length; i++) ...[
-                Row(
-                  children: [
-                    Text('Caregiver ${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                    const Spacer(),
-                    if (_editing && _caregivers.length > 1)
-                      IconButton(
-                        tooltip: 'Remove caregiver',
-                        icon: const Icon(Icons.remove_circle_outline),
-                        onPressed: () => _removeCaregiver(i),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-
-                _labeledBox(
-                  'Name',
-                  _caregivers[i].name,
-                  enabled: _editing,
-                ),
-                const SizedBox(height: 12),
-
-                _labeledBox(
-                  'Detail',
-                  _caregivers[i].detail,
-                  enabled: _editing,
-                  hint: 'Nanny / Grandmother',
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              if (_editing)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _addCaregiver,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add caregiver'),
+            _navButton(
+              context,
+              title: 'Manage Baby Information',
+              subtitle: 'Add / edit babies',
+              icon: Icons.child_care_outlined,
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ManageBabiesPage(
+                      initialBabies: _babies
+                          .map((b) => Baby(
+                            id: DateTime.now().microsecondsSinceEpoch.toString(),
+                            name: b.name.text,
+                            age: b.age.text))
+                          .toList(),
+                    ),
                   ),
-                ),
-            ]
+                ).then((updated) {
+                  if (updated is List<Baby>) {
+                    // sync back into controllers
+                    for (final b in _babies) { b.name.dispose(); b.age.dispose(); }
+                    _babies
+                      ..clear()
+                      ..addAll(updated.map((b) => BabyInfo(
+                                      name: b.name, 
+                                      age: b.age ?? '')));
+                    setState(() {});
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            _navButton(
+              context,
+              title: 'Manage Caregivers',
+              subtitle: 'Create / edit caregiver profiles',
+              icon: Icons.group_outlined,
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ManageCaregiversPage(
+                      initialCaregivers: _caregivers
+                          .map((c) => Caregiver(
+                                username: c.name.text,
+                                email: '',
+                                phone: '',
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                ).then((updated) {
+                  if (updated is List<Caregiver>) {
+                    for (final c in _caregivers) { c.name.dispose(); c.detail.dispose(); }
+                    _caregivers
+                      ..clear()
+                      ..addAll(updated.map((c) => CaregiverInfo(name: c.username, detail: '')));
+                    setState(() {});
+                  }
+                });
+              },
+            ),
           ],
         ),
       ),
       bottomNavigationBar: const _ProfileTabs(),
-    );
-  }
-
-  Widget _sectionHeader({required String title, required bool open, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-          const Spacer(),
-          Icon(open ? Icons.expand_less : Icons.expand_more),
-        ],
-      ),
     );
   }
 
@@ -285,8 +289,7 @@ class _ProfileTabs extends StatelessWidget {
               Navigator.pushNamed(context, Routes.calendar);
               break;
             case 2:
-              // Navigator.pushNamed(context, Routes.landing); // or pop
-              Navigator.popUntil(context, (r) => r.isFirst);
+              Navigator.pushNamed(context, Routes.landing);
               break;
             case 3:
               Navigator.pushNamed(context, Routes.chat);

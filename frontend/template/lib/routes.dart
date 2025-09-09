@@ -1,4 +1,3 @@
-// lib/routes.dart
 class Routes {
   static const landing = '/landing';
   static const journal = '/journal';
@@ -7,4 +6,6 @@ class Routes {
   static const calendar = '/calendar';
   static const chat = '/chat';
   static const profile = '/profile';
+  static const manageBabies = '/manage-babies';
+  static const manageCaregivers = '/manage-caregivers';
 }

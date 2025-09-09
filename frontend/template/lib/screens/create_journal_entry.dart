@@ -268,7 +268,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   Widget _feedGroup(int index) {
       final typeCtrl  = _feedTypeCtrls[index];
       final valueCtrl = _feedValueCtrls[index];
-      final unitValue = _feedUnits[index];
+      // final unitValue = _feedUnits[index];
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,19 +402,19 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     );
   }
 
-  Widget _durationField() {
-    return _LabeledField(
-      label: 'Sleep Duration',
-      child: TextFormField(
-        controller: _sleepDurationCtrl,
-        decoration: const InputDecoration(hintText: 'HH:MM:SS'),
-        validator: (v) {
-          if (v == null || v.isEmpty) return null; // optional
-          return _parseDuration(v) == null ? 'Use HH:MM:SS' : null;
-        },
-      ),
-    );
-  }
+  // Widget _durationField() {
+  //   return _LabeledField(
+  //     label: 'Sleep Duration',
+  //     child: TextFormField(
+  //       controller: _sleepDurationCtrl,
+  //       decoration: const InputDecoration(hintText: 'HH:MM:SS'),
+  //       validator: (v) {
+  //         if (v == null || v.isEmpty) return null; // optional
+  //         return _parseDuration(v) == null ? 'Use HH:MM:SS' : null;
+  //       },
+  //     ),
+  //   );
+  // }
 
   Widget _textField({required String label, String? hintText, required ValueChanged<String> onChanged}) {
     return _LabeledField(
