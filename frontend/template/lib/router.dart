@@ -18,11 +18,10 @@ class AppRouter {
 
       case Routes.profile:
         return MaterialPageRoute(
-          builder: (_) => const ProfilePage(),
+          builder: (_) =>  ProfilePage(),
         );
 
       case Routes.chooseBaby:
-        final token = settings.arguments as String;
         return MaterialPageRoute(
           builder: (_) => ChooseBabyScreen(),
         );
