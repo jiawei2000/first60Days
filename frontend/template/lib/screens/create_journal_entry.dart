@@ -84,11 +84,16 @@ class JournalEntry {
   static String? _fmtTOD(TimeOfDay? t) => t == null ? null : _formatTimeOfDay(t);
 }
 
+const _kFeedTypes = ['EBM', 'FM', 'BF (L)', 'BF (R)'];
+String _unitForType(String? t) {
+  if (t == null) return 'mL';
+  return t.startsWith('BF') ? 'minutes' : 'mL';
+}
+
 class JournalEntryPage extends StatefulWidget {
   final JournalEntry? initial;
   final ValueChanged<JournalEntry>? onSave;
   const JournalEntryPage({super.key, this.initial, this.onSave});
-
   @override
   State<JournalEntryPage> createState() => _JournalEntryPageState();
 }
@@ -266,75 +271,92 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   }
 
   Widget _feedGroup(int index) {
-      final typeCtrl  = _feedTypeCtrls[index];
-      final valueCtrl = _feedValueCtrls[index];
-      // final unitValue = _feedUnits[index];
+    final typeCtrl  = _feedTypeCtrls[index];
+    final valueCtrl = _feedValueCtrls[index];
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Feed Type ${index + 1}',
-              style: const TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-
-          TextFormField(
-            controller: typeCtrl,
-            decoration: const InputDecoration(
-              hintText: 'EBM / FM / BF (L/R)',
-              isDense: true,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _feedUnits[index],
-                  items: const [
-                    DropdownMenuItem(value: 'mL', child: Text('mL')),
-                  ],
-                  onChanged: (v) => setState(() => _feedUnits[index] = v ?? 'mL'),
-                  decoration: const InputDecoration(labelText: 'Unit', isDense: true),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Value field
-              Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: valueCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
-                  decoration: const InputDecoration(labelText: 'Value', isDense: true),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return null;
-                    return double.tryParse(v) == null ? 'Numeric' : null;
-                  },
-                ),
-              ),
-              // Remove feed button (show if >1)
-              if (_feedTypeCtrls.length > 1) ...[
-                const SizedBox(width: 6),
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    iconSize: 20,
-                    splashRadius: 18,
-                    constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () => _removeFeed(index),
-                    tooltip: 'Remove',
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      );
+    // keep unit in sync with type (in case initial data had empty unit)
+    final currentUnit = _unitForType(typeCtrl.text.isEmpty ? null : typeCtrl.text);
+    if (_feedUnits[index] != currentUnit) {
+      _feedUnits[index] = currentUnit;
     }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Feed Type ${index + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+
+        // Feed TYPE dropdown
+        DropdownButtonFormField<String>(
+          initialValue: typeCtrl.text.isEmpty ? null : typeCtrl.text,
+          items: _kFeedTypes
+              .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+              .toList(),
+          onChanged: (v) {
+            setState(() {
+              typeCtrl.text = v ?? '';
+              _feedUnits[index] = _unitForType(v);
+            });
+          },
+          decoration: const InputDecoration(
+            hintText: 'Select feed type',
+            isDense: true,
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Row: Value (left) • Unit (right, auto-filled)
+        Row(
+          children: [
+            // VALUE
+            Expanded(
+              flex: 2,
+              child: TextFormField(
+                controller: valueCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                decoration: const InputDecoration(labelText: 'Value', isDense: true),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null; // optional
+                  return double.tryParse(v) == null ? 'Numeric' : null;
+                },
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // UNIT (read-only, auto-filled)
+            Expanded(
+              flex: 1,
+              child: InputDecorator(
+                decoration: const InputDecoration(labelText: 'Unit', isDense: true, border: OutlineInputBorder()),
+                child: Text(_feedUnits[index]),
+              ),
+            ),
+
+            // Remove feed button (show if >1)
+            if (_feedTypeCtrls.length > 1) ...[
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 20,
+                  splashRadius: 18,
+                  constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () => _removeFeed(index),
+                  tooltip: 'Remove',
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
 
   void _addFeed() {
       setState(() {
