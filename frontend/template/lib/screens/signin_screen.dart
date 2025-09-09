@@ -3,6 +3,8 @@
   import 'package:http/http.dart' as http;
 
   import 'choose_baby_screen.dart';
+  import 'providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
   class SignInScreen extends StatefulWidget {
     const SignInScreen({super.key});
@@ -43,21 +45,21 @@
           body: jsonEncode({'email': email, 'password': password}),
         );
 
-        if (response.statusCode == 200) {
+                if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final token = data['token'];
-          print("✅ Token: $token");
 
-          //token needs to be stored locally i think, not sure
+          // 🔥 Set token globally
+          Provider.of<AuthProvider>(context, listen: false).setToken(token);
 
+          // Navigate to baby selection
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => ChooseBabyScreen(token: token),
+              builder: (_) => ChooseBabyScreen(),
             ),
           );
-
-        } else {
+} else {
           final error = jsonDecode(response.body);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(error['error'] ?? 'Login failed')),

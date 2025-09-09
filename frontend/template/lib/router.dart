@@ -17,12 +17,14 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const JournalEntryPage());
 
       case Routes.profile:
-        return MaterialPageRoute(builder: (_) => const ProfilePage());
+        return MaterialPageRoute(
+          builder: (_) => const ProfilePage(),
+        );
 
       case Routes.chooseBaby:
         final token = settings.arguments as String;
         return MaterialPageRoute(
-          builder: (_) => ChooseBabyScreen(token: token),
+          builder: (_) => ChooseBabyScreen(),
         );
 
       case Routes.chat:

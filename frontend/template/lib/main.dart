@@ -1,8 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-
+import 'package:provider/provider.dart';
+import 'screens/providers/auth_provider.dart'; // <-- import your AuthProvider
+import 'dart:io';
 import 'app_theme.dart';
 import 'router.dart';
 import 'routes.dart';
@@ -13,7 +14,16 @@ void main() async {
   await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-  ]).then((_) => runApp(const MyApp()));
+  ]);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: const MyApp(), // wrapped in provider
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -43,12 +53,11 @@ class MyApp extends StatelessWidget {
         dividerTheme: const DividerThemeData(color: Color(0xFFE0E0E0)),
       ),
       home: const OnboardingScreen(),
-      onGenerateRoute: AppRouter.generateRoute, // All routes handled here
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }
 
-// 👇 Utility to support hex colors in app
 class HexColor extends Color {
   HexColor(final String hexColor) : super(_getColorFromHex(hexColor));
 

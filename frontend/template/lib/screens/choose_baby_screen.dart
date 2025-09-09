@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart'; 
 import '../model/baby.dart';
 import '../routes.dart';
+import '../main.dart'; 
+import 'providers/auth_provider.dart';
 
 class ChooseBabyScreen extends StatefulWidget {
-  final String token;
-
-  const ChooseBabyScreen({super.key, required this.token});
+  const ChooseBabyScreen({super.key}); 
 
   @override
   State<ChooseBabyScreen> createState() => _ChooseBabyScreenState();
@@ -17,7 +18,6 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
   List<Map<String, String>> babies = [];
   bool isLoading = true;
 
-  // Hardcoded baby images to cycle through
   final List<String> babyImages = [
     'assets/images/baby1.jpg',
     'assets/images/baby2.jpg',
@@ -26,16 +26,23 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
   @override
   void initState() {
     super.initState();
-    fetchBabyProfiles();
+    WidgetsBinding.instance.addPostFrameCallback((_) => fetchBabyProfiles());
   }
 
   Future<void> fetchBabyProfiles() async {
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+
+    if (token == null) {
+      print(' No token found');
+      return;
+    }
+
     final url = Uri.parse('http://10.0.2.2:3000/babyProfiles');
 
     try {
       final response = await http.get(
         url,
-        headers: {'Authorization': 'Bearer ${widget.token}'},
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
@@ -47,7 +54,7 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
             final baby = profiles[index];
             return {
               'name': baby['name'],
-              'image': babyImages[index % babyImages.length], // rotate images
+              'image': babyImages[index % babyImages.length],
             };
           });
           isLoading = false;
