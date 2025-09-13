@@ -2,7 +2,7 @@ const db = require('../config/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Timestamp } = require('firebase-admin/firestore');
-
+const admin = require("firebase-admin");
 const User = require('../models/User');
 const Permission = require('../models/Permission');
 
@@ -147,7 +147,7 @@ class UserService {
 
             // Update main permission with new sub user
             t.update(mainPermissionDoc.ref, {
-                subAccArr: FieldValue.arrayUnion(subUserRef)
+                subAccArr: admin.firestore.FieldValue.arrayUnion(subUserRef)
             });
 
             return { subUser, subPermission };

@@ -1,5 +1,6 @@
 const UserService = require('../services/userService');
 
+
 const userController = {
     async registerNew(req, res) {
         // ... your register new user logic here

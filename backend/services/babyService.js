@@ -102,7 +102,7 @@ class BabyService {
 
         // Remove baby from main permission
         batch.update(permissionRef, {
-            babyIDArr: FieldValue.arrayRemove(babyRef),
+            babyIDArr: admin.firestore.FieldValue.arrayRemove(babyRef),
         });
 
         // Clean up sub-user permissions
@@ -117,7 +117,7 @@ class BabyService {
 
                 subPermSnap.forEach((doc) => {
                     batch.update(doc.ref, {
-                        babyIDArr: FieldValue.arrayRemove(babyRef),
+                        babyIDArr: admin.firestore.FieldValue.arrayRemove(babyRef),
                     });
                 });
             }

@@ -33,8 +33,8 @@ class CheckService {
                         .collection("babies")
                         .doc(babyId)
                         .collection("journalEntries")
-                        .where("createdAt", ">=", startOfDay)
-                        .where("createdAt", "<=", endOfDay)
+                        .where("awakeTime", ">=", startOfDay)
+                        .where("awakeTime", "<=", endOfDay)
                         .get();
 
                     if (entriesSnap.empty) {

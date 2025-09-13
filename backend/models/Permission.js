@@ -16,7 +16,7 @@ class Permission {
 
     toFirestore() {
         return {
-            userID: this.userID,
+            // userID: this.userID,
             babyIDArr: this.babyIDArr,
             permissionType: this.permissionType,
             createdAt: this.createdAt,

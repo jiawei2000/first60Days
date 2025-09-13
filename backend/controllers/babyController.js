@@ -48,7 +48,8 @@ const BabyController = {
         try {
             const userId = req.user.id;
             const { babyId } = req.body;
-
+            console.log(babyId);
+            console.log(userId);
             const result = await BabyService.deleteProfile(userId, babyId);
 
             res.status(200).json(result);
@@ -78,7 +79,7 @@ const BabyController = {
 
     async getProfileById(req, res) {
         try {
-            const { babyId } = req.params;
+            const { babyId } = req.body;
             const babyProfile = await BabyService.getProfileById(babyId);
 
             res.status(200).json(babyProfile);

@@ -23,8 +23,8 @@ const journalController = {
 
     async editEntry(req, res) {
         try {
-            const { babyId, entryId } = req.params;
-            const updateData = req.body;
+            const { babyId, entryId, updateData } = req.body;
+            // const updateData = req.body;
 
             if (!babyId || !entryId) {
                 return res.status(400).json({ error: "babyId and entryId are required" });
@@ -45,7 +45,7 @@ const journalController = {
 
     async getEntries(req, res) {
         try {
-            const { babyId } = req.params;
+            const { babyId } = req.body;
             const entries = await JournalService.getEntries(babyId);
 
             if (entries.length === 0) {
@@ -61,7 +61,7 @@ const journalController = {
 
     async getEntryById(req, res) {
         try {
-            const { babyId, entryId } = req.params;
+            const { babyId, entryId } = req.body;
             
             // Fetch journal entry from service
             const entry = await JournalService.getEntryById(babyId, entryId);
