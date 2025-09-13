@@ -2,8 +2,10 @@ const db = require('../config/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Timestamp } = require('firebase-admin/firestore');
+
 const User = require('../models/User');
 const Permission = require('../models/Permission');
+
 const { JWT_SECRET } = require('../config/authMiddleware');
 
 class UserService {
@@ -37,7 +39,7 @@ class UserService {
 
             // create permission model
             const permission = new Permission(permissionRef.id, {
-                userID: userRef,
+                // userID: userRef,
                 babyIDArr: [],
                 permissionType: "main",
                 createdAt: Timestamp.now(),
@@ -121,7 +123,7 @@ class UserService {
             // Create sub permission
             const subPermissionRef = db.collection('permissions').doc();
             const subPermission = new Permission(subPermissionRef.id, {
-                userID: subUserRef,
+                // userID: subUserRef,
                 babyIDArr: babyRefs,
                 permissionType: "sub",
                 createdAt: Timestamp.now(),

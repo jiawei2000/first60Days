@@ -1,7 +1,7 @@
 class Permission {
     constructor(id, { userID, babyIDArr = [], permissionType, createdAt, deletedAt, subAccArr = [] }) {
         this.id = id;
-        this.userID = userID; // Firestore ref 
+        // this.userID = userID; Firestore ref 
         this.babyIDArr = babyIDArr;
         this.permissionType = permissionType;
         this.createdAt = createdAt;
