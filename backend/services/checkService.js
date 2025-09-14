@@ -8,6 +8,7 @@ class CheckService {
             // Get yesterday’s date
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
+            // yesterday.setDate(yesterday.getDate());
 
             const startOfDay = new Date(yesterday);
             startOfDay.setHours(0, 0, 0, 0);

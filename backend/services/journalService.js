@@ -3,7 +3,6 @@ const db = require('../config/database');
 const JournalEntry = require('../models/JournalEntry');
 
 const { Timestamp } = require('firebase-admin/firestore');
-const admin = require("firebase-admin");
 
 class JournalService {
     static async createEntry(babyId, entryData) {
@@ -13,9 +12,26 @@ class JournalService {
             .doc(babyId)
             .collection("journalEntries");
 
-        const newEntryRef = await journalRef.add({ ...entryData });
+        //Ensure the datetime stamp in entryData is stored correctly in firestore    
+        //awakeTime, startPlayTime, startFeedTime, startSleepTime
 
-        return new JournalEntry(newEntryRef.id, entryData);
+        // Convert known datetime fields to Firestore Timestamps
+        const formattedData = { ...entryData };
+        const dateFields = ['awakeTime', 'startPlayTime', 'startFeedTime', 'startSleepTime'];
+        //2025-09-13T03:15:00+08:00
+        for (const field of dateFields) {
+            const value = formattedData[field];
+            if (value) {
+                const parsed = new Date(value);   // Handles ISO strings with timezone offsets
+                console.log(field + " " + parsed + " " + value);
+                if (!isNaN(parsed)) {             // Check for valid date
+                    formattedData[field] = Timestamp.fromDate(parsed);
+                }
+            }
+        }
+        const newEntryRef = await journalRef.add(formattedData);
+
+        return new JournalEntry(newEntryRef.id, formattedData);
     }
 
     static async editEntry(babyId, entryId, updateData) {
