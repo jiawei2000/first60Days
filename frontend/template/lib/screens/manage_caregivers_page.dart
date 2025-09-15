@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../model/profile_models.dart';
 import 'providers/auth_provider.dart';
@@ -119,9 +120,9 @@ class _ManageCaregiversPageState extends State<ManageCaregiversPage> {
                         "username": username.text.trim(),
                         "babyIDArr": ["W6b0M4UJxxfbo0bktsm0"], // Replace with actual baby ID
                       };
-
-                      final url =
-                          Uri.parse('http://10.0.2.2:3000/users/registerSub');
+                      
+                      final baseURL = dotenv.env['BASE_URL'];
+                      final url = Uri.parse('$baseURL/users/registerSub');
 
                       print("📤 API CALL to: $url");
                       print("📦 Request Body: ${jsonEncode(caregiverData)}");

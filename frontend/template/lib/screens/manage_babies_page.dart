@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../model/baby.dart';
 import 'providers/auth_provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ManageBabiesPage extends StatefulWidget {
   const ManageBabiesPage({super.key, required this.initialBabies});
@@ -15,6 +16,7 @@ class ManageBabiesPage extends StatefulWidget {
 
 class _ManageBabiesPageState extends State<ManageBabiesPage> {
   late List<Baby> babies;
+  final baseURL = dotenv.env['BASE_URL'];
 
   @override
   void initState() {
@@ -25,7 +27,7 @@ class _ManageBabiesPageState extends State<ManageBabiesPage> {
   Future<void> _deleteBaby(String babyId) async {
     final token = Provider.of<AuthProvider>(context, listen: false).token;
 
-    final url = Uri.parse('http://10.0.2.2:3000/babyProfile/delete');
+    final url = Uri.parse('$baseURL/babyProfile/delete');
     final response = await http.delete(
       url,
       headers: {
@@ -54,7 +56,7 @@ class _ManageBabiesPageState extends State<ManageBabiesPage> {
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:3000/babyProfile/editBaby');
+    final url = Uri.parse('$baseURL/babyProfile/editBaby');
     final response = await http.put(
       url,
       headers: {
@@ -89,7 +91,7 @@ class _ManageBabiesPageState extends State<ManageBabiesPage> {
     final dobIso = dob.toUtc().toIso8601String().split('.').first + 'Z';
     
 
-    final url = Uri.parse('http://10.0.2.2:3000/babyProfile/newBaby');
+    final url = Uri.parse('$baseURL/babyProfile/newBaby');
 
     final requestBody = {
       'dob': dobIso,

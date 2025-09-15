@@ -9,6 +9,7 @@ import '../model/profile_models.dart';
 import '../model/baby.dart';
 import 'providers/auth_provider.dart';
 import 'signin_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BabyInfo {
   String id;
@@ -61,7 +62,8 @@ class _ProfilePageState extends State<ProfilePage> {
     final token = Provider.of<AuthProvider>(context, listen: false).token;
     if (token == null) return;
 
-    final url = Uri.parse('http://10.0.2.2:3000/babyProfiles');
+    final baseURL = dotenv.env['BASE_URL'];
+    final url = Uri.parse('$baseURL/babyProfiles');
     try {
       final response = await http.get(
         url,

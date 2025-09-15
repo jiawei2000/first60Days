@@ -2,13 +2,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../screens/create_journal_entry.dart' show JournalEntry, Feed;
 
-/// Android emulator hits host via 10.0.2.2
-const String _baseUrl = String.fromEnvironment(
-  'BASE_URL',
-  defaultValue: 'http://10.0.2.2:3000',
-);
+final _baseUrl = dotenv.env['BASE_URL'];
 
 class JournalApi {
   final String token;

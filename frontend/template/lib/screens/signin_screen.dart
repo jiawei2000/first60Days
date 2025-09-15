@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 
 import 'choose_baby_screen.dart';
@@ -37,7 +38,8 @@ class _SignInScreenState extends State<SignInScreen> {
       _isLoading = true;
     });
 
-    final url = Uri.parse('http://10.0.2.2:3000/users/login');
+    final baseURL = dotenv.env['BASE_URL'];
+    final url = Uri.parse('$baseURL/users/login');    
 
     try {
       final response = await http.post(

@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart'; 
 import '../model/baby.dart';
 import '../routes.dart';
-import '../main.dart'; 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'providers/auth_provider.dart';
 
 class ChooseBabyScreen extends StatefulWidget {
@@ -37,8 +38,9 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:3000/babyProfiles');
-
+    final baseURL = dotenv.env['BASE_URL'];
+    final url = Uri.parse('$baseURL/babyProfiles');
+    
     try {
       final response = await http.get(
         url,
@@ -129,8 +131,9 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
                 'name': name,
                 'dob': selectedDate!.toUtc().toIso8601String(),
               };
-
-              final url = Uri.parse('http://10.0.2.2:3000/babyProfile/newBaby');
+              
+              final baseURL = dotenv.env['BASE_URL'];
+              final url = Uri.parse('$baseURL/babyProfile/newBaby');
 
               try {
                 final response = await http.post(

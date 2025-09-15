@@ -313,7 +313,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
 
         // Feed TYPE dropdown
         DropdownButtonFormField<String>(
-          initialValue: typeCtrl.text.isEmpty ? null : typeCtrl.text,
+          value: typeCtrl.text.isEmpty ? null : typeCtrl.text,
           items: _kFeedTypes
               .map((t) => DropdownMenuItem(value: t, child: Text(t)))
               .toList(),

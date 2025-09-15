@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -32,7 +33,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     setState(() => _isLoading = true);
 
-    final url = Uri.parse('http://10.0.2.2:3000/users/registerNew'); // 👈 adjust for device IP if needed
+    final baseURL = dotenv.env['BASE_URL'];
+    final url = Uri.parse('$baseURL/users/registerNew');
 
     try {
       final response = await http.post(

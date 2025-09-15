@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'screens/providers/auth_provider.dart'; // <-- import your AuthProvider
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'app_theme.dart';
 import 'router.dart';
-import 'routes.dart';
 import 'screens/onboarding_screen.dart';
 
 void main() async {
@@ -15,6 +15,12 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    throw Exception("Failed to load .env file: $e");
+  }
 
   runApp(
     MultiProvider(
