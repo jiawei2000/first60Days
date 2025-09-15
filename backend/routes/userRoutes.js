@@ -11,5 +11,6 @@ router.post('/login', userController.login);
 router.post('/registerSub', authenticateToken, userController.registerSub);
 router.put('/updatePassword', authenticateToken, userController.updatePassword);
 router.delete('/delete', authenticateToken, userController.deleteUser);
+router.get('/getUserById', authenticateToken, userController.getUserById)
 
 module.exports = router;

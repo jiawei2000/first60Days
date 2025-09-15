@@ -2,8 +2,10 @@
 const cron = require('node-cron');
 const CheckService = require("../services/checkService");
 
-// Example 1: Cleanup old journal entries (run every midnight)
-cron.schedule('0 0 * * *', async () => {
+//Daily journal entries check (run every midnight)
+//run every midnight ("0 0 * * *")
+//run every min ("* * * * *")
+cron.schedule('* * * * *', async () => {
     console.log("Running daily checks job...");
 
     try {
