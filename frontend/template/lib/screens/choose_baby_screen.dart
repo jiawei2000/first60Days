@@ -70,6 +70,95 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
     }
   }
 
+  Future<void> _showAddBabyDialog() async {
+    final nameController = TextEditingController();
+    DateTime? selectedDate;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Baby Profile'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Baby Name'),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedDate != null
+                        ? 'DOB: ${selectedDate!.toLocal().toString().split(" ")[0]}'
+                        : 'Select Date of Birth',
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (pickedDate != null) {
+                      setState(() => selectedDate = pickedDate);
+                    }
+                  },
+                )
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final token = Provider.of<AuthProvider>(context, listen: false).token;
+              final name = nameController.text.trim();
+
+              if (name.isEmpty || selectedDate == null || token == null) return;
+
+              final body = {
+                'name': name,
+                'dob': selectedDate!.toUtc().toIso8601String(),
+              };
+
+              final url = Uri.parse('http://10.0.2.2:3000/babyProfile/newBaby');
+
+              try {
+                final response = await http.post(
+                  url,
+                  headers: {
+                    'Authorization': 'Bearer $token',
+                    'Content-Type': 'application/json',
+                  },
+                  body: jsonEncode(body),
+                );
+
+                if (response.statusCode == 200 || response.statusCode == 201) {
+                  Navigator.pop(ctx);
+                  fetchBabyProfiles();
+                } else {
+                  print('Failed to create baby: ${response.body}');
+                }
+              } catch (e) {
+                print('❌ Error creating baby: $e');
+              }
+            },
+            child: const Text('Create'),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,9 +226,7 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
                           return Column(
                             children: [
                               InkWell(
-                                onTap: () {
-                                  // TODO: Add baby logic
-                                },
+                                onTap: _showAddBabyDialog,
                                 child: Container(
                                   width: 80,
                                   height: 80,

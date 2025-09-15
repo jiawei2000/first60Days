@@ -8,6 +8,7 @@ import 'manage_caregivers_page.dart';
 import '../model/profile_models.dart';
 import '../model/baby.dart';
 import 'providers/auth_provider.dart';
+import 'signin_screen.dart';
 
 class BabyInfo {
   String id;
@@ -36,8 +37,8 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool _editing = false;
 
-  final TextEditingController _nameCtrl = TextEditingController(text: 'Melissa Peters');
-  final TextEditingController _emailCtrl = TextEditingController(text: 'melpeters@gmail.com');
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _trainerCtrl = TextEditingController(text: 'Jane Doe');
 
   final List<BabyInfo> _babies = [];
@@ -45,10 +46,14 @@ class _ProfilePageState extends State<ProfilePage> {
     CaregiverInfo(name: 'XYZ', detail: 'Nanny'),
     CaregiverInfo(name: 'XYZ', detail: 'Grandmother'),
   ];
+  //need api to get the subaccts tagged to the main acct, hardcoded for now
 
   @override
   void initState() {
     super.initState();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    _emailCtrl.text = auth.email ?? 'Unknown';
+    _nameCtrl.text = '';
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchBabyProfiles());
   }
 
@@ -71,10 +76,10 @@ class _ProfilePageState extends State<ProfilePage> {
           final id = baby['id'] ?? '';
           final name = baby['name'] ?? '-';
           final dobMap = baby['dob'];
-            DateTime dob = DateTime.now(); // fallback
-            if (dobMap != null && dobMap is Map && dobMap['_seconds'] != null) {
-              dob = DateTime.fromMillisecondsSinceEpoch(dobMap['_seconds'] * 1000);
-            }
+          DateTime dob = DateTime.now();
+          if (dobMap != null && dobMap is Map && dobMap['_seconds'] != null) {
+            dob = DateTime.fromMillisecondsSinceEpoch(dobMap['_seconds'] * 1000);
+          }
           final ageWeeks = DateTime.now().difference(dob).inDays ~/ 7;
           _babies.add(BabyInfo(id: id, name: name, age: '$ageWeeks Weeks'));
         }
@@ -126,11 +131,10 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             _labeledBox('Name', _nameCtrl, enabled: _editing),
             const SizedBox(height: 12),
-            _labeledBox('Email', _emailCtrl, enabled: _editing, keyboard: TextInputType.emailAddress),
+            _labeledBox('Email', _emailCtrl, enabled: false, keyboard: TextInputType.emailAddress),
             const SizedBox(height: 12),
             _labeledBox('Trainer', _trainerCtrl, enabled: _editing),
             const SizedBox(height: 16),
-
             _navButton(
               context,
               title: 'Manage Baby Information',
@@ -198,6 +202,25 @@ class _ProfilePageState extends State<ProfilePage> {
                 });
               },
             ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Provider.of<AuthProvider>(context, listen: false).clearToken();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SignInScreen()),
+                  (route) => false,
+                );
+              },
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
       ),
@@ -205,22 +228,13 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _labeledBox(
-    String label,
-    TextEditingController ctrl, {
-    bool enabled = false,
-    String? hint,
-    TextInputType keyboard = TextInputType.text,
-  }) {
+  Widget _labeledBox(String label, TextEditingController ctrl, {bool enabled = false, String? hint, TextInputType keyboard = TextInputType.text}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.blue),
-          ),
+          child: Text(label, style: const TextStyle(color: Colors.blue)),
         ),
         if (enabled)
           TextField(
@@ -232,28 +246,19 @@ class _ProfilePageState extends State<ProfilePage> {
               isDense: true,
               filled: true,
               fillColor: Theme.of(context).colorScheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
           )
         else
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              ctrl.text.isEmpty ? '-' : ctrl.text,
-              style: const TextStyle(fontSize: 16, color: Colors.black),
-            ),
+            child: Text(ctrl.text.isEmpty ? '-' : ctrl.text, style: const TextStyle(fontSize: 16, color: Colors.black)),
           ),
       ],
     );
   }
 
-  Widget _navButton(BuildContext context,
-      {required String title,
-      String? subtitle,
-      required IconData icon,
-      required VoidCallback onTap}) {
+  Widget _navButton(BuildContext context, {required String title, String? subtitle, required IconData icon, required VoidCallback onTap}) {
     return Material(
       color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(12),
@@ -272,8 +277,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
                     if (subtitle != null)
-                      Text(subtitle,
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text(subtitle, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                   ],
                 ),
               ),
