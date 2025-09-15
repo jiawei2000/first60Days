@@ -18,16 +18,13 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _accountType;
   bool _isLoading = false;
-
-  final List<String> _accountOptions = ['Parent', 'Caregiver'];
 
   Future<void> _handleSignIn() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty || _accountType == null) {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please complete all fields")),
       );
@@ -39,7 +36,7 @@ class _SignInScreenState extends State<SignInScreen> {
     });
 
     final baseURL = dotenv.env['BASE_URL'];
-    final url = Uri.parse('$baseURL/users/login');    
+    final url = Uri.parse('$baseURL/users/login');
 
     try {
       final response = await http.post(
@@ -52,22 +49,40 @@ class _SignInScreenState extends State<SignInScreen> {
         final data = jsonDecode(response.body);
         final token = data['token'];
 
-
         final decodedToken = JwtDecoder.decode(token);
         final emailFromToken = decodedToken['email'] ?? email;
         final userId = decodedToken['id'] ?? '';
 
+        // ✅ Extract extra fields from API response
+        final user = data['user'] ?? {};
+        final permission = data['permission'] ?? {};
+
+        final username = user['username'] as String?;
+        final babyIds = (permission['babyIDArr'] as List<dynamic>? ?? [])
+            .map((b) => b['_path']?['segments']?.last.toString() ?? '')
+            .where((id) => id.isNotEmpty)
+            .toList();
+
+        final subAccountIds = (permission['subAccArr'] as List<dynamic>? ?? [])
+            .map((s) => s['_path']?['segments']?.last.toString() ?? '')
+            .where((id) => id.isNotEmpty)
+            .toList();
+
+        // ✅ Save everything in AuthProvider
         Provider.of<AuthProvider>(context, listen: false).setUser(
           token: token,
           email: emailFromToken,
           userId: userId,
+          username: username,
+          babyIds: babyIds,
+          subAccountIds: subAccountIds,
         );
 
         // ✅ Navigate to baby selection screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => ChooseBabyScreen(),
+            builder: (_) => const ChooseBabyScreen(),
           ),
         );
       } else {
@@ -110,19 +125,6 @@ class _SignInScreenState extends State<SignInScreen> {
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: "Password*",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _accountType,
-              items: _accountOptions
-                  .map((type) =>
-                      DropdownMenuItem(value: type, child: Text(type)))
-                  .toList(),
-              onChanged: (value) => setState(() => _accountType = value),
-              decoration: const InputDecoration(
-                labelText: "Account Type",
                 border: OutlineInputBorder(),
               ),
             ),

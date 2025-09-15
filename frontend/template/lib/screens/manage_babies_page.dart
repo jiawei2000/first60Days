@@ -27,7 +27,7 @@ class _ManageBabiesPageState extends State<ManageBabiesPage> {
   Future<void> _deleteBaby(String babyId) async {
     final token = Provider.of<AuthProvider>(context, listen: false).token;
 
-    final url = Uri.parse('$baseURL/babyProfile/delete');
+    final url = Uri.parse('$baseURL/babies/deleteProfile');
     final response = await http.delete(
       url,
       headers: {
@@ -56,7 +56,7 @@ class _ManageBabiesPageState extends State<ManageBabiesPage> {
       return;
     }
 
-    final url = Uri.parse('$baseURL/babyProfile/editBaby');
+    final url = Uri.parse('$baseURL/babies/editProfile');
     final response = await http.put(
       url,
       headers: {
@@ -91,7 +91,7 @@ class _ManageBabiesPageState extends State<ManageBabiesPage> {
     final dobIso = dob.toUtc().toIso8601String().split('.').first + 'Z';
     
 
-    final url = Uri.parse('$baseURL/babyProfile/newBaby');
+    final url = Uri.parse('$baseURL/babies/newProfile');
 
     final requestBody = {
       'dob': dobIso,

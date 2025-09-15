@@ -43,18 +43,20 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _trainerCtrl = TextEditingController(text: 'Jane Doe');
 
   final List<BabyInfo> _babies = [];
-  final List<CaregiverInfo> _caregivers = [
-    CaregiverInfo(name: 'XYZ', detail: 'Nanny'),
-    CaregiverInfo(name: 'XYZ', detail: 'Grandmother'),
-  ];
-  //need api to get the subaccts tagged to the main acct, hardcoded for now
+  final List<CaregiverInfo> _caregivers = [];
 
   @override
   void initState() {
     super.initState();
     final auth = Provider.of<AuthProvider>(context, listen: false);
     _emailCtrl.text = auth.email ?? 'Unknown';
-    _nameCtrl.text = '';
+    _nameCtrl.text = auth.username ?? 'unknown';
+
+    // ✅ Load caregivers from provider (IDs only)
+    _caregivers.addAll(
+      auth.subAccountIds.map((id) => CaregiverInfo(name: id, detail: '')),
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchBabyProfiles());
   }
 
@@ -63,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (token == null) return;
 
     final baseURL = dotenv.env['BASE_URL'];
-    final url = Uri.parse('$baseURL/babyProfiles');
+    final url = Uri.parse('$baseURL/babies/getProfiles');
     try {
       final response = await http.get(
         url,

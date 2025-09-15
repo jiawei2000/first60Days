@@ -39,7 +39,7 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
     }
 
     final baseURL = dotenv.env['BASE_URL'];
-    final url = Uri.parse('$baseURL/babyProfiles');
+    final url = Uri.parse('$baseURL/babies/getProfiles');
     
     try {
       final response = await http.get(
@@ -133,7 +133,7 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
               };
               
               final baseURL = dotenv.env['BASE_URL'];
-              final url = Uri.parse('$baseURL/babyProfile/newBaby');
+              final url = Uri.parse('$baseURL/babies/newProfile');
 
               try {
                 final response = await http.post(
