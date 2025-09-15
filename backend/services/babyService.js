@@ -10,7 +10,7 @@ class BabyService {
         if (!name || !dob) {
             throw new Error("Name and DOB are required");
         }
-
+        dob = new Date(dob);
         const result = await db.runTransaction(async (t) => {
             // Get user doc
             const userRef = db.collection("users").doc(userId);

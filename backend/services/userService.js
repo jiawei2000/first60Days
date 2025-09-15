@@ -207,6 +207,21 @@ class UserService {
             userId: user.id
         };
     }
+
+    static async getUserById(userId) {
+        const userRef = db.collection('users').doc(userId)
+        const userSnap = await userRef.get()
+
+        //if usersnap don't exist, throw error 
+        if (!userSnap.exists) {
+            throw new Error('User not found');
+        }
+
+        return {
+            userId: userId,
+            ...userSnap.data()
+        };
+    }
 }
 
 module.exports = UserService;
