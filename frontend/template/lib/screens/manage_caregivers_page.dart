@@ -18,10 +18,52 @@ class ManageCaregiversPage extends StatefulWidget {
 class _ManageCaregiversPageState extends State<ManageCaregiversPage> {
   late List<Caregiver> caregivers;
 
+  // 🔹 Baby profiles for dropdown
+  List<Map<String, String>> _babies = [];
+  String? _selectedBabyId;
+
   @override
   void initState() {
     super.initState();
     caregivers = [...widget.initialCaregivers];
+    _fetchBabyProfiles();
+  }
+
+  Future<void> _fetchBabyProfiles() async {
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final baseURL = dotenv.env['BASE_URL'];
+    final url = Uri.parse('$baseURL/babies/getProfiles');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final profiles = data['babyProfiles'] as List<dynamic>;
+
+        setState(() {
+          _babies = profiles.map((baby) {
+            return {
+              'id': baby['id'] as String,
+              'name': baby['name'] as String,
+            };
+          }).toList();
+
+          if (_babies.isNotEmpty) {
+            _selectedBabyId = _babies.first['id'];
+          }
+        });
+      } else {
+        print('❌ Failed to fetch babies: ${response.body}');
+      }
+    } catch (e) {
+      print('❌ Error fetching babies: $e');
+    }
   }
 
   void _addCaregiver() async {
@@ -92,7 +134,29 @@ class _ManageCaregiversPageState extends State<ManageCaregiversPage> {
                   validator: (v) =>
                       (v != pwd.text) ? 'Passwords do not match' : null,
                 ),
+                const SizedBox(height: 12),
+
+                // 🔹 Baby dropdown
+                DropdownButtonFormField<String>(
+                  value: _selectedBabyId,
+                  items: _babies
+                      .map((baby) => DropdownMenuItem(
+                            value: baby['id'],
+                            child: Text(baby['name'] ?? ''),
+                          ))
+                      .toList(),
+                  onChanged: (val) {
+                    setState(() => _selectedBabyId = val);
+                  },
+                  decoration: const InputDecoration(
+                    labelText: "Assign to Baby",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (val) =>
+                      val == null ? "Please select a baby" : null,
+                ),
                 const SizedBox(height: 20),
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -107,7 +171,8 @@ class _ManageCaregiversPageState extends State<ManageCaregiversPage> {
                       if (token == null) {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('User not authenticated')),
+                            const SnackBar(
+                                content: Text('User not authenticated')),
                           );
                         }
                         return;
@@ -118,9 +183,9 @@ class _ManageCaregiversPageState extends State<ManageCaregiversPage> {
                         "password": pwd.text.trim(),
                         "phoneNo": phone.text.trim(),
                         "username": username.text.trim(),
-                        "babyIDArr": ["W6b0M4UJxxfbo0bktsm0"], // Replace with actual baby ID
+                        "babyIDArr": [_selectedBabyId], // 🔹 use selected ID
                       };
-                      
+
                       final baseURL = dotenv.env['BASE_URL'];
                       final url = Uri.parse('$baseURL/users/registerSub');
 
@@ -137,15 +202,16 @@ class _ManageCaregiversPageState extends State<ManageCaregiversPage> {
                           body: jsonEncode(caregiverData),
                         );
 
-                        print("📥 Response: ${response.statusCode} - ${response.body}");
-                        const SnackBar(content: Text('Not permitted to Create accounts, contact your main'));
+                        print(
+                            "📥 Response: ${response.statusCode} - ${response.body}");
 
                         if (response.statusCode == 200 ||
                             response.statusCode == 201) {
                           if (!mounted) return;
                           Navigator.pop(ctx); // close the modal
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Caregiver added successfully')),
+                            const SnackBar(
+                                content: Text('Caregiver added successfully')),
                           );
                           setState(() {
                             caregivers.add(Caregiver(
@@ -159,7 +225,8 @@ class _ManageCaregiversPageState extends State<ManageCaregiversPage> {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(error['error'] ?? 'Failed to create caregiver'),
+                              content: Text(error['error'] ??
+                                  'Failed to create caregiver'),
                             ),
                           );
                         }
@@ -167,7 +234,8 @@ class _ManageCaregiversPageState extends State<ManageCaregiversPage> {
                         if (!mounted) return;
                         print('❌ Error: $e');
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Network error. Please try again.')),
+                          const SnackBar(
+                              content: Text('Network error. Please try again.')),
                         );
                       }
                     },

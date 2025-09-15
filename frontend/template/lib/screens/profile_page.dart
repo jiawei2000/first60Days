@@ -40,7 +40,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
-  final TextEditingController _trainerCtrl = TextEditingController(text: 'Jane Doe');
+  final TextEditingController _trainerCtrl =
+      TextEditingController(text: 'Jane Doe');
 
   final List<BabyInfo> _babies = [];
   final List<CaregiverInfo> _caregivers = [];
@@ -52,12 +53,50 @@ class _ProfilePageState extends State<ProfilePage> {
     _emailCtrl.text = auth.email ?? 'Unknown';
     _nameCtrl.text = auth.username ?? 'unknown';
 
-    // ✅ Load caregivers from provider (IDs only)
-    _caregivers.addAll(
-      auth.subAccountIds.map((id) => CaregiverInfo(name: id, detail: '')),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchCaregivers(auth.subAccountIds);
+      _fetchBabyProfiles();
+    });
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _fetchBabyProfiles());
+  Future<void> _fetchCaregivers(List<String> caregiverIds) async {
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final baseURL = dotenv.env['BASE_URL'];
+
+     try {
+    for (final id in caregiverIds) {
+      final url = Uri.parse('$baseURL/users/getUserById');
+
+      final request = http.Request('GET', url)
+        ..headers.addAll({
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        })
+        ..body = jsonEncode({'userId': id});
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        final username = data['username'] ?? id;
+        final phone = data['phoneNo'] ?? '';
+
+        setState(() {
+          _caregivers.add(
+            CaregiverInfo(name: username, detail: phone),
+          );
+        });
+      } else {
+        print('❌ Failed to fetch caregiver $id: ${response.body}');
+      }
+    }
+  } catch (e) {
+      print('❌ Error fetching caregivers: $e');
+    }
   }
 
   Future<void> _fetchBabyProfiles() async {
@@ -82,7 +121,8 @@ class _ProfilePageState extends State<ProfilePage> {
           final dobMap = baby['dob'];
           DateTime dob = DateTime.now();
           if (dobMap != null && dobMap is Map && dobMap['_seconds'] != null) {
-            dob = DateTime.fromMillisecondsSinceEpoch(dobMap['_seconds'] * 1000);
+            dob = DateTime.fromMillisecondsSinceEpoch(
+                dobMap['_seconds'] * 1000);
           }
           final ageWeeks = DateTime.now().difference(dob).inDays ~/ 7;
           _babies.add(BabyInfo(id: id, name: name, age: '$ageWeeks Weeks'));
@@ -135,7 +175,8 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             _labeledBox('Name', _nameCtrl, enabled: _editing),
             const SizedBox(height: 12),
-            _labeledBox('Email', _emailCtrl, enabled: false, keyboard: TextInputType.emailAddress),
+            _labeledBox('Email', _emailCtrl,
+                enabled: false, keyboard: TextInputType.emailAddress),
             const SizedBox(height: 12),
             _labeledBox('Trainer', _trainerCtrl, enabled: _editing),
             const SizedBox(height: 16),
@@ -166,7 +207,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     }
                     _babies
                       ..clear()
-                      ..addAll(updated.map((b) => BabyInfo(id: b.id, name: b.name, age: b.age ?? '')));
+                      ..addAll(updated.map((b) => BabyInfo(
+                          id: b.id, name: b.name, age: b.age ?? '')));
                     setState(() {});
                   }
                 });
@@ -187,7 +229,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           .map((c) => Caregiver(
                                 username: c.name.text,
                                 email: '',
-                                phone: '',
+                                phone: c.detail.text,
                               ))
                           .toList(),
                     ),
@@ -200,7 +242,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     }
                     _caregivers
                       ..clear()
-                      ..addAll(updated.map((c) => CaregiverInfo(name: c.username, detail: '')));
+                      ..addAll(updated.map(
+                          (c) => CaregiverInfo(name: c.username, detail: c.phone)));
                     setState(() {});
                   }
                 });
@@ -222,7 +265,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                textStyle:
+                    const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -232,7 +276,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _labeledBox(String label, TextEditingController ctrl, {bool enabled = false, String? hint, TextInputType keyboard = TextInputType.text}) {
+  Widget _labeledBox(String label, TextEditingController ctrl,
+      {bool enabled = false,
+      String? hint,
+      TextInputType keyboard = TextInputType.text}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -250,19 +297,26 @@ class _ProfilePageState extends State<ProfilePage> {
               isDense: true,
               filled: true,
               fillColor: Theme.of(context).colorScheme.surface,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
           )
         else
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(ctrl.text.isEmpty ? '-' : ctrl.text, style: const TextStyle(fontSize: 16, color: Colors.black)),
+            child: Text(ctrl.text.isEmpty ? '-' : ctrl.text,
+                style:
+                    const TextStyle(fontSize: 16, color: Colors.black)),
           ),
       ],
     );
   }
 
-  Widget _navButton(BuildContext context, {required String title, String? subtitle, required IconData icon, required VoidCallback onTap}) {
+  Widget _navButton(BuildContext context,
+      {required String title,
+      String? subtitle,
+      required IconData icon,
+      required VoidCallback onTap}) {
     return Material(
       color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(12),
@@ -279,9 +333,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(title,
+                        style:
+                            const TextStyle(fontWeight: FontWeight.w600)),
                     if (subtitle != null)
-                      Text(subtitle, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text(subtitle,
+                          style: TextStyle(
+                              color: Colors.grey[600], fontSize: 12)),
                   ],
                 ),
               ),
@@ -322,10 +380,14 @@ class _ProfileTabs extends StatelessWidget {
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.event_note_outlined), label: 'Plan'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Calendar'),
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.event_note_outlined), label: 'Plan'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today_outlined), label: 'Calendar'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
