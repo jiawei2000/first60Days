@@ -1,5 +1,7 @@
 const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
 const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
+const admin = require("firebase-admin");
+
 require('dotenv').config();
 
 const serviceAccount = {
@@ -16,7 +18,7 @@ const serviceAccount = {
     "universe_domain": process.env.FIREBASE_UNIVERSE_DOMAIN
 }
 
-initializeApp({
+admin.initializeApp({
     credential: cert(serviceAccount)
 });
 

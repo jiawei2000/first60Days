@@ -4,14 +4,10 @@ const cors = require('cors')
 const dotenv = require('dotenv')
 const morgan = require('morgan')
 
-// const authRouter = require('./functions/auth');
-// const { router: authRouter, authenticateToken } = require('./functions/auth');
-// const entryRouter = require('./functions/entry');
-// const babyProfileRouter = require('./functions/babyProfile');
-// const permissionRouter = require('./functions/permission');
 const userRoutes = require('./routes/userRoutes');
 const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
+// require('./jobs/batchJobs');
 
 // Load env variables
 dotenv.config()
