@@ -186,6 +186,7 @@ class UserService {
         };
     }
 
+    //needs to be updated. 
     static async deleteUser(userId) {
         const userDoc = await db.collection('users').doc(userId).get();
 

@@ -2,64 +2,38 @@ const db = require('../config/database');
 
 const JournalEntry = require('../models/JournalEntry');
 
-const { Timestamp } = require('firebase-admin/firestore');
-
 class JournalService {
     static async createEntry(babyId, entryData) {
-
         const journalRef = db
             .collection("babies")
             .doc(babyId)
             .collection("journalEntries");
 
-        //Ensure the datetime stamp in entryData is stored correctly in firestore    
-        //awakeTime, startPlayTime, startFeedTime, startSleepTime
+        // Create a JournalEntry instance → validates & normalizes
+        const entry = new JournalEntry(null, entryData);
 
-        // Convert known datetime fields to Firestore Timestamps
-        const formattedData = { ...entryData };
-        const dateFields = ['awakeTime', 'startPlayTime', 'startFeedTime', 'startSleepTime'];
-        //2025-09-13T03:15:00+08:00
-        for (const field of dateFields) {
-            const value = formattedData[field];
-            if (value) {
-                const parsed = new Date(value);   // Handles ISO strings with timezone offsets
-                console.log(field + " " + parsed + " " + value);
-                if (!isNaN(parsed)) {             // Check for valid date
-                    formattedData[field] = Timestamp.fromDate(parsed);
-                }
-            }
-        }
-        const newEntryRef = await journalRef.add(formattedData);
+        // Save normalized data
+        const newEntryRef = await journalRef.add(entry.toFirestore());
 
-        return new JournalEntry(newEntryRef.id, formattedData);
+        return new JournalEntry(newEntryRef.id, entryData);
     }
 
     static async editEntry(babyId, entryId, updateData) {
-
         const journalRef = db
             .collection("babies")
             .doc(babyId)
             .collection("journalEntries")
             .doc(entryId);
 
-        // Only include fields that exist
-        const filteredData = {};
-        for (const [key, value] of Object.entries(updateData)) {
-            if (value !== undefined && value !== null) {
-                // Convert date strings to Firestore Timestamp if necessary
-                if (['awakeTime', 'startFeedTime', 'startPlayTime', 'startSleepTime'].includes(key)) {
-                    filteredData[key] = new Date(value);
-                } else {
-                    filteredData[key] = value;
-                }
-            }
-        }
+        // Use JournalEntry class to validate & normalize fields
+        const validatedData = JournalEntry.validateData(updateData, { partial: true });
 
-        await journalRef.update(filteredData);
+        await journalRef.update(validatedData);
 
         const snapshot = await journalRef.get();
         return new JournalEntry(snapshot.id, snapshot.data());
     }
+
 
     static async getEntries(babyId) {
         // Reference to baby's journalEntries subcollection
