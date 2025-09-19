@@ -13,6 +13,7 @@ const BabyController = {
                 babyId: baby.id,
                 baby,
             });
+    
         } catch (error) {
             console.error("Error in createBaby:", error.message);
             if (error.message === "User not found" || error.message === "Permission reference not found") {

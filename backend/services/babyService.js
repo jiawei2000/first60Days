@@ -10,35 +10,32 @@ class BabyService {
         if (!name || !dob) {
             throw new Error("Name and DOB are required");
         }
-        dob = new Date(dob);
+        // Use Baby.validateData to normalize fields
+        const formattedData = Baby.validateData({ name, dob });
+
+        // Transaction to create baby and update permissions
         const result = await db.runTransaction(async (t) => {
-            // Get user doc
+            // Get user document
             const userRef = db.collection("users").doc(userId);
             const userSnap = await t.get(userRef);
-
-            if (!userSnap.exists) {
-                throw new Error("User not found");
-            }
+            if (!userSnap.exists) throw new Error("User not found");
 
             const permissionRef = userSnap.data().permissionID;
-            if (!permissionRef) {
-                throw new Error("Permission reference not found");
-            }
+            if (!permissionRef) throw new Error("Permission reference not found");
 
-            // Create baby doc
+            // Create new Baby instance
             const babyRef = db.collection("babies").doc();
             const baby = new Baby(babyRef.id, {
-                name,
-                dob,
+                ...formattedData,
                 createdAt: Timestamp.now(),
                 deletedAt: null,
                 feedSchedule: null,
             });
 
-            // Save baby doc in transaction
+            // Save baby in Firestore
             t.set(babyRef, baby.toFirestore());
 
-            // Update permission doc with new baby ref
+            // Update permission doc with new baby reference
             t.update(permissionRef, {
                 babyIDArr: admin.firestore.FieldValue.arrayUnion(babyRef),
             });
@@ -56,20 +53,26 @@ class BabyService {
 
         const babyRef = db.collection("babies").doc(babyId);
 
-        // Build updateData dynamically
-        const updateData = {};
-        if (updateFields.dob) updateData.dob = new Date(updateFields.dob);
-        if (updateFields.name !== undefined) updateData.name = updateFields.name;
+        // Validate and format allowed fields using Baby.validateData
+        const allowedFields = ['name', 'dob'];
+        const filteredFields = {};
+        for (const key of allowedFields) {
+            if (updateFields[key] !== undefined) filteredFields[key] = updateFields[key];
+        }
 
-        if (Object.keys(updateData).length === 0) {
+        if (Object.keys(filteredFields).length === 0) {
             throw new Error("No valid fields provided for update");
         }
 
-        await babyRef.update(updateData);
+        // Use Baby.validateData for type normalization
+        const formattedData = Baby.validateData(filteredFields, { partial: true });
 
-        // Return updated baby instance
+        // Update Firestore
+        await babyRef.update(formattedData);
+
+        // Return updated Baby instance
         const updatedDoc = await babyRef.get();
-        return Baby.fromFirestore(updatedDoc);
+        return new Baby(updatedDoc.id, updatedDoc.data());
     }
 
     static async deleteProfile(userId, babyId) {
@@ -171,11 +174,7 @@ class BabyService {
             throw new Error("Baby profile not found");
         }
 
-        // Option A: return plain data
-        return { id: snapshot.id, ...snapshot.data() };
-
-        // Option B (if using Baby model consistently):
-        // return new Baby(snapshot.id, snapshot.data());
+        return new Baby(snapshot.id, snapshot.data());
     }
 }
 
