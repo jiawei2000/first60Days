@@ -27,7 +27,8 @@ class _MonthViewState extends State<MonthView> {
 
   void _getJournalEntries() {
     debugPrint("Reach AAA");
-    JournalAPI.getJournalEntries().then((response) {
+    String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
+    JournalAPI.getJournalEntries(babyId).then((response) {
       debugPrint("Response status: ${response.statusCode}");
       // debugPrint("Response body: ${response.body}");
       setState(() {

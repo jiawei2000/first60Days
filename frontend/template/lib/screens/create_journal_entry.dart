@@ -1,92 +1,19 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'providers/auth_provider.dart'; // path relative to /screens
+
+import '../model/journal_entry.dart';
+import '../network/journal_api.dart';
 
 class Feed {
-  String type;   // e.g. EBM / FM / BF(L) / BF(R)
-  String unit;   // mL or minutes
+  String type; // e.g. EBM / FM / BF(L) / BF(R)
+  String unit; // mL or minutes
   double? value; // numeric value
 
   Feed({this.type = '', this.unit = 'mL', this.value});
 
-  Map<String, dynamic> toJson() => {
-    'type': type,
-    'unit': unit,
-    'value': value,
-  };
+  Map<String, dynamic> toJson() => {'type': type, 'unit': unit, 'value': value};
   bool get isEmpty => type.isEmpty && (value == null);
-}
-
-class JournalEntry {
-  DateTime date;
-  String? cycle; // e.g., "First Feed"
-  int?cycleNo;
-  TimeOfDay? wakeTime;
-  TimeOfDay? feedTime;
-  TimeOfDay? playTime;
-  TimeOfDay? sleepTime;
-
-  // Advanced fields
-  TimeOfDay? wakeUpTime;
-  TimeOfDay? startFeedTime;
-  String? typeOfFeed; // EBM / FM / Direct Latch etc.
-  int? totalFeedRightMins;
-  int? totalFeedLeftMins;
-  int? feedAmountMl;
-  TimeOfDay? startPlayTime;
-  TimeOfDay? startSleepTime;
-  Duration? sleepDuration;
-  bool pee;
-  bool poo;
-
-  List<Feed> feeds;
-
-  JournalEntry({
-    required this.date,
-    this.cycle,
-    this.cycleNo,
-    this.wakeTime,
-    this.feedTime,
-    this.playTime,
-    this.sleepTime,
-    this.wakeUpTime,
-    this.startFeedTime,
-    this.typeOfFeed,
-    this.totalFeedRightMins,
-    this.totalFeedLeftMins,
-    this.feedAmountMl,
-    this.startPlayTime,
-    this.startSleepTime,
-    this.sleepDuration,
-    this.pee = false,
-    this.poo = false,
-    this.feeds = const [],
-  });
-
-  Map<String, dynamic> toJson() => {
-        'date': date.toIso8601String(),
-        'cycle': cycle,
-        'cycleNo': cycleNo,
-        'wakeTime': _fmtTOD(wakeTime),
-        'feedTime': _fmtTOD(feedTime),
-        'playTime': _fmtTOD(playTime),
-        'sleepTime': _fmtTOD(sleepTime),
-        'wakeUpTime': _fmtTOD(wakeUpTime),
-        'startFeedTime': _fmtTOD(startFeedTime),
-        'typeOfFeed': typeOfFeed,
-        'totalFeedRightMins': totalFeedRightMins,
-        'totalFeedLeftMins': totalFeedLeftMins,
-        'feedAmountMl': feedAmountMl,
-        'startPlayTime': _fmtTOD(startPlayTime),
-        'startSleepTime': _fmtTOD(startSleepTime),
-        'sleepDuration': sleepDuration?.inSeconds,
-        'pee': pee,
-        'poo': poo,
-        'feeds': feeds.map((f) => f.toJson()).toList(),
-      };
-
-  static String? _fmtTOD(TimeOfDay? t) => t == null ? null : _formatTimeOfDay(t);
 }
 
 const _kFeedTypes = ['EBM', 'FM', 'BF (L)', 'BF (R)'];
@@ -113,27 +40,22 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   final _formKey = GlobalKey<FormState>();
   bool _showAllFields = false;
 
-  // Core state
-  late DateTime _date;
-  TimeOfDay? _wakeTime;
-  TimeOfDay? _feedTime;
-  TimeOfDay? _playTime;
-  TimeOfDay? _sleepTime;
-
   // Advanced state
   String? _cycle;
   final _cycleNoCtrl = TextEditingController();
-  TimeOfDay? _wakeUpTime;
-  TimeOfDay? _startFeedTime;
   String? _typeOfFeed;
   final _totalRightCtrl = TextEditingController();
   final _totalLeftCtrl = TextEditingController();
   final _feedAmountCtrl = TextEditingController();
-  TimeOfDay? _startPlayTime;
-  TimeOfDay? _startSleepTime;
   final _sleepDurationCtrl = TextEditingController(text: '02:30:00');
   bool _pee = false;
   bool _poo = false;
+
+  DateTime _startWakeTime = DateTime.now();
+  DateTime _startFeedTime = DateTime.now();
+  DateTime _startPlayTime = DateTime.now();
+  DateTime _startSleepTime = DateTime.now();
+  TimeOfDay? _playTime;
 
   final List<TextEditingController> _feedTypeCtrls = [];
   final List<TextEditingController> _feedValueCtrls = [];
@@ -143,40 +65,6 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   void initState() {
     super.initState();
     final init = widget.initial;
-    _date = init?.date ?? DateTime.now();
-    _wakeTime = init?.wakeTime;
-    _feedTime = init?.feedTime;
-    _playTime = init?.playTime;
-    _sleepTime = init?.sleepTime;
-
-    _cycle = init?.cycle;
-    if (init?.cycleNo != null) _cycleNoCtrl.text = init!.cycleNo.toString();
-    _wakeUpTime = init?.wakeUpTime;
-    _startFeedTime = init?.startFeedTime;
-    _typeOfFeed = init?.typeOfFeed;
-    if (init?.totalFeedRightMins != null) {
-      _totalRightCtrl.text = init!.totalFeedRightMins.toString();
-    }
-    if (init?.totalFeedLeftMins != null) {
-      _totalLeftCtrl.text = init!.totalFeedLeftMins.toString();
-    }
-    if (init?.feedAmountMl != null) {
-      _feedAmountCtrl.text = init!.feedAmountMl.toString();
-    }
-    if (init?.sleepDuration != null) {
-      _sleepDurationCtrl.text = _formatDuration(init!.sleepDuration!);
-    }
-    _startPlayTime = init?.startPlayTime;
-    _startSleepTime = init?.startSleepTime;
-    _pee = init?.pee ?? false;
-    _poo = init?.poo ?? false;
-
-    final seeds = init?.feeds ?? [Feed()];
-    for (final f in seeds) {
-      _feedTypeCtrls.add(TextEditingController(text: f.type));
-      _feedValueCtrls.add(TextEditingController(text: f.value?.toString() ?? ''));
-      _feedUnits.add(f.unit);
-    }
   }
 
   @override
@@ -200,29 +88,38 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: const Text('Log an Entry'),
+        title: const Text('Log Journal Entry'),
         actions: [
           TextButton(
             onPressed: () => setState(() => _showAllFields = !_showAllFields),
             child: Text(_showAllFields ? 'Simple' : 'Edit'),
-          )
+          ),
         ],
       ),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             children: [
               _weekHeader(),
-              const SizedBox(height: 8),
-              _dateField(context),
-              const SizedBox(height: 12),
-              _timeField(context, label: 'Wake time', value: _wakeTime,
-                  onPicked: (t) => setState(() => _wakeTime = t)),
-              const SizedBox(height: 12),
-              _timeField(context, label: 'Start of Feed time', value: _feedTime,
-                  onPicked: (t) => setState(() => _feedTime = t)),
+              SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: _cupertinoDate(
+                  context,
+                  _startWakeTime,
+                  'Awake Time',
+                  (newDateTime) => setState(() => _startWakeTime = newDateTime),
+                ),
+              ),
+              SizedBox(height: 12),
+              _cupertinoDate(
+                context,
+                _startFeedTime,
+                'Feed Time',
+                (newDateTime) => setState(() => _startFeedTime = newDateTime),
+              ),
               const SizedBox(height: 12),
               _section('Feed(s)'),
               for (int i = 0; i < _feedTypeCtrls.length; i++) ...[
@@ -233,22 +130,26 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: _addFeed,
-                  child: const Text('+ Add new feed',
-                      style: TextStyle(color: Colors.deepOrange)),
+                  child: const Text(
+                    '+ Add new feed',
+                    style: TextStyle(color: Colors.deepOrange),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
-              _timeField(context, label: 'Start of Play time', value: _playTime,
-                  onPicked: (t) => setState(() => _playTime = t)),
               const SizedBox(height: 12),
-              _timeField(context, label: 'Start of Sleep time', value: _sleepTime,
-                  onPicked: (t) => setState(() => _sleepTime = t)),
               Row(
                 children: [
-                  Checkbox(value: _pee, onChanged: (v) => setState(() => _pee = v ?? false)),
+                  Checkbox(
+                    value: _pee,
+                    onChanged: (v) => setState(() => _pee = v ?? false),
+                  ),
                   const Text('Pee'),
                   const SizedBox(width: 24),
-                  Checkbox(value: _poo, onChanged: (v) => setState(() => _poo = v ?? false)),
+                  Checkbox(
+                    value: _poo,
+                    onChanged: (v) => setState(() => _poo = v ?? false),
+                  ),
                   const Text('Poo'),
                 ],
               ),
@@ -266,11 +167,10 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
                     onChanged: (v) => _cycle = v,
                   ),
                 ),
-                _timeField(context, label: 'Wake time (legacy field)', value: _wakeUpTime,
-                    onPicked: (t) => setState(() => _wakeUpTime = t)),
-                _timeField(context, label: 'Start of Feed Time (legacy)', value: _startFeedTime,
-                    onPicked: (t) => setState(() => _startFeedTime = t)),
-                _textField(label: 'Type of Feed (legacy)', onChanged: (v) => _typeOfFeed = v),
+                _textField(
+                  label: 'Type of Feed (legacy)',
+                  onChanged: (v) => _typeOfFeed = v,
+                ),
                 _numberField('Total Feed Time in Mins (R)', _totalRightCtrl),
                 _numberField('Total Feed Time in Mins (L)', _totalLeftCtrl),
                 _numberField('Feed Amount (mL)', _feedAmountCtrl),
@@ -295,11 +195,13 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   }
 
   Widget _feedGroup(int index) {
-    final typeCtrl  = _feedTypeCtrls[index];
+    final typeCtrl = _feedTypeCtrls[index];
     final valueCtrl = _feedValueCtrls[index];
 
     // keep unit in sync with type (in case initial data had empty unit)
-    final currentUnit = _unitForType(typeCtrl.text.isEmpty ? null : typeCtrl.text);
+    final currentUnit = _unitForType(
+      typeCtrl.text.isEmpty ? null : typeCtrl.text,
+    );
     if (_feedUnits[index] != currentUnit) {
       _feedUnits[index] = currentUnit;
     }
@@ -307,7 +209,10 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Feed Type ${index + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text(
+          'Feed Type ${index + 1}',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 6),
 
         // Feed TYPE dropdown
@@ -338,9 +243,16 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
               flex: 2,
               child: TextFormField(
                 controller: valueCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
-                decoration: const InputDecoration(labelText: 'Value', isDense: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ],
+                decoration: const InputDecoration(
+                  labelText: 'Value',
+                  isDense: true,
+                ),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return null; // optional
                   return double.tryParse(v) == null ? 'Numeric' : null;
@@ -354,7 +266,11 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
             Expanded(
               flex: 1,
               child: InputDecorator(
-                decoration: const InputDecoration(labelText: 'Unit', isDense: true, border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Unit',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
                 child: Text(_feedUnits[index]),
               ),
             ),
@@ -369,7 +285,10 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
                   padding: EdgeInsets.zero,
                   iconSize: 20,
                   splashRadius: 18,
-                  constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                  constraints: const BoxConstraints.tightFor(
+                    width: 36,
+                    height: 36,
+                  ),
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: () => _removeFeed(index),
                   tooltip: 'Remove',
@@ -383,12 +302,12 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   }
 
   void _addFeed() {
-      setState(() {
-        _feedTypeCtrls.add(TextEditingController());
-        _feedValueCtrls.add(TextEditingController());
-        _feedUnits.add('mL');
-      });
-    }
+    setState(() {
+      _feedTypeCtrls.add(TextEditingController());
+      _feedValueCtrls.add(TextEditingController());
+      _feedUnits.add('mL');
+    });
+  }
 
   void _removeFeed(int i) {
     setState(() {
@@ -398,49 +317,103 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     });
   }
 
-
   Widget _weekHeader() {
+    var _date = DateTime.now();
     final week = _weekNumber(_date);
     return Row(
       children: [
         const Text('Week ', style: TextStyle(fontSize: 16)),
         GestureDetector(
           onTap: () {},
-          child: Text('$week', style: const TextStyle(fontSize: 18, color: Colors.blue, decoration: TextDecoration.underline)),
-        )
+          child: Text(
+            '$week',
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _section(String title) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      );
-
-  Widget _dateField(BuildContext context) {
-    return _LabeledField(
-      label: 'Date',
-      child: InkWell(
-        onTap: () async {
-          final picked = await showDatePicker(
-            context: context,
-            initialDate: _date,
-            firstDate: DateTime(2020),
-            lastDate: DateTime(2100),
-          );
-          if (picked != null) setState(() => _date = picked);
-        },
-        child: _ReadOnlyBox(text: _formatDate(_date)),
+  void _showDialog(Widget child) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => Container(
+        height: 216,
+        padding: const EdgeInsets.only(top: 6.0),
+        // The Bottom margin is provided to align the popup above the system
+        // navigation bar.
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        // Provide a background color for the popup.
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        // Use a SafeArea widget to avoid system overlaps.
+        child: SafeArea(top: false, child: child),
       ),
     );
   }
 
-  Widget _timeField(BuildContext context, {required String label, required TimeOfDay? value, required ValueChanged<TimeOfDay> onPicked}) {
+  Widget _cupertinoDate(
+    BuildContext context,
+    DateTime dateTime,
+    String label,
+    ValueChanged<DateTime> onChanged,
+  ) {
+    return _LabeledField(
+      label: label,
+      child: InkWell(
+        // Give the blinking effect when clicked
+        child: CupertinoButton(
+          padding: EdgeInsets.zero,
+          // Display a CupertinoDatePicker in dateTime picker mode.
+          onPressed: () => _showDialog(
+            CupertinoDatePicker(
+              initialDateTime: dateTime,
+              use24hFormat: true,
+              // This is called when the user changes the dateTime.
+              onDateTimeChanged: (DateTime newDateTime) {
+                // setState(() => dateTime = newDateTime);
+                onChanged(newDateTime);
+              },
+            ),
+          ),
+          // child: Text(
+          //   // Format DateTime
+          //   '${dateTime.month}/${dateTime.day}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}',
+          //   style: const TextStyle(fontSize: 22.0),
+          // ),
+          child: _ReadOnlyBox(
+            text:
+                "${dateTime.day}/${dateTime.month}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}",
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _section(String title) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+  );
+
+  Widget _timeField(
+    BuildContext context, {
+    required String label,
+    required TimeOfDay? value,
+    required ValueChanged<TimeOfDay> onPicked,
+  }) {
     return _LabeledField(
       label: label,
       child: InkWell(
         onTap: () async {
-          final picked = await showTimePicker(context: context, initialTime: value ?? TimeOfDay.now());
+          final picked = await showTimePicker(
+            context: context,
+            initialTime: value ?? TimeOfDay.now(),
+          );
           if (picked != null) onPicked(picked);
         },
         child: _ReadOnlyBox(text: value == null ? '' : _formatTimeOfDay(value)),
@@ -448,21 +421,11 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     );
   }
 
-  // Widget _durationField() {
-  //   return _LabeledField(
-  //     label: 'Sleep Duration',
-  //     child: TextFormField(
-  //       controller: _sleepDurationCtrl,
-  //       decoration: const InputDecoration(hintText: 'HH:MM:SS'),
-  //       validator: (v) {
-  //         if (v == null || v.isEmpty) return null; // optional
-  //         return _parseDuration(v) == null ? 'Use HH:MM:SS' : null;
-  //       },
-  //     ),
-  //   );
-  // }
-
-  Widget _textField({required String label, String? hintText, required ValueChanged<String> onChanged}) {
+  Widget _textField({
+    required String label,
+    String? hintText,
+    required ValueChanged<String> onChanged,
+  }) {
     return _LabeledField(
       label: label,
       child: TextFormField(
@@ -485,68 +448,15 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   }
 
   void _onSave() async {
-    if (!_formKey.currentState!.validate()) return;
+    final entry = JournalEntry(remarks: "test");
 
-    final feeds = <Feed>[];
-    for (var i = 0; i < _feedTypeCtrls.length; i++) {
-      final type = _feedTypeCtrls[i].text.trim();
-      final unit = _feedUnits[i];
-      final vTxt = _feedValueCtrls[i].text.trim();
-      final value = vTxt.isEmpty ? null : double.tryParse(vTxt);
-      final f = Feed(type: type, unit: unit, value: value);
-      if (!f.isEmpty) feeds.add(f);
-    }
+    debugPrint("Reach AAA");
+    String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
 
-    final entry = JournalEntry(
-      date: _date,
-      cycle: _cycle,
-      cycleNo: _tryParseInt(_cycleNoCtrl.text),
-      wakeTime: _wakeTime,
-      feedTime: _feedTime,
-      playTime: _playTime,
-      sleepTime: _sleepTime,
-      wakeUpTime: _wakeUpTime,
-      startFeedTime: _startFeedTime,
-      typeOfFeed: _typeOfFeed,
-      totalFeedRightMins: _tryParseInt(_totalRightCtrl.text),
-      totalFeedLeftMins: _tryParseInt(_totalLeftCtrl.text),
-      feedAmountMl: _tryParseInt(_feedAmountCtrl.text),
-      startPlayTime: _startPlayTime,
-      startSleepTime: _startSleepTime,
-      sleepDuration: _parseDuration(_sleepDurationCtrl.text),
-      pee: _pee,
-      poo: _poo,
-      feeds: feeds,
-    );
-
-    final token = Provider.of<AuthProvider>(context, listen: false).token;
-    if (token == null || token.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No auth token. Please sign in again.')),
-      );
-      return;
-    }
-
-    // try {
-    //   final api = "";
-    //   final newId = await api.createEntry(
-    //     babyId: widget.babyId,
-    //     entry: entry,
-    //   );
-
-    //   if (!mounted) return;
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('✅ Saved entry $newId')),
-    //   );
-
-    //   widget.onSave?.call(entry);
-    //   Navigator.of(context).pop(entry);
-    // } catch (e) {
-    //   if (!mounted) return;
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('❌ Save failed: $e')),
-    //   );
-    // }
+    JournalAPI.createJournalEntry(babyId, entry).then((response) {
+      debugPrint("Response status: ${response.statusCode}");
+      debugPrint("Response body: ${response.body}");
+    });
   }
 }
 
@@ -562,7 +472,13 @@ class _LabeledField extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: Text(label, style: const TextStyle(color: Colors.blue)),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF1565C0), // Darker blue
+              fontSize: 18, // Increased font size
+            ),
+          ),
         ),
         child,
       ],
@@ -585,7 +501,10 @@ class _ReadOnlyBox extends StatelessWidget {
         border: Border.all(color: Theme.of(context).dividerColor),
         color: Theme.of(context).colorScheme.surface,
       ),
-      child: Text(text),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 20, color: Colors.black87),
+      ),
     );
   }
 }
@@ -609,20 +528,3 @@ int _weekNumber(DateTime date) {
   return 1 + ((thursday.difference(firstThursday).inDays) / 7).floor();
 }
 
-int? _tryParseInt(String s) => s.trim().isEmpty ? null : int.tryParse(s.trim());
-
-Duration? _parseDuration(String? hhmmss) {
-  if (hhmmss == null || hhmmss.isEmpty) return null;
-  final parts = hhmmss.split(':');
-  if (parts.length != 3) return null;
-  final h = int.tryParse(parts[0]);
-  final m = int.tryParse(parts[1]);
-  final s = int.tryParse(parts[2]);
-  if (h == null || m == null || s == null) return null;
-  return Duration(hours: h, minutes: m, seconds: s);
-}
-
-String _formatDuration(Duration d) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(d.inHours)}:${two(d.inMinutes % 60)}:${two(d.inSeconds % 60)}';
-}

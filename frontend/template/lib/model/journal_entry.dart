@@ -1,7 +1,7 @@
 import 'feed_type.dart';
 
 class JournalEntry {
-  final String id;
+  final String? id;
   final int? cycleNo;
   final String? remarks;
   final List<FeedType>? feedType;
@@ -14,7 +14,7 @@ class JournalEntry {
   final bool? hasUrine;
 
   JournalEntry({
-    required this.id,
+    this.id,
     this.cycleNo,
     this.remarks,
     this.feedType,
@@ -51,15 +51,3 @@ class JournalEntry {
     hasUrine: json['urine'] as bool?,
   );
 }
-
-JournalEntry toJson(Map<String, dynamic> json) => JournalEntry(
-  id: json['id'] as String,
-  cycleNo: json['cycleNo'] as int,
-  remarks: json['remarks'] as String,
-  feedType: List<FeedType>.from(
-    (json['feedType'] as List).map((item) => FeedType.fromJson(item)),
-  ),
-  sleepDuration: json['sleepDuration'] as int,
-  hasStool: json['stool'] as bool?,
-  hasUrine: json['urine'] as bool?,
-);
