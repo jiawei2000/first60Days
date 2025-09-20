@@ -156,10 +156,9 @@ class BabyService {
         for (const babyRef of babyIDArr) {
             const babySnap = await babyRef.get();
             if (babySnap.exists) {
-                babyProfiles.push({
-                    id: babySnap.id,
-                    ...babySnap.data(),
-                });
+                babyProfiles.push(
+                    new Baby(babySnap.id, babySnap.data())
+                );
             }
         }
 

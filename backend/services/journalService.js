@@ -9,6 +9,10 @@ class JournalService {
             .doc(babyId)
             .collection("journalEntries");
 
+        //how should the server know which cycleNo the user is currently at for each day?
+        //take entries from 00:00 to 2359 of the same day and increment the count 
+
+
         // Create a JournalEntry instance → validates & normalizes
         const entry = new JournalEntry(null, entryData);
 
@@ -69,6 +73,37 @@ class JournalService {
 
         // Return as JournalEntry object
         return new JournalEntry(snapshot.id, snapshot.data());
+    }
+
+    static async getCurrentCycleNo(babyId) {
+        // Determine start and end of the day
+        //this is not a good implementation. Needs to be updated.
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+
+        //reference to babyjournal entries 
+        const journalRef = db
+            .collection("babies")
+            .doc(babyId)
+            .collection("journalEntries");
+
+        //entries of the day     
+        const entrySnap = await journalRef
+            .where("awakeTime", ">=", startOfDay)
+            .where("awakeTime", "<=", endOfDay)
+            .orderBy("awakeTime", "desc")
+            .limit(1)
+            .get();
+        console.log(entrySnap);
+        //Find the next cycleNo
+        let nextCycleNo = 1;
+        if (!entrySnap.empty) {
+            const lastEntry = entrySnap.docs[0].data();
+            nextCycleNo = (lastEntry.cycleNo || 0) + 1;
+        }
+        return nextCycleNo;
     }
 }
 

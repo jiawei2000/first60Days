@@ -218,10 +218,7 @@ class UserService {
             throw new Error('User not found');
         }
 
-        return {
-            userId: userId,
-            ...userSnap.data()
-        };
+        return new User(userSnap.id, userSnap.data());
     }
 }
 
