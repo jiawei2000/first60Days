@@ -1,7 +1,9 @@
+import 'package:best_flutter_ui_templates/model/journal_entry.dart';
+import 'package:best_flutter_ui_templates/network/journal_api.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-
+import 'dart:convert';
 class MonthView extends StatefulWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateSelected;
@@ -21,11 +23,33 @@ class _MonthViewState extends State<MonthView> {
   late DateTime _selectedDay;
   bool _showWarning = true;
 
+  List<JournalEntry> journalEntries = [];
+
+  void _getJournalEntries() {
+    debugPrint("Reach AAA");
+    JournalAPI.getJournalEntries().then((response) {
+      debugPrint("Response status: ${response.statusCode}");
+      // debugPrint("Response body: ${response.body}");
+      setState(() {
+        Iterable list = json.decode(response.body);
+        journalEntries = list
+            .map((journalEntry) => JournalEntry.fromJson(journalEntry))
+            .toList();
+      });
+
+      // For debugging
+      for (var entry in journalEntries) {
+        debugPrint("Journal entry: ${entry.id}");
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _focusedDay = widget.selectedDate;
     _selectedDay = widget.selectedDate;
+    _getJournalEntries();
   }
 
   @override
@@ -38,7 +62,9 @@ class _MonthViewState extends State<MonthView> {
               if (_showWarning)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: _warningBanner(() => setState(() => _showWarning = false)),
+                  child: _warningBanner(
+                    () => setState(() => _showWarning = false),
+                  ),
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -109,7 +135,7 @@ class _MonthViewState extends State<MonthView> {
                       color: Colors.black26,
                       blurRadius: 10,
                       offset: Offset(0, -2),
-                    )
+                    ),
                   ],
                 ),
                 child: ListView(
@@ -229,10 +255,26 @@ class _MonthViewState extends State<MonthView> {
     if (day.day % 2 == 0) {
       return Column(
         children: const [
-          _EventTile(time: "7:15 – 8:00 AM", title: "Prep and arrive", color: Colors.green),
-          _EventTile(time: "8:00 – 9:30 AM", title: "Family time", color: Colors.orange),
-          _EventTile(time: "9:30 AM – 12:30 PM", title: "Church", color: Colors.yellow),
-          _EventTile(time: "1:00 – 3:30 PM", title: "Calendar app rewrite research", color: Colors.blue),
+          _EventTile(
+            time: "7:15 – 8:00 AM",
+            title: "Prep and arrive",
+            color: Colors.green,
+          ),
+          _EventTile(
+            time: "8:00 – 9:30 AM",
+            title: "Family time",
+            color: Colors.orange,
+          ),
+          _EventTile(
+            time: "9:30 AM – 12:30 PM",
+            title: "Church",
+            color: Colors.yellow,
+          ),
+          _EventTile(
+            time: "1:00 – 3:30 PM",
+            title: "Calendar app rewrite research",
+            color: Colors.blue,
+          ),
         ],
       );
     } else {
@@ -285,10 +327,7 @@ class _EventTile extends StatelessWidget {
       dense: true,
       contentPadding: EdgeInsets.zero,
       leading: Icon(Icons.circle, size: 12, color: color),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text(time),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../network/journal_api.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart'; // path relative to /screens
 
@@ -528,26 +527,26 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
       return;
     }
 
-    try {
-      final api = JournalApi(token);
-      final newId = await api.createEntry(
-        babyId: widget.babyId,
-        entry: entry,
-      );
+    // try {
+    //   final api = "";
+    //   final newId = await api.createEntry(
+    //     babyId: widget.babyId,
+    //     entry: entry,
+    //   );
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ Saved entry $newId')),
-      );
+    //   if (!mounted) return;
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text('✅ Saved entry $newId')),
+    //   );
 
-      widget.onSave?.call(entry);
-      Navigator.of(context).pop(entry);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Save failed: $e')),
-      );
-    }
+    //   widget.onSave?.call(entry);
+    //   Navigator.of(context).pop(entry);
+    // } catch (e) {
+    //   if (!mounted) return;
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text('❌ Save failed: $e')),
+    //   );
+    // }
   }
 }
 
