@@ -9,6 +9,7 @@ const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
 const entryPlannerRouters = require('./routes/entryPlannerRoutes'); 
 // require('./jobs/batchJobs');
+require('./jobs/notifications');
 
 // Load env variables
 dotenv.config()

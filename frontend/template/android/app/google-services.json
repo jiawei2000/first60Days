@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "434421419563",
+    "project_id": "first60days-d1785",
+    "storage_bucket": "first60days-d1785.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:434421419563:android:08a679d12f16edbb83246e",
+        "android_client_info": {
+          "package_name": "com.example.best_flutter_ui_templates"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYPeyVc-foL6Ui3QNRGFmkkWK9OuUxrv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

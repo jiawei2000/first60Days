@@ -1,5 +1,5 @@
 class User {
-    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID }) {
+    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID, fcmTokens}) {
         this.id = id;
         //Inputed by user, requires data validation 
         this.email = email; //string 
@@ -12,6 +12,8 @@ class User {
         this.lastLoginAt = lastLoginAt; //timestamp 
         this.deletedAt = deletedAt; //timestamp updated by the system 
         this.permissionID = permissionID; //permission document reference created and assigned by the system  
+
+        this.fcmTokens = fcmTokens; // Array, multiple tokens for multiple devices
     }
 
     // convenience method to map Firestore doc -> User instance
@@ -30,7 +32,8 @@ class User {
             createdAt: this.createdAt,
             lastLoginAt: this.lastLoginAt,
             deletedAt: this.deletedAt,
-            permissionID: this.permissionID
+            permissionID: this.permissionID,
+            fcmTokens: this.fcmTokens
         };
     }
 }
