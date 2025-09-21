@@ -62,7 +62,7 @@ const journalController = {
     async getEntryById(req, res) {
         try {
             const { babyId, entryId } = req.body;
-            
+
             // Fetch journal entry from service
             const entry = await JournalService.getEntryById(babyId, entryId);
 
@@ -78,6 +78,18 @@ const journalController = {
             res.status(500).json({ error: "Internal Server Error" });
         }
     },
+
+    async getCurrentCycleNo(req, res) {
+        try {
+            const { babyId } = req.body;
+            const cycleNo = await JournalService.getCurrentCycleNo(babyId);
+
+            return res.status(200).json({ cycleNo });
+        } catch (error) {
+            console.error("Error getting current cycle number:", error);
+            return res.status(500).json({ error: "Failed to get current cycle number" });
+        }
+    }
 }
 
 module.exports = journalController;
