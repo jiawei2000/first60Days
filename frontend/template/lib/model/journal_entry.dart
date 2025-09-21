@@ -4,7 +4,7 @@ class JournalEntry {
   final String? id;
   final int? cycleNo;
   final String? remarks;
-  final List<FeedType>? feedType;
+  final List<FeedType>? feedTypes;
   final int? sleepDuration;
   final DateTime? startWakeTime;
   final DateTime? startFeedTime;
@@ -17,7 +17,7 @@ class JournalEntry {
     this.id,
     this.cycleNo,
     this.remarks,
-    this.feedType,
+    this.feedTypes,
     this.sleepDuration,
     this.startWakeTime,
     this.startFeedTime,
@@ -27,11 +27,25 @@ class JournalEntry {
     this.hasUrine,
   });
 
+  // Map<String, dynamic> toJson() => {
+  //   'id': id,
+  //   'cycleNo': cycleNo,
+  //   'remarks': remarks,
+  //   'feedTypes': feedTypes?.map((item) => item.toJson()).toList(),
+  //   'sleepDuration': sleepDuration,
+  //   'awakeTime': startWakeTime?.toIso8601String(),
+  //   'startFeedTime': startFeedTime?.toIso8601String(),
+  //   'startPlayTime': startPlayTime?.toIso8601String(),
+  //   'startSleepTime': startSleepTime?.toIso8601String(),
+  //   'stool': hasStool,
+  //   'urine': hasUrine,
+  // };
+
   factory JournalEntry.fromJson(Map<String, dynamic> json) => JournalEntry(
     id: json['id'] as String,
-    cycleNo: json['cycleNo'] as int,
-    remarks: json['remarks'] as String,
-    feedType: List<FeedType>.from(
+    cycleNo: json['cycleNo'] as int?,
+    remarks: json['remarks'] as String?,
+    feedTypes: List<FeedType>.from(
       (json['feedType'] as List).map((item) => FeedType.fromJson(item)),
     ),
     sleepDuration: json['sleepDuration'] as int,

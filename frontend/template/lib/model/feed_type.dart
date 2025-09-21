@@ -1,23 +1,15 @@
 class FeedType {
-  final String type;
-  final int? minutes;
-  final int? ml;
+  final String? type;
+  final int? value;
+  final String? unit;
 
-  FeedType({required this.type, this.minutes, this.ml});
+  FeedType({this.type, this.value, this.unit});
 
-  Map<String, dynamic> toJson() {
-    return {
-      'type': type,
-      if (minutes != null) 'minutes': minutes,
-      if (ml != null) 'ml': ml,
-    };
-  }
+  Map<String, dynamic> toJson() => {'type': type, 'value': value, 'unit': unit};
 
-  factory FeedType.fromJson(Map<String, dynamic> json) {
-    return FeedType(
-      type: json['type'] as String,
-      minutes: json['minutes'] as int?,
-      ml: json['ml'] as int?,
-    );
-  }
+  factory FeedType.fromJson(Map<String, dynamic> json) => FeedType(
+    type: json['type'] as String?,
+    value: json['value'] as int?,
+    unit: json['unit'] as String?,
+  );
 }

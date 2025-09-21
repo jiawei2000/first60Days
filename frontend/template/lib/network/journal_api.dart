@@ -8,8 +8,7 @@ final baseUrl = dotenv.env['BASE_URL'];
 class JournalAPI {
   // Hardcoded token for testing
   static final token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlZERjc1WEdqdG45UTBzaUdyYlZlIiwiZW1haWwiOiJob25nd2VpQGdtYWlsLmNvbSIsImlhdCI6MTc1ODMwMTQ0MSwiZXhwIjoxNzU4Mzg3ODQxfQ.iTlcRICBF1iARkYXy2LndSQYqHJ-2c0zzrmeJJizVAE";
-
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlZERjc1WEdqdG45UTBzaUdyYlZlIiwiZW1haWwiOiJob25nd2VpQGdtYWlsLmNvbSIsImlhdCI6MTc1ODM4OTAyNSwiZXhwIjoxNzU4NDc1NDI1fQ.BzN2jq_glQ4xNSXuxwtp3LSzw2VzwLim5S0E1PBilqo";
   static Future getJournalEntries(String babyId) async {
     final getJournalEntriesURL = Uri.parse(
       '$baseUrl/journalEntries/getEntries',
@@ -42,6 +41,11 @@ class JournalAPI {
         "remarks": entry.remarks,
         "stool": entry.hasStool,
         "urine": entry.hasUrine,
+        "awakeTime": entry.startWakeTime?.toIso8601String(),
+        "feedTypes": entry.feedTypes,
+        "startFeedTime": entry.startFeedTime?.toIso8601String(),
+        "startPlayTime": entry.startPlayTime?.toIso8601String(),
+        "startSleepTime": entry.startSleepTime?.toIso8601String(),
       }),
     );
   }
