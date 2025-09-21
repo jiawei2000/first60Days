@@ -1,9 +1,13 @@
+import 'package:best_flutter_ui_templates/model/feed_type.dart';
 import 'package:best_flutter_ui_templates/model/journal_entry.dart';
 import 'package:best_flutter_ui_templates/network/journal_api.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
+
+import '../../routes.dart';
+
 class MonthView extends StatefulWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateSelected;
@@ -21,16 +25,17 @@ class MonthView extends StatefulWidget {
 class _MonthViewState extends State<MonthView> {
   late DateTime _focusedDay;
   late DateTime _selectedDay;
-  bool _showWarning = true;
+  bool _showWarning = false;
 
-  List<JournalEntry> journalEntries = [];
+  late Map<DateTime, List<JournalEntry>> entriesByDate = {};
 
   void _getJournalEntries() {
+    List<JournalEntry> journalEntries = [];
+
     debugPrint("Reach AAA");
+
     String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
     JournalAPI.getJournalEntries(babyId).then((response) {
-      debugPrint("Response status: ${response.statusCode}");
-      // debugPrint("Response body: ${response.body}");
       setState(() {
         Iterable list = json.decode(response.body);
         journalEntries = list
@@ -38,9 +43,22 @@ class _MonthViewState extends State<MonthView> {
             .toList();
       });
 
-      // For debugging
+      // Group entries by startWakeTime date
       for (var entry in journalEntries) {
-        debugPrint("Journal entry: ${entry.id}");
+        if (entry.startWakeTime != null) {
+          DateTime date = DateTime(
+            entry.startWakeTime!.year,
+            entry.startWakeTime!.month,
+            entry.startWakeTime!.day,
+          );
+          entriesByDate.putIfAbsent(date, () => []).add(entry);
+        }
+      }
+      // Print by date for debugging
+      for (var date in entriesByDate.keys) {
+        debugPrint(
+          "Date: $date, No. of entries: ${entriesByDate[date]?.length}",
+        );
       }
     });
   }
@@ -123,7 +141,7 @@ class _MonthViewState extends State<MonthView> {
 
           // Draggable pull-up event details
           DraggableScrollableSheet(
-            initialChildSize: 0.25,
+            initialChildSize: 0.45,
             minChildSize: 0.2,
             maxChildSize: 0.75,
             builder: (context, scrollController) {
@@ -167,64 +185,20 @@ class _MonthViewState extends State<MonthView> {
 
       // ➕ Floating button
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddEventForm,
+        onPressed: onClickAdd,
         backgroundColor: const Color(0xFF2F80ED),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showAddEventForm() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      isScrollControlled: true,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Wrap(
-            children: [
-              const Text(
-                "Add Event",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: "Title",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: "Time",
-                  hintText: "e.g. 10:00 – 12:00",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // TODO: Save logic
-                  },
-                  child: const Text("Save"),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+  void onClickAdd() {
+    // Go to Add Journal Entry page
+    debugPrint("Clicked Add button");
+    Navigator.pushNamed(
+      context,
+      Routes.journal,
+      arguments: {'babyId': "W6bOM4UJxxfbo0bktsmO"},
     );
   }
 
@@ -252,34 +226,56 @@ class _MonthViewState extends State<MonthView> {
     );
   }
 
+  String formatFeedType(List<FeedType> feedTypes) {
+    if (feedTypes.isEmpty) {
+      return "No feed types";
+    } else {
+      return feedTypes
+          .map(
+            (feedType) => "${feedType.type} ${feedType.value}${feedType.unit}",
+          )
+          .join(", ");
+    }
+  }
+
   Widget _eventListForDay(DateTime day) {
-    if (day.day % 2 == 0) {
+    // Convert day to UTC
+    final utcDay = DateTime(day.year, day.month, day.day);
+
+    final entriesForDay = entriesByDate[utcDay] ?? [];
+    debugPrint("Entries for $utcDay: ${entriesForDay.length}");
+    // Sort entries by startWakeTime
+    entriesForDay.sort((a, b) {
+      if (a.startWakeTime == null && b.startWakeTime == null) return 0;
+      if (a.startWakeTime == null) return 1;
+      if (b.startWakeTime == null) return -1;
+      return a.startWakeTime!.compareTo(b.startWakeTime!);
+    });
+
+    if (entriesForDay.isNotEmpty) {
       return Column(
-        children: const [
-          _EventTile(
-            time: "7:15 – 8:00 AM",
-            title: "Prep and arrive",
-            color: Colors.green,
-          ),
-          _EventTile(
-            time: "8:00 – 9:30 AM",
-            title: "Family time",
-            color: Colors.orange,
-          ),
-          _EventTile(
-            time: "9:30 AM – 12:30 PM",
-            title: "Church",
-            color: Colors.yellow,
-          ),
-          _EventTile(
-            time: "1:00 – 3:30 PM",
-            title: "Calendar app rewrite research",
-            color: Colors.blue,
+        children: [
+          ...entriesForDay.map(
+            (entry) => InkWell(
+              onTap: () {
+                // TODO: Go to Edit page
+                debugPrint("Clicked entry: ${entry.id}");
+              },
+              child: _EventTile(
+                subtitle: formatFeedType(entry.feedTypes ?? []),
+                title:
+                    "Feed ${entriesForDay.indexOf(entry) + 1} - ${DateFormat.Hm().format(entry.startWakeTime!)}",
+                color: Colors.green,
+              ),
+            ),
           ),
         ],
       );
     } else {
-      return const Text("No events", style: TextStyle(color: Colors.grey));
+      return const Text(
+        "No feeds logged",
+        style: TextStyle(color: Colors.grey),
+      );
     }
   }
 
@@ -312,12 +308,12 @@ class _MonthViewState extends State<MonthView> {
 }
 
 class _EventTile extends StatelessWidget {
-  final String time;
+  final String subtitle;
   final String title;
   final Color color;
 
   const _EventTile({
-    required this.time,
+    required this.subtitle,
     required this.title,
     required this.color,
   });
@@ -329,7 +325,7 @@ class _EventTile extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: Icon(Icons.circle, size: 12, color: color),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(time),
+      subtitle: Text(subtitle),
     );
   }
 }
