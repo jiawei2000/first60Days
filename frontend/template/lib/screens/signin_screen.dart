@@ -53,7 +53,6 @@ class _SignInScreenState extends State<SignInScreen> {
         final emailFromToken = decodedToken['email'] ?? email;
         final userId = decodedToken['id'] ?? '';
 
-        // ✅ Extract extra fields from API response
         final user = data['user'] ?? {};
         final permission = data['permission'] ?? {};
 
@@ -68,7 +67,6 @@ class _SignInScreenState extends State<SignInScreen> {
             .where((id) => id.isNotEmpty)
             .toList();
 
-        // ✅ Save everything in AuthProvider
         Provider.of<AuthProvider>(context, listen: false).setUser(
           token: token,
           email: emailFromToken,
@@ -78,7 +76,6 @@ class _SignInScreenState extends State<SignInScreen> {
           subAccountIds: subAccountIds,
         );
 
-        // ✅ Navigate to baby selection screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -107,39 +104,39 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Sign In"), centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 32),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: "Email*",
-                border: OutlineInputBorder(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 32),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: "Email*",
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password*",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: "Password*",
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {},
-                child: const Text("Forgot your Password?"),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {},
+                  child: const Text("Forgot your Password?"),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
+              const SizedBox(height: 24),
+              ElevatedButton(
                 onPressed: _isLoading ? null : _handleSignIn,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
@@ -149,8 +146,8 @@ class _SignInScreenState extends State<SignInScreen> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text("Sign In"),
               ),
-            )
-          ],
+            ],
+          ),
         ),
       ),
     );
