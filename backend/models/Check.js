@@ -27,8 +27,8 @@ class Check {
     // console.log(sortedEntries);
 
     for (const entry of sortedEntries) {
-      if (entry.urine === true) urineCount++;
-      if (entry.stool === true) stoolCount++;
+      if (entry.hasUrine === true) urineCount++;
+      if (entry.hasStool === true) stoolCount++;
     }
 
     // Interval calculation:

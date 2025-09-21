@@ -186,6 +186,7 @@ class UserService {
         };
     }
 
+    //needs to be updated. 
     static async deleteUser(userId) {
         const userDoc = await db.collection('users').doc(userId).get();
 
@@ -217,10 +218,7 @@ class UserService {
             throw new Error('User not found');
         }
 
-        return {
-            userId: userId,
-            ...userSnap.data()
-        };
+        return new User(userSnap.id, userSnap.data());
     }
 }
 
