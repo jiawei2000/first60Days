@@ -1,3 +1,4 @@
+import 'package:best_flutter_ui_templates/model/feed_type.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
@@ -42,7 +43,7 @@ class JournalAPI {
         "stool": entry.hasStool,
         "urine": entry.hasUrine,
         "awakeTime": entry.startWakeTime?.toIso8601String(),
-        "feedTypes": entry.feedTypes,
+        "feedType": entry.feedTypes,
         "startFeedTime": entry.startFeedTime?.toIso8601String(),
         "startPlayTime": entry.startPlayTime?.toIso8601String(),
         "startSleepTime": entry.startSleepTime?.toIso8601String(),
