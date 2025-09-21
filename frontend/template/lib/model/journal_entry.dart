@@ -48,20 +48,20 @@ class JournalEntry {
     feedTypes: List<FeedType>.from(
       (json['feedType'] as List).map((item) => FeedType.fromJson(item)),
     ),
-    sleepDuration: json['sleepDuration'] as int,
-    startWakeTime: DateTime.fromMillisecondsSinceEpoch(
-      json['awakeTime']['_seconds'] * 1000,
-    ),
-    startFeedTime: DateTime.fromMillisecondsSinceEpoch(
-      json['startFeedTime']['_seconds'] * 1000,
-    ),
-    startPlayTime: DateTime.fromMillisecondsSinceEpoch(
-      json['startPlayTime']['_seconds'] * 1000,
-    ),
-    startSleepTime: DateTime.fromMillisecondsSinceEpoch(
-      json['startSleepTime']['_seconds'] * 1000,
-    ),
+    sleepDuration: json['sleepDuration'] as int?,
+    startWakeTime: parseTimestamp(json['awakeTime']),
+    startFeedTime: parseTimestamp(json['startFeedTime']),
+    startPlayTime: parseTimestamp(json['startPlayTime']),
+    startSleepTime: parseTimestamp(json['startSleepTime']),
     hasStool: json['stool'] as bool?,
     hasUrine: json['urine'] as bool?,
   );
+}
+
+DateTime? parseTimestamp(Map<String, dynamic>? timeStamp) {
+  if (timeStamp == null) return null;
+  return DateTime.fromMillisecondsSinceEpoch(
+    timeStamp['_seconds'] * 1000 + (timeStamp['_nanoseconds'] ~/ 1000000),
+    isUtc: true,
+  ).add(const Duration(hours: 8)); // shift to UTC+8
 }

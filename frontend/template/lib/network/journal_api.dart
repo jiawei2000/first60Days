@@ -1,4 +1,3 @@
-import 'package:best_flutter_ui_templates/model/feed_type.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
@@ -10,6 +9,7 @@ class JournalAPI {
   // Hardcoded token for testing
   static final token =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlZERjc1WEdqdG45UTBzaUdyYlZlIiwiZW1haWwiOiJob25nd2VpQGdtYWlsLmNvbSIsImlhdCI6MTc1ODM4OTAyNSwiZXhwIjoxNzU4NDc1NDI1fQ.BzN2jq_glQ4xNSXuxwtp3LSzw2VzwLim5S0E1PBilqo";
+
   static Future getJournalEntries(String babyId) async {
     final getJournalEntriesURL = Uri.parse(
       '$baseUrl/journalEntries/getEntries',
