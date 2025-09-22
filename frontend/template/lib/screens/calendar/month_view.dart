@@ -1,10 +1,12 @@
 import 'package:best_flutter_ui_templates/model/feed_type.dart';
 import 'package:best_flutter_ui_templates/model/journal_entry.dart';
 import 'package:best_flutter_ui_templates/network/journal_api.dart';
+import 'package:best_flutter_ui_templates/screens/providers/widget.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
+import '../providers/widget.dart';
 
 import '../../routes.dart';
 
@@ -29,19 +31,25 @@ class _MonthViewState extends State<MonthView> {
 
   late Map<DateTime, List<JournalEntry>> entriesByDate = {};
 
-  void _getJournalEntries() {
-    List<JournalEntry> journalEntries = [];
+void _getJournalEntries() {
+  List<JournalEntry> journalEntries = [];
 
-    debugPrint("Reach AAA");
+  debugPrint("Reach AAA");
 
-    String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
-    JournalAPI.getJournalEntries(babyId).then((response) {
-      setState(() {
-        Iterable list = json.decode(response.body);
-        journalEntries = list
-            .map((journalEntry) => JournalEntry.fromJson(journalEntry))
-            .toList();
-      });
+  final token = get_token(context);
+
+  if (token == null) {
+    debugPrint("No token found. User may not be logged in.");
+    return;
+  }
+
+  String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
+  JournalAPI.getJournalEntries(babyId, token).then((response) {
+    setState(() {
+      Iterable list = json.decode(response.body);
+      journalEntries = list
+          .map((journalEntry) => JournalEntry.fromJson(journalEntry))
+          .toList();
 
       // Group entries by startWakeTime date
       for (var entry in journalEntries) {
@@ -54,14 +62,16 @@ class _MonthViewState extends State<MonthView> {
           entriesByDate.putIfAbsent(date, () => []).add(entry);
         }
       }
-      // Print by date for debugging
-      for (var date in entriesByDate.keys) {
-        debugPrint(
-          "Date: $date, No. of entries: ${entriesByDate[date]?.length}",
-        );
-      }
     });
-  }
+
+    // Print by date for debugging
+    for (var date in entriesByDate.keys) {
+      debugPrint(
+        "Date: $date, No. of entries: ${entriesByDate[date]?.length}",
+      );
+    }
+  });
+}
 
   @override
   void initState() {
