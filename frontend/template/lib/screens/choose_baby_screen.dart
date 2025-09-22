@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart'; 
+import 'package:provider/provider.dart';
 import '../model/baby.dart';
 import '../routes.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,7 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'providers/auth_provider.dart';
 
 class ChooseBabyScreen extends StatefulWidget {
-  const ChooseBabyScreen({super.key}); 
+  const ChooseBabyScreen({super.key});
 
   @override
   State<ChooseBabyScreen> createState() => _ChooseBabyScreenState();
@@ -40,7 +40,7 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
 
     final baseURL = dotenv.env['BASE_URL'];
     final url = Uri.parse('$baseURL/babies/getProfiles');
-    
+
     try {
       final response = await http.get(
         url,
@@ -55,6 +55,7 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
           babies = List<Map<String, String>>.generate(profiles.length, (index) {
             final baby = profiles[index];
             return {
+              'id': baby['id'], // baby id stored now, i think 
               'name': baby['name'],
               'image': babyImages[index % babyImages.length],
             };
@@ -131,7 +132,7 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
                 'name': name,
                 'dob': selectedDate!.toUtc().toIso8601String(),
               };
-              
+
               final baseURL = dotenv.env['BASE_URL'];
               final url = Uri.parse('$baseURL/babies/newProfile');
 
@@ -197,10 +198,14 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
                           return InkWell(
                             onTap: () {
                               final selectedBaby = Baby(
-                                id: index.toString(),
+                                id: baby["id"]!, //selected baby id
                                 name: baby["name"]!,
                                 avatarUrl: baby["image"],
                               );
+
+                              
+                              Provider.of<AuthProvider>(context, listen: false)
+                                  .setCurrentBabyId(baby["id"]!);
 
                               Navigator.pushReplacementNamed(
                                 context,

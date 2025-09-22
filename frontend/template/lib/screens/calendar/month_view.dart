@@ -37,13 +37,19 @@ void _getJournalEntries() {
   debugPrint("Reach AAA");
 
   final token = get_token(context);
+  final babyId = get_babyid(context);
 
   if (token == null) {
     debugPrint("No token found. User may not be logged in.");
     return;
   }
 
-  String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
+  debugPrint(" Selected baby ID: $babyId");
+  if (babyId == null) {
+    debugPrint("No baby ID found. Baby may not be selected.");
+    return;
+  }
+
   JournalAPI.getJournalEntries(babyId, token).then((response) {
     setState(() {
       Iterable list = json.decode(response.body);
@@ -67,7 +73,7 @@ void _getJournalEntries() {
     // Print by date for debugging
     for (var date in entriesByDate.keys) {
       debugPrint(
-        "Date: $date, No. of entries: ${entriesByDate[date]?.length}",
+        " Date: $date, No. of entries: ${entriesByDate[date]?.length}",
       );
     }
   });

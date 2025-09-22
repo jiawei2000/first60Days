@@ -9,6 +9,7 @@ class AuthProvider with ChangeNotifier {
   String? _username;
   List<String> _babyIds = [];
   List<String> _subAccountIds = [];
+  String? _currentBabyId;
 
   // Getters
   String? get token => _token;
@@ -17,6 +18,7 @@ class AuthProvider with ChangeNotifier {
   String? get username => _username;
   List<String> get babyIds => _babyIds;
   List<String> get subAccountIds => _subAccountIds;
+  String? get currentBabyId => _currentBabyId;
 
   // Set user info (extended but existing args still required)
   void setUser({
@@ -37,6 +39,11 @@ class AuthProvider with ChangeNotifier {
     _subAccountIds = subAccountIds ?? [];
 
     notifyListeners();
+  }
+  
+  void setCurrentBabyId(String babyId) {
+  _currentBabyId = babyId;
+  notifyListeners();
   }
 
   void clearToken() {
