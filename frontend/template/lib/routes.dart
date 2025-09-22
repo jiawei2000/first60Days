@@ -1,6 +1,7 @@
 class Routes {
   static const landing = '/landing';
   static const journal = '/journal';
+  static const editJournal = '/edit-journal';
   static const chooseBaby = '/chooseBaby';
   static const plan = '/plan';
   static const calendar = '/calendar';

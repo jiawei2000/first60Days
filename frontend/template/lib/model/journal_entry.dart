@@ -12,6 +12,7 @@ class JournalEntry {
   final DateTime? startSleepTime;
   final bool? hasStool;
   final bool? hasUrine;
+  bool? isCompleted;
 
   JournalEntry({
     this.id,
@@ -25,6 +26,7 @@ class JournalEntry {
     this.startSleepTime,
     this.hasStool,
     this.hasUrine,
+    this.isCompleted,
   });
 
   // Map<String, dynamic> toJson() => {

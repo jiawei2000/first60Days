@@ -4,26 +4,51 @@ import 'routes.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/landing_page.dart';
 import 'screens/create_journal_entry.dart';
+import 'screens/edit_journal_entry.dart';
 import 'screens/profile_page.dart';
 import 'screens/choose_baby_screen.dart';
 import 'screens/chat_page.dart';
 import 'screens/calendar/calendar_screen.dart';
 import 'model/baby.dart';
 
+import 'model/journal_entry.dart';
+
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case Routes.journal: {
-        // expects: { 'babyId': String }
-        final args = settings.arguments as Map<String, dynamic>?;
-        if (args == null || args['babyId'] == null) {
-          return _badArgs('Routes.journal expects { babyId }');
+      case Routes.journal:
+        {
+          // expects: { 'babyId': String }
+          final args = settings.arguments as Map<String, dynamic>?;
+          if (args == null || args['babyId'] == null) {
+            return _badArgs('Routes.journal expects { babyId }');
+          }
+          final String babyId = args['babyId'] as String;
+          return MaterialPageRoute(
+            builder: (_) => JournalEntryPage(babyId: babyId),
+          );
         }
-        final String babyId = args['babyId'] as String;
-        return MaterialPageRoute(
-          builder: (_) => JournalEntryPage(babyId: babyId),
-        );
-      }
+      case Routes.editJournal:
+        {
+          // expects: { 'babyId': String, 'entryId': String }
+          final args = settings.arguments as Map<String, dynamic>?;
+          if (args == null ||
+              args['babyId'] == null ||
+              args['journalEntry'] == null) {
+            return _badArgs(
+              'Routes.editJournal expects { babyId, journalEntry }',
+            );
+          }
+          final String babyId = args['babyId'] as String;
+          final JournalEntry journalEntry =
+              args['journalEntry'] as JournalEntry;
+          return MaterialPageRoute(
+            builder: (_) => EditJournalEntryPage(
+              babyId: babyId,
+              initialJournalEntry: journalEntry,
+            ),
+          );
+        }
 
       case Routes.profile:
         return MaterialPageRoute(builder: (_) => const ProfilePage());
@@ -38,15 +63,14 @@ class AppRouter {
       case Routes.calendar:
         return MaterialPageRoute(builder: (_) => const CalendarScreen());
 
-      case Routes.landing: {
-        // expects: { 'baby': Baby }
-        final args = settings.arguments as Map<String, dynamic>?;
-        final baby = args?['baby'] as Baby?;
-        if (baby == null) return _badArgs('Routes.landing expects { baby }');
-        return MaterialPageRoute(
-          builder: (_) => LandingPage(baby: baby),
-        );
-      }
+      case Routes.landing:
+        {
+          // expects: { 'baby': Baby }
+          final args = settings.arguments as Map<String, dynamic>?;
+          final baby = args?['baby'] as Baby?;
+          if (baby == null) return _badArgs('Routes.landing expects { baby }');
+          return MaterialPageRoute(builder: (_) => LandingPage(baby: baby));
+        }
 
       default:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());

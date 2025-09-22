@@ -53,6 +53,12 @@ class _MonthViewState extends State<MonthView> {
           );
           entriesByDate.putIfAbsent(date, () => []).add(entry);
         }
+        // Update isCompleted status if feedType is not empty only for now
+        if (entry.feedTypes != null && entry.feedTypes!.isNotEmpty) {
+          entry.isCompleted = true;
+        } else {
+          entry.isCompleted = false;
+        }
       }
       // Print by date for debugging
       for (var date in entriesByDate.keys) {
@@ -125,12 +131,12 @@ class _MonthViewState extends State<MonthView> {
                   ),
                   calendarBuilders: CalendarBuilders(
                     markerBuilder: (context, date, events) {
-                      if (date.day % 3 == 0) {
-                        return const Positioned(
-                          bottom: 4,
-                          child: Icon(Icons.circle, size: 6, color: Colors.red),
-                        );
-                      }
+                      // if (date.day % 3 == 0) {
+                      //   return const Positioned(
+                      //     bottom: 4,
+                      //     child: Icon(Icons.circle, size: 6, color: Colors.red),
+                      //   );
+                      // }
                       return null;
                     },
                   ),
@@ -194,7 +200,7 @@ class _MonthViewState extends State<MonthView> {
 
   void onClickAdd() {
     // Go to Add Journal Entry page
-    debugPrint("Clicked Add button");
+    // ToDo update passing args
     Navigator.pushNamed(
       context,
       Routes.journal,
@@ -259,13 +265,21 @@ class _MonthViewState extends State<MonthView> {
             (entry) => InkWell(
               onTap: () {
                 // TODO: Go to Edit page
+                Navigator.pushNamed(
+                  context,
+                  Routes.editJournal,
+                  arguments: {
+                    'babyId': "W6bOM4UJxxfbo0bktsmO",
+                    'journalEntry': entry,
+                  },
+                );
                 debugPrint("Clicked entry: ${entry.id}");
               },
               child: _EventTile(
                 subtitle: formatFeedType(entry.feedTypes ?? []),
                 title:
                     "Feed ${entriesForDay.indexOf(entry) + 1} - ${DateFormat.Hm().format(entry.startWakeTime!)}",
-                color: Colors.green,
+                color: entry.isCompleted == true ? Colors.green : Colors.amber,
               ),
             ),
           ),
