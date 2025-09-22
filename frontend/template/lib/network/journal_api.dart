@@ -6,14 +6,9 @@ import '../../model/journal_entry.dart';
 final baseUrl = dotenv.env['BASE_URL'];
 
 class JournalAPI {
-  // Hardcoded token for testing
-  static final token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlZERjc1WEdqdG45UTBzaUdyYlZlIiwiZW1haWwiOiJob25nd2VpQGdtYWlsLmNvbSIsImlhdCI6MTc1ODM4OTAyNSwiZXhwIjoxNzU4NDc1NDI1fQ.BzN2jq_glQ4xNSXuxwtp3LSzw2VzwLim5S0E1PBilqo";
-
-  static Future getJournalEntries(String babyId) async {
-    final getJournalEntriesURL = Uri.parse(
-      '$baseUrl/journalEntries/getEntries',
-    );
+  /// Get journal entries for a specific baby
+  static Future<http.Response> getJournalEntries(String babyId, String token) async {
+    final getJournalEntriesURL = Uri.parse('$baseUrl/journalEntries/getEntries');
 
     return http.post(
       getJournalEntriesURL,
@@ -25,10 +20,9 @@ class JournalAPI {
     );
   }
 
-  static Future createJournalEntry(String babyId, JournalEntry entry) async {
-    final createJournalEntryURL = Uri.parse(
-      '$baseUrl/journalEntries/createEntry',
-    );
+  /// Create a new journal entry
+  static Future<http.Response> createJournalEntry(String babyId, JournalEntry entry, String token) async {
+    final createJournalEntryURL = Uri.parse('$baseUrl/journalEntries/createEntry');
 
     return http.post(
       createJournalEntryURL,

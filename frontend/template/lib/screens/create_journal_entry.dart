@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../model/journal_entry.dart';
 import '../model/feed_type.dart';
 import '../network/journal_api.dart';
+import 'providers/widget.dart';
 
 const _kFeedTypes = ['EBM', 'Formula', 'Breast (Left)', 'Breast (Right)'];
 String _unitForType(String? t) {
@@ -401,35 +402,40 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   }
 
   void onSave() async {
-    List<FeedType> feedTypes = [];
-    for (int i = 0; i < _feedTypeCtrls.length; i++) {
-      String type = _feedTypeCtrls[i].text;
-      int? value = int.tryParse(_feedValueCtrls[i].text);
-      String unit = _feedUnits[i];
-      if (type.isNotEmpty && value != null) {
-        feedTypes.add(FeedType(type: type, value: value, unit: unit));
-      }
+  List<FeedType> feedTypes = [];
+  for (int i = 0; i < _feedTypeCtrls.length; i++) {
+    String type = _feedTypeCtrls[i].text;
+    int? value = int.tryParse(_feedValueCtrls[i].text);
+    String unit = _feedUnits[i];
+    if (type.isNotEmpty && value != null) {
+      feedTypes.add(FeedType(type: type, value: value, unit: unit));
     }
-    final entry = JournalEntry(
-      cycleNo: cycle,
-      hasUrine: hasUrine,
-      hasStool: hasStool,
-      startWakeTime: startWakeTime,
-      startFeedTime: startFeedTime,
-      startPlayTime: startPlayTime,
-      startSleepTime: startSleepTime,
-      feedTypes: feedTypes,
-      remarks: remarksController.text,
-    );
-
-    debugPrint("Reach AAA");
-    String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
-
-    JournalAPI.createJournalEntry(babyId, entry).then((response) {
-      debugPrint("Response status: ${response.statusCode}");
-      debugPrint("Response body: ${response.body}");
-    });
   }
+  final entry = JournalEntry(
+    cycleNo: cycle,
+    hasUrine: hasUrine,
+    hasStool: hasStool,
+    startWakeTime: startWakeTime,
+    startFeedTime: startFeedTime,
+    startPlayTime: startPlayTime,
+    startSleepTime: startSleepTime,
+    feedTypes: feedTypes,
+    remarks: remarksController.text,
+  );
+
+  debugPrint("Reach AAA");
+  String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
+
+  final token = get_token(context);
+  if (token == null) {
+    debugPrint("No token found. User may not be logged in.");
+    return;
+  }
+  JournalAPI.createJournalEntry(babyId, entry, token).then((response) {
+    debugPrint("Response status: ${response.statusCode}");
+    debugPrint("Response body: ${response.body}");
+  });
+}
 }
 
 class _LabeledField extends StatelessWidget {
