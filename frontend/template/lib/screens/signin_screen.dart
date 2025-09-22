@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'choose_baby_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -15,10 +16,29 @@ class _SignInScreenState extends State<SignInScreen> {
 
   final List<String> _accountOptions = ['Parent', 'Caregiver'];
 
+  /// Retrieve FCM token
+  Future<void> _getFcmToken() async {
+    try {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      // Request permission (needed on iOS, safe to call everywhere)
+      await messaging.requestPermission();
+
+      final token = await messaging.getToken();
+      debugPrint("✅ FCM Token: $token");
+    } catch (e) {
+      debugPrint("⚠️ Failed to get FCM token: $e");
+    }
+  }
+
   void _handleSignIn() {
     if (_emailController.text.isNotEmpty &&
         _passwordController.text.isNotEmpty &&
         _accountType != null) {
+      
+      // Get FCM token, and send it as part of login
+      _getFcmToken();
+      
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ChooseBabyScreen()),

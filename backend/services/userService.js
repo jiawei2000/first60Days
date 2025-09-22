@@ -34,7 +34,8 @@ class UserService {
                 createdAt: Timestamp.now(),
                 lastLoginAt: null,
                 deletedAt: null,
-                permissionID: permissionRef
+                permissionID: permissionRef,
+                fcmTokens: []
             });
 
             // create permission model
@@ -54,7 +55,7 @@ class UserService {
         });
     }
 
-    static async login({ email, password }) {
+    static async login({ email, password, fcmToken }) {
         const usersRef = db.collection('users');
         const snapshot = await usersRef.where('email', '==', email).get();
 
@@ -73,6 +74,13 @@ class UserService {
         // Update lastLoginAt
         await usersRef.doc(user.id).update({ lastLoginAt: Timestamp.now() });
         user.lastLoginAt = Timestamp.now();
+
+        if (fcmToken) {
+        await usersRef.doc(user.id).update({
+            fcmTokens: admin.firestore.FieldValue.arrayUnion(fcmToken)
+        });
+            user.fcmTokens = [...(user.fcmTokens || []), fcmToken];
+        }
 
         // Load permission object
         const permissionDoc = await user.permissionID.get();
