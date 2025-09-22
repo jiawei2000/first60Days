@@ -21,7 +21,7 @@ class EntryPlannerController {
     static async getPlanner(req, res) {
         try {
             const { babyId, plannerId } = req.params;
-            const planner = await EntryPlannerService.getPlanner(plannerId);
+            const planner = await EntryPlannerService.getPlannerById(babyId, plannerId);
 
             if (!planner) return res.status(404).json({ error: "Planner not found" });
 
@@ -36,7 +36,7 @@ class EntryPlannerController {
         try {
             const { babyId, plannerId } = req.params;
             const updateData = req.body;
-            const updatedPlanner = await EntryPlannerService.updatePlanner(plannerId, updateData);
+            const updatedPlanner = await EntryPlannerService.updatePlanner(babyId, plannerId, updateData);
 
             return res.status(200).json({
                 message: "Entry Planner updated successfully",

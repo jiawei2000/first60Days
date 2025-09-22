@@ -9,10 +9,6 @@ class JournalService {
             .doc(babyId)
             .collection("journalEntries");
 
-        //how should the server know which cycleNo the user is currently at for each day?
-        //take entries from 00:00 to 2359 of the same day and increment the count 
-
-
         // Create a JournalEntry instance → validates & normalizes
         const entry = new JournalEntry(null, entryData);
 

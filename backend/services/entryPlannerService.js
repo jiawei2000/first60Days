@@ -23,19 +23,35 @@ class EntryPlannerService {
         return planner;
     }
 
-    static async getPlanner(plannerId) {
-        // If stored in Firestore:
-        // const doc = await db.collection("entryPlanners").doc(plannerId).get();
-        // return doc.exists ? doc.data() : null;
+    static async getPlannerById(babyId, plannerId) {
+        const docRef = db
+            .collection("babies")
+            .doc(babyId)
+            .collection("entryPlanner")
+            .doc(plannerId);
 
-        // Placeholder for now
-        return null;
+        const doc = await docRef.get();
+        if (!doc.exists) return null;
+
+        return new EntryPlanner(doc.id, doc.data());
     }
 
-    static async updatePlanner(plannerId, updateData) {
-        // Fetch existing, update fields, regenerate feedTimings if needed
-        // Save to Firestore if persistence is implemented
-        return null;
+
+    //updatePlanner need more specific usecase of update?
+    //change only the feed timings?
+    //change number of feed?
+    static async updatePlanner(babyId, plannerId, updateData) {
+        const docRef = db
+            .collection("babies")
+            .doc(babyId)
+            .collection("entryPlanner")
+            .doc(plannerId);
+
+        const planner = new EntryPlanner(plannerId, updateData);
+        planner.generateFeedTimings(); // regenerate feedTimings if first/last feed changed
+
+        await docRef.update(planner.toFirestore());
+        return planner;
     }
 
     static async deletePlanner(plannerId) {
