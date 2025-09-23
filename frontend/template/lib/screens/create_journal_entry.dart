@@ -426,7 +426,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     );
 
     debugPrint("Reach AAA");
-    String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
+    String babyId = widget.babyId; // Replace with actual babyId
 
     final token = get_token(context);
     if (token == null) {
