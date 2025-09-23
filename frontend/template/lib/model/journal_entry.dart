@@ -55,8 +55,8 @@ class JournalEntry {
     startFeedTime: parseTimestamp(json['startFeedTime']),
     startPlayTime: parseTimestamp(json['startPlayTime']),
     startSleepTime: parseTimestamp(json['startSleepTime']),
-    hasStool: json['stool'] as bool?,
-    hasUrine: json['urine'] as bool?,
+    hasStool: json['hasStool'] as bool?,
+    hasUrine: json['hasUrine'] as bool?,
   );
 }
 

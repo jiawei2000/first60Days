@@ -8,7 +8,7 @@ const { authenticateToken } = require('../config/authMiddleware');
 router.post('/createEntry', authenticateToken, journalController.createEntry);
 router.put('/editEntry', authenticateToken, journalController.editEntry);
 router.post('/getEntries', authenticateToken, journalController.getEntries)
-router.get('/getEntryById', authenticateToken, journalController.getEntryById);
+router.post('/getEntryById', authenticateToken, journalController.getEntryById)
 router.get('/getCurrentCycleNo', authenticateToken, journalController.getCurrentCycleNo);
 
 module.exports = router;
