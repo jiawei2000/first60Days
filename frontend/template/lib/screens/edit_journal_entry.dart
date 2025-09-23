@@ -432,10 +432,10 @@ class _EditJournalEntryPageState extends State<EditJournalEntryPage> {
     debugPrint("Reach AAA");
     String babyId = "W6bOM4UJxxfbo0bktsmO"; // Replace with actual babyId
 
-    JournalAPI.createJournalEntry(babyId, entry).then((response) {
-      debugPrint("Response status: ${response.statusCode}");
-      debugPrint("Response body: ${response.body}");
-    });
+    // JournalAPI.createJournalEntry(babyId, entry).then((response) {
+    //   debugPrint("Response status: ${response.statusCode}");
+    //   debugPrint("Response body: ${response.body}");
+    // });
   }
 }
 

@@ -2,13 +2,11 @@ import 'package:best_flutter_ui_templates/model/feed_type.dart';
 import 'package:best_flutter_ui_templates/model/journal_entry.dart';
 import 'package:best_flutter_ui_templates/network/journal_api.dart';
 import 'package:best_flutter_ui_templates/screens/providers/widget.dart';
+import 'package:best_flutter_ui_templates/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-import '../providers/widget.dart';
-
-import '../../routes.dart';
 
 class MonthView extends StatefulWidget {
   final DateTime selectedDate;
