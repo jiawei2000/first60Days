@@ -8,7 +8,6 @@ import '../network/journal_api.dart';
 import 'providers/widget.dart';
 import '../routes.dart';
 
-
 const _kFeedTypes = ['EBM', 'Formula', 'Breast (Left)', 'Breast (Right)'];
 String _unitForType(String? t) {
   if (t == null) return 'mL';
@@ -426,7 +425,8 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     );
 
     debugPrint("Reach AAA");
-    String babyId = widget.babyId; // Replace with actual babyId
+    String babyId = get_babyid(context) ?? "";
+    // String babyId = widget.babyId; // Replace with actual babyId
 
     final token = get_token(context);
     if (token == null) {

@@ -64,9 +64,9 @@ class _EditJournalEntryPageState extends State<EditJournalEntryPage> {
   }
 
   void loadInitialJournalEntry() {
-    final token = get_token(context);
-    final babyId = widget.babyId;
-    if (token == null) {
+    String token = get_token(context) ?? "";
+    String babyId = get_babyid(context) ?? "";
+    if (token.isEmpty) {
       debugPrint("No token found. User may not be logged in.");
       return;
     }
@@ -524,7 +524,7 @@ class _EditJournalEntryPageState extends State<EditJournalEntryPage> {
       remarks: remarksController.text,
     );
 
-    String babyId = widget.babyId;
+    String babyId = get_babyid(context) ?? "";
     String entryId = widget.initialJournalEntry?.id ?? "";
     // debugPrint("Saving entry for babyId: $babyId");
     // debugPrint("Entry ID: $entryId");
