@@ -29,59 +29,59 @@ class _MonthViewState extends State<MonthView> {
 
   late Map<DateTime, List<JournalEntry>> entriesByDate = {};
 
-void _getJournalEntries() {
-  List<JournalEntry> journalEntries = [];
+  void _getJournalEntries() {
+    List<JournalEntry> journalEntries = [];
 
-  debugPrint("Reach AAA");
+    debugPrint("Reach AAA");
 
-  final token = get_token(context);
-  final babyId = get_babyid(context);
+    final token = get_token(context);
+    final babyId = get_babyid(context);
 
-  if (token == null) {
-    debugPrint("No token found. User may not be logged in.");
-    return;
-  }
+    if (token == null) {
+      debugPrint("No token found. User may not be logged in.");
+      return;
+    }
 
-  debugPrint(" Selected baby ID: $babyId");
-  if (babyId == null) {
-    debugPrint("No baby ID found. Baby may not be selected.");
-    return;
-  }
+    debugPrint(" Selected baby ID: $babyId");
+    if (babyId == null) {
+      debugPrint("No baby ID found. Baby may not be selected.");
+      return;
+    }
 
-  JournalAPI.getJournalEntries(babyId, token).then((response) {
-    setState(() {
-      Iterable list = json.decode(response.body);
-      journalEntries = list
-          .map((journalEntry) => JournalEntry.fromJson(journalEntry))
-          .toList();
+    JournalAPI.getJournalEntries(babyId, token).then((response) {
+      setState(() {
+        Iterable list = json.decode(response.body);
+        journalEntries = list
+            .map((journalEntry) => JournalEntry.fromJson(journalEntry))
+            .toList();
 
-      // Group entries by startWakeTime date
-      for (var entry in journalEntries) {
-        if (entry.startWakeTime != null) {
-          DateTime date = DateTime(
-            entry.startWakeTime!.year,
-            entry.startWakeTime!.month,
-            entry.startWakeTime!.day,
-          );
-          entriesByDate.putIfAbsent(date, () => []).add(entry);
+        // Group entries by startWakeTime date
+        for (var entry in journalEntries) {
+          if (entry.startWakeTime != null) {
+            DateTime date = DateTime(
+              entry.startWakeTime!.year,
+              entry.startWakeTime!.month,
+              entry.startWakeTime!.day,
+            );
+            entriesByDate.putIfAbsent(date, () => []).add(entry);
+          }
+          // Update isCompleted status if feedType is not empty only for now
+          if (entry.feedTypes != null && entry.feedTypes!.isNotEmpty) {
+            entry.isCompleted = true;
+          } else {
+            entry.isCompleted = false;
+          }
         }
-        // Update isCompleted status if feedType is not empty only for now
-        if (entry.feedTypes != null && entry.feedTypes!.isNotEmpty) {
-          entry.isCompleted = true;
-        } else {
-          entry.isCompleted = false;
-        }
+      });
+
+      // Print by date for debugging
+      for (var date in entriesByDate.keys) {
+        debugPrint(
+          " Date: $date, No. of entries: ${entriesByDate[date]?.length}",
+        );
       }
     });
-
-    // Print by date for debugging
-    for (var date in entriesByDate.keys) {
-      debugPrint(
-        " Date: $date, No. of entries: ${entriesByDate[date]?.length}",
-      );
-    }
-  });
-}
+  }
 
   @override
   void initState() {
