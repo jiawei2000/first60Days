@@ -21,7 +21,7 @@ class _ChooseBabyScreenState extends State<ChooseBabyScreen> {
 
   final List<String> babyImages = [
     'assets/images/baby1.jpg',
-    'assets/images/baby2.jpg',
+    'assets/images/baby_2.jpg',
   ];
 
   @override
