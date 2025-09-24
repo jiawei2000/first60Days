@@ -8,17 +8,18 @@ class EntryPlanner {
         MONInterval = null,
         feedTimings = [], //Only time is needed, not date. 
         weekNo = 1,
-        createdAt = null
+        // createdAt = EntryPlanner.toTimestamp(createdAt)
+        createdAt = new Date()
     }) {
         this.id = id; // Firestore document ID
         this.totalFeeds = totalFeeds;
         // this.firstFeedTime = firstFeedTime ? new Date(firstFeedTime) : null;
-        this.firstFeedTime = firstFeedTime ? EntryPlanner.toTimestamp(firstFeedTime) : null;
-        this.lastFeedTime = lastFeedTime ? EntryPlanner.toTimestamp(lastFeedTime) : null;
+        this.firstFeedTime = firstFeedTime ? EntryPlanner.toTimestamp(firstFeedTime): null;
+        this.lastFeedTime = lastFeedTime ?EntryPlanner.toTimestamp(lastFeedTime): null;
         this.MONInterval = MONInterval; // display value in hours
         this.feedTimings = feedTimings;
         this.weekNo = weekNo;
-        this.createdAt = createdAt ? EntryPlanner.toTimestamp(new Date(createdAt)) : EntryPlanner.toTimestamp(new Date());
+        this.createdAt = EntryPlanner.toTimestamp(createdAt);
     }
 
     // Generates feed timings of the day 

@@ -1,4 +1,5 @@
 const EntryPlanner = require("../models/EntryPlanner");
+
 const db = require('../config/database');
 
 class EntryPlannerService {
@@ -37,21 +38,73 @@ class EntryPlannerService {
     }
 
 
-    //updatePlanner need more specific usecase of update?
-    //change only the feed timings?
-    //change number of feed?
+    //updatePlanner 
+
+    //if users change their firstFeedTime and lastFeedTime, give them updated generated timings
     static async updatePlanner(babyId, plannerId, updateData) {
-        const docRef = db
-            .collection("babies")
-            .doc(babyId)
-            .collection("entryPlanner")
-            .doc(plannerId);
+        if (!plannerId) throw new Error("plannerId is required");
 
-        const planner = new EntryPlanner(plannerId, updateData);
-        planner.generateFeedTimings(); // regenerate feedTimings if first/last feed changed
+        const plannerRef = db.collection("babies").doc(babyId).collection("entryPlanner").doc(plannerId);
 
-        await docRef.update(planner.toFirestore());
-        return planner;
+        // Get existing planner
+        const doc = await plannerRef.get();
+        if (!doc.exists) {
+            throw new Error(`Planner with ID ${plannerId} not found`);
+        }
+
+        const existingData = doc.data();
+
+        // Merge updates with existing fields
+        const mergedData = { ...existingData, ...updateData };
+
+        // Rebuild planner and regenerate fields
+        const updatedPlanner = new EntryPlanner(plannerId, mergedData);
+        updatedPlanner.generateFeedTimings();
+
+        // Update only the necessary fields in Firestore
+        await plannerRef.update(updatedPlanner.toFirestore());
+
+        return updatedPlanner;
+
+    }
+
+    //Update feedTimings only
+    static async updateFeedTimings(babyId, plannerId, updateData) {
+        if (!plannerId) throw new Error("plannerId is required");
+
+        const plannerRef = db.collection("babies").doc(babyId).collection("entryPlanner").doc(plannerId);
+
+        // Get existing planner
+        const doc = await plannerRef.get();
+        if (!doc.exists) {
+            throw new Error(`Planner with ID ${plannerId} not found`);
+        }
+
+        const existingData = doc.data();
+
+        // Merge updates with existing fields
+        const mergedData = { ...existingData, ...updateData };
+
+        // Rebuild planner and regenerate fields
+        const updatedPlanner = new EntryPlanner(plannerId, mergedData);
+
+        // Update only the necessary fields in Firestore
+        await plannerRef.update(updatedPlanner.toFirestore());
+
+        return updatedPlanner;
+    }
+
+    static async getPlanners(babyId) {
+        const plannerRef = db.collection("babies").doc(babyId).collection("entryPlanner");
+
+        const snapshot = await plannerRef.orderBy("createdAt", "desc").get();
+
+        if (snapshot.empty) return [];
+
+        return snapshot.docs.map(doc => {
+            const data = doc.data();
+            return new EntryPlanner(doc.id, data);
+        });
     }
 
     static async deletePlanner(plannerId) {

@@ -31,6 +31,7 @@ class JournalService {
         await journalRef.update(validatedData);
 
         const snapshot = await journalRef.get();
+        
         return new JournalEntry(snapshot.id, snapshot.data());
     }
 

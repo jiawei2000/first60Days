@@ -32,6 +32,20 @@ class EntryPlannerController {
         }
     }
 
+    static async getPlanners(req, res) {
+        try {
+            const { babyId } = req.params;
+            const planner = await EntryPlannerService.getPlanners(babyId);
+
+            if (!planner) return res.status(404).json({ error: "Planners not found" });
+
+            return res.status(200).json({ planner });
+        } catch (error) {
+            console.error("Error fetching Entry Planners:", error);
+            return res.status(500).json({ error: "Failed to fetch Entry Planners" });
+        }
+    }
+
     static async updatePlanner(req, res) {
         try {
             const { babyId, plannerId } = req.params;
@@ -47,6 +61,23 @@ class EntryPlannerController {
             return res.status(500).json({ error: "Failed to update Entry Planner" });
         }
     }
+
+    static async updateFeedTimings(req, res) {
+        try {
+            const { babyId, plannerId } = req.params;
+            const updateData = req.body;
+            const updatedPlanner = await EntryPlannerService.updateFeedTimings(babyId, plannerId, updateData);
+
+            return res.status(200).json({
+                message: "FeedTimings updated successfully",
+                planner: updatedPlanner
+            });
+        } catch (error) {
+            console.error("Error updating Entry Planner:", error);
+            return res.status(500).json({ error: "Failed to update Entry Planner" });
+        }
+    }
+
 
     static async deletePlanner(req, res) {
         try {
