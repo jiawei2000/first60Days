@@ -7,9 +7,7 @@ const morgan = require('morgan')
 const userRoutes = require('./routes/userRoutes');
 const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
-const entryPlannerRouters = require('./routes/entryPlannerRoutes'); 
 // require('./jobs/batchJobs');
-require('./jobs/notifications');
 
 // Load env variables
 dotenv.config()
@@ -27,7 +25,7 @@ app.get('/', (req, res) => {
 app.use('/users', userRoutes);
 app.use('/babies', babyRoutes);
 app.use('/journalEntries', journalEntryRoutes);
-app.use('/entryPlanner', entryPlannerRouters);
+
 
 
 // Error handling middleware

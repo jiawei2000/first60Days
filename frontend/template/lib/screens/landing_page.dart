@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import '../routes.dart';
+import '../model/baby.dart';
 
 class LandingPage extends StatefulWidget {
-  final String babyName;
-  final String? avatarUrl;
   final int currentWeek;
   final int totalWeeks;
+  final Baby baby;
 
   const LandingPage({
     super.key,
-    required this.babyName,
-    this.avatarUrl,
     this.currentWeek = 8,
     this.totalWeeks = 10,
+    required this.baby,
   });
 
   @override
@@ -50,7 +49,13 @@ class _LandingPageState extends State<LandingPage> {
             const SizedBox(height: 32),
             _primaryCta(
               label: 'Log Baby Journal Entry',
-              onPressed: () => Navigator.pushNamed(context, Routes.journal),
+              onPressed: () => Navigator.pushNamed(
+                context,
+                Routes.journal,
+                arguments: {
+                  'babyId': widget.baby.id
+                },
+              ),
             ),
             const SizedBox(height: 24),
           ],
@@ -66,7 +71,7 @@ class _LandingPageState extends State<LandingPage> {
       children: [
         Expanded(
           child: Text(
-            widget.babyName,
+            widget.baby.name,
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
@@ -74,8 +79,8 @@ class _LandingPageState extends State<LandingPage> {
           radius: 18,
           backgroundColor: Colors.blue.shade50,
           backgroundImage:
-              widget.avatarUrl == null ? null : NetworkImage(widget.avatarUrl!),
-          child: widget.avatarUrl == null
+              widget.baby.avatarUrl == null ? null : NetworkImage(widget.baby.avatarUrl!),
+          child: widget.baby.avatarUrl == null
               ? const Icon(Icons.child_care, color: Colors.blue)
               : null,
         ),

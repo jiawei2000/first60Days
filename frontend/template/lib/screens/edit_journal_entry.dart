@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:best_flutter_ui_templates/screens/providers/widget.dart';
 
 import '../model/journal_entry.dart';
 import '../model/feed_type.dart';
 import '../network/journal_api.dart';
-import 'providers/widget.dart';
 import '../routes.dart';
+import 'dart:convert';
 
 const _kFeedTypes = ['EBM', 'Formula', 'Breast (Left)', 'Breast (Right)'];
 String _unitForType(String? t) {
@@ -14,15 +15,19 @@ String _unitForType(String? t) {
   return t.startsWith('BF') ? 'min' : 'mL';
 }
 
-class JournalEntryPage extends StatefulWidget {
+class EditJournalEntryPage extends StatefulWidget {
   final String babyId;
-  final JournalEntry? initial;
-  const JournalEntryPage({super.key, required this.babyId, this.initial});
+  final JournalEntry? initialJournalEntry;
+  const EditJournalEntryPage({
+    super.key,
+    required this.babyId,
+    this.initialJournalEntry,
+  });
   @override
-  State<JournalEntryPage> createState() => _JournalEntryPageState();
+  State<EditJournalEntryPage> createState() => _EditJournalEntryPageState();
 }
 
-class _JournalEntryPageState extends State<JournalEntryPage> {
+class _EditJournalEntryPageState extends State<EditJournalEntryPage> {
   final _formKey = GlobalKey<FormState>();
 
   // TODO get cycle no
@@ -44,7 +49,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
   @override
   void initState() {
     super.initState();
-    _addFeed(); // Start with one feed entry
+    loadInitialJournalEntry();
   }
 
   @override
@@ -58,12 +63,102 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
     super.dispose();
   }
 
+  void loadInitialJournalEntry() {
+    String token = get_token(context) ?? "";
+    String babyId = get_babyid(context) ?? "";
+    if (token.isEmpty) {
+      debugPrint("No token found. User may not be logged in.");
+      return;
+    }
+
+    JournalAPI.getJournalEntryById(
+      widget.initialJournalEntry?.id ?? '',
+      babyId,
+      token,
+    ).then((response) {
+      debugPrint("Response status: ${response.statusCode}");
+      debugPrint("Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        JournalEntry journalEntry = JournalEntry.fromJson(
+          json.decode(response.body),
+        );
+        setState(() {
+          debugPrint("BabyId: $babyId");
+          debugPrint("EntryId: ${journalEntry.id}");
+
+          hasUrine = journalEntry.hasUrine ?? false;
+          hasStool = journalEntry.hasStool ?? false;
+
+          // To fix time being off by 8 hours, create a new DateTime
+          startWakeTime = DateTime(
+            journalEntry.startWakeTime!.year,
+            journalEntry.startWakeTime!.month,
+            journalEntry.startWakeTime!.day,
+            journalEntry.startWakeTime!.hour,
+            journalEntry.startWakeTime!.minute,
+          );
+
+          startFeedTime = DateTime(
+            journalEntry.startFeedTime!.year,
+            journalEntry.startFeedTime!.month,
+            journalEntry.startFeedTime!.day,
+            journalEntry.startFeedTime!.hour,
+            journalEntry.startFeedTime!.minute,
+          );
+          startPlayTime = DateTime(
+            journalEntry.startPlayTime!.year,
+            journalEntry.startPlayTime!.month,
+            journalEntry.startPlayTime!.day,
+            journalEntry.startPlayTime!.hour,
+            journalEntry.startPlayTime!.minute,
+          );
+          startSleepTime = DateTime(
+            journalEntry.startSleepTime!.year,
+            journalEntry.startSleepTime!.month,
+            journalEntry.startSleepTime!.day,
+            journalEntry.startSleepTime!.hour,
+            journalEntry.startSleepTime!.minute,
+          );
+
+          remarksController.text = journalEntry.remarks ?? '';
+
+          //feed types controllers
+          _feedTypeCtrls.clear();
+          _feedValueCtrls.clear();
+          _feedUnits.clear();
+
+          List<FeedType> feedTypes = [];
+
+          if (journalEntry.feedTypes != null &&
+              journalEntry.feedTypes!.isNotEmpty) {
+            feedTypes = journalEntry.feedTypes!;
+          } else {
+            // At least have one feed type field
+            _addFeed();
+          }
+
+          for (var feedType in feedTypes) {
+            debugPrint("AAAA");
+            final typeCtrl = TextEditingController(text: feedType.type);
+            final valueCtrl = TextEditingController(
+              text: feedType.value.toString(),
+            );
+            _feedTypeCtrls.add(typeCtrl);
+            _feedValueCtrls.add(valueCtrl);
+            _feedUnits.add(feedType.unit ?? 'mL');
+          }
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: const Text('Log Journal Entry'),
+        title: const Text('Edit Journal Entry'),
       ),
       body: SafeArea(
         child: Form(
@@ -119,6 +214,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
               const SizedBox(height: 12),
               _textField(
                 label: 'Remarks',
+                controller: remarksController,
                 hintText: 'Add any remarks here',
                 onChanged: (value) =>
                     setState(() => remarksController.text = value),
@@ -366,6 +462,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
 
   Widget _textField({
     required String label,
+    required TextEditingController controller,
     String? hintText,
     required ValueChanged<String> onChanged,
   }) {
@@ -386,6 +483,7 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
           ),
           style: const TextStyle(fontSize: 18),
           onChanged: onChanged,
+          controller: controller,
         ),
       ),
     );
@@ -412,6 +510,8 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
         feedTypes.add(FeedType(type: type, value: value, unit: unit));
       }
     }
+    debugPrint("HasUrine: ${hasUrine.toString()}");
+
     final entry = JournalEntry(
       cycleNo: cycle,
       hasUrine: hasUrine,
@@ -424,28 +524,37 @@ class _JournalEntryPageState extends State<JournalEntryPage> {
       remarks: remarksController.text,
     );
 
-    debugPrint("Reach AAA");
     String babyId = get_babyid(context) ?? "";
-    // String babyId = widget.babyId; // Replace with actual babyId
+    String entryId = widget.initialJournalEntry?.id ?? "";
+    // debugPrint("Saving entry for babyId: $babyId");
+    // debugPrint("Entry ID: $entryId");
+    // debugPrint("Journey Entry Urine: ${entry.hasUrine}");
 
     final token = get_token(context);
     if (token == null) {
       debugPrint("No token found. User may not be logged in.");
       return;
     }
-    JournalAPI.createJournalEntry(babyId, entry, token).then((response) {
-      debugPrint("Response status: ${response.statusCode}");
-      debugPrint("Response body: ${response.body}");
 
-      if (response.statusCode == 201) {
-        // Navigate to calendar
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          Routes.calendar,
-          (route) => false,
-        );
-      }
-    });
+    // Check sending Journal Entry
+    debugPrint("Remarks: ${entry.remarks}");
+
+    JournalAPI.updateJournalEntry(entryId, babyId, entry, token).then(
+      (value) => {
+        debugPrint("Response status: ${value.statusCode}"),
+        debugPrint("Response body: ${value.body}"),
+
+        if (value.statusCode == 200)
+          {
+            // Navigate to calendar
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              Routes.calendar,
+              (route) => false,
+            ),
+          },
+      },
+    );
   }
 }
 

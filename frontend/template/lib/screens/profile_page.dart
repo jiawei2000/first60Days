@@ -1,61 +1,47 @@
-// lib/screens/profile_page.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import '../routes.dart';
+import 'manage_babies_page.dart';
+import 'manage_caregivers_page.dart';
+import '../model/profile_models.dart';
+import '../model/baby.dart';
+import 'providers/auth_provider.dart';
+import 'signin_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BabyInfo {
+  String id;
   TextEditingController name;
-  TextEditingController age; // e.g. "6 Weeks"
-  BabyInfo({String name = '', String age = ''})
+  TextEditingController age;
+  BabyInfo({this.id = '', String name = '', String age = ''})
       : name = TextEditingController(text: name),
         age = TextEditingController(text: age);
 }
 
 class CaregiverInfo {
   TextEditingController name;
-  TextEditingController detail; // e.g. "Nanny", "Grandmother"
+  TextEditingController detail;
   CaregiverInfo({String name = '', String detail = ''})
       : name = TextEditingController(text: name),
         detail = TextEditingController(text: detail);
 }
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({
-    super.key,
-    this.initialName = 'Melissa Peters',
-    this.initialEmail = 'melpeters@gmail.com',
-    this.initialTrainer = 'Jane Doe',
-    this.initialBabies = const [
-      ('Chloe Lim', '6 Weeks'),
-      ('Justin Lim', '10 Weeks'),
-    ],
-    this.initialCaregivers = const [
-      ('XYZ', 'Nanny'),
-      ('XYZ', 'Grandmother'),
-    ],
-  });
-
-  final String initialName;
-  final String initialEmail;
-  final String initialTrainer;
-  final List<(String, String)> initialBabies;     // (name, age)
-  final List<(String, String)> initialCaregivers; // (name, detail)
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // edit mode
   bool _editing = false;
 
-  // main fields
-  late final TextEditingController _nameCtrl;
-  late final TextEditingController _emailCtrl;
-  late final TextEditingController _trainerCtrl;
-
-  // sections
-  bool _babyOpen = false;
-  bool _caregiverOpen = false;
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _trainerCtrl =
+      TextEditingController(text: 'Jane Doe');
 
   final List<BabyInfo> _babies = [];
   final List<CaregiverInfo> _caregivers = [];
@@ -63,15 +49,91 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _nameCtrl = TextEditingController(text: widget.initialName);
-    _emailCtrl = TextEditingController(text: widget.initialEmail);
-    _trainerCtrl = TextEditingController(text: widget.initialTrainer);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    _emailCtrl.text = auth.email ?? 'Unknown';
+    _nameCtrl.text = auth.username ?? 'unknown';
 
-    for (final b in widget.initialBabies) {
-      _babies.add(BabyInfo(name: b.$1, age: b.$2));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchCaregivers(auth.subAccountIds);
+      _fetchBabyProfiles();
+    });
+  }
+
+  Future<void> _fetchCaregivers(List<String> caregiverIds) async {
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final baseURL = dotenv.env['BASE_URL'];
+
+     try {
+    for (final id in caregiverIds) {
+      final url = Uri.parse('$baseURL/users/getUserById');
+
+      final request = http.Request('GET', url)
+        ..headers.addAll({
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        })
+        ..body = jsonEncode({'userId': id});
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        final username = data['username'] ?? id;
+        final phone = data['phoneNo'] ?? '';
+
+        setState(() {
+          _caregivers.add(
+            CaregiverInfo(name: username, detail: phone),
+          );
+        });
+      } else {
+        print('❌ Failed to fetch caregiver $id: ${response.body}');
+      }
     }
-    for (final c in widget.initialCaregivers) {
-      _caregivers.add(CaregiverInfo(name: c.$1, detail: c.$2));
+  } catch (e) {
+      print('❌ Error fetching caregivers: $e');
+    }
+  }
+
+  Future<void> _fetchBabyProfiles() async {
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final baseURL = dotenv.env['BASE_URL'];
+    final url = Uri.parse('$baseURL/babies/getProfiles');
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> profiles = data['babyProfiles'];
+
+        for (final baby in profiles) {
+          final id = baby['id'] ?? '';
+          final name = baby['name'] ?? '-';
+          final dobMap = baby['dob'];
+          DateTime dob = DateTime.now();
+          if (dobMap != null && dobMap is Map && dobMap['_seconds'] != null) {
+            dob = DateTime.fromMillisecondsSinceEpoch(
+                dobMap['_seconds'] * 1000);
+          }
+          final ageWeeks = DateTime.now().difference(dob).inDays ~/ 7;
+          _babies.add(BabyInfo(id: id, name: name, age: '$ageWeeks Weeks'));
+        }
+
+        setState(() {});
+      } else {
+        print('Failed to fetch babies');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
@@ -89,19 +151,6 @@ class _ProfilePageState extends State<ProfilePage> {
       c.detail.dispose();
     }
     super.dispose();
-  }
-
-  void _addCaregiver() {
-    setState(() {
-      _caregivers.add(CaregiverInfo());
-    });
-  }
-
-  void _removeCaregiver(int index) {
-    final removed = _caregivers.removeAt(index);
-    removed.name.dispose();
-    removed.detail.dispose();
-    setState(() {});
   }
 
   @override
@@ -126,78 +175,100 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             _labeledBox('Name', _nameCtrl, enabled: _editing),
             const SizedBox(height: 12),
-            _labeledBox('Email', _emailCtrl, enabled: _editing, keyboard: TextInputType.emailAddress),
+            _labeledBox('Email', _emailCtrl,
+                enabled: false, keyboard: TextInputType.emailAddress),
             const SizedBox(height: 12),
             _labeledBox('Trainer', _trainerCtrl, enabled: _editing),
             const SizedBox(height: 16),
-
-            // Baby section header
-            _sectionHeader(
-              title: 'Baby Information',
-              open: _babyOpen,
-              onTap: () => setState(() => _babyOpen = !_babyOpen),
-            ),
-            if (_babyOpen) ...[
-              const SizedBox(height: 8),
-              for (int i = 0; i < _babies.length; i++) ...[
-                Text('Baby ${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 6),
-                _labeledBox('Name', _babies[i].name, enabled: _editing),
-                const SizedBox(height: 12),
-                _labeledBox('Age', _babies[i].age, enabled: _editing, hint: 'e.g. 6 Weeks'),
-                const SizedBox(height: 16),
-              ],
-            ],
-
-            _sectionHeader(
-              title: 'Caregiver',
-              open: _caregiverOpen,
-              onTap: () => setState(() => _caregiverOpen = !_caregiverOpen),
-            ),
-            if (_caregiverOpen) ...[
-              const SizedBox(height: 8),
-
-              for (int i = 0; i < _caregivers.length; i++) ...[
-                Row(
-                  children: [
-                    Text('Caregiver ${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                    const Spacer(),
-                    if (_editing && _caregivers.length > 1)
-                      IconButton(
-                        tooltip: 'Remove caregiver',
-                        icon: const Icon(Icons.remove_circle_outline),
-                        onPressed: () => _removeCaregiver(i),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-
-                _labeledBox(
-                  'Name',
-                  _caregivers[i].name,
-                  enabled: _editing,
-                ),
-                const SizedBox(height: 12),
-
-                _labeledBox(
-                  'Detail',
-                  _caregivers[i].detail,
-                  enabled: _editing,
-                  hint: 'Nanny / Grandmother',
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              if (_editing)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _addCaregiver,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add caregiver'),
+            _navButton(
+              context,
+              title: 'Manage Baby Information',
+              subtitle: 'Add / edit babies',
+              icon: Icons.child_care_outlined,
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ManageBabiesPage(
+                      initialBabies: _babies
+                          .map((b) => Baby(
+                                id: b.id,
+                                name: b.name.text,
+                                age: b.age.text,
+                              ))
+                          .toList(),
+                    ),
                   ),
-                ),
-            ]
+                ).then((updated) {
+                  if (updated is List<Baby>) {
+                    for (final b in _babies) {
+                      b.name.dispose();
+                      b.age.dispose();
+                    }
+                    _babies
+                      ..clear()
+                      ..addAll(updated.map((b) => BabyInfo(
+                          id: b.id, name: b.name, age: b.age ?? '')));
+                    setState(() {});
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            _navButton(
+              context,
+              title: 'Manage Caregivers',
+              subtitle: 'Create / edit caregiver profiles',
+              icon: Icons.group_outlined,
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ManageCaregiversPage(
+                      initialCaregivers: _caregivers
+                          .map((c) => Caregiver(
+                                username: c.name.text,
+                                email: '',
+                                phone: c.detail.text,
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                ).then((updated) {
+                  if (updated is List<Caregiver>) {
+                    for (final c in _caregivers) {
+                      c.name.dispose();
+                      c.detail.dispose();
+                    }
+                    _caregivers
+                      ..clear()
+                      ..addAll(updated.map(
+                          (c) => CaregiverInfo(name: c.username, detail: c.phone)));
+                    setState(() {});
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Provider.of<AuthProvider>(context, listen: false).clearToken();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SignInScreen()),
+                  (route) => false,
+                );
+              },
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle:
+                    const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
       ),
@@ -205,35 +276,16 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _sectionHeader({required String title, required bool open, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-          const Spacer(),
-          Icon(open ? Icons.expand_less : Icons.expand_more),
-        ],
-      ),
-    );
-  }
-
-  Widget _labeledBox(
-    String label,
-    TextEditingController ctrl, {
-    bool enabled = false,
-    String? hint,
-    TextInputType keyboard = TextInputType.text,
-  }) {
+  Widget _labeledBox(String label, TextEditingController ctrl,
+      {bool enabled = false,
+      String? hint,
+      TextInputType keyboard = TextInputType.text}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.blue),
-          ),
+          child: Text(label, style: const TextStyle(color: Colors.blue)),
         ),
         if (enabled)
           TextField(
@@ -245,23 +297,57 @@ class _ProfilePageState extends State<ProfilePage> {
               isDense: true,
               filled: true,
               fillColor: Theme.of(context).colorScheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
           )
         else
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              ctrl.text.isEmpty ? '-' : ctrl.text,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black, // solid text
-              ),
-            ),
+            child: Text(ctrl.text.isEmpty ? '-' : ctrl.text,
+                style:
+                    const TextStyle(fontSize: 16, color: Colors.black)),
           ),
       ],
+    );
+  }
+
+  Widget _navButton(BuildContext context,
+      {required String title,
+      String? subtitle,
+      required IconData icon,
+      required VoidCallback onTap}) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style:
+                            const TextStyle(fontWeight: FontWeight.w600)),
+                    if (subtitle != null)
+                      Text(subtitle,
+                          style: TextStyle(
+                              color: Colors.grey[600], fontSize: 12)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -275,32 +361,33 @@ class _ProfileTabs extends StatelessWidget {
       top: false,
       child: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: 4, // Profile active
+        currentIndex: 4,
         onTap: (i) {
           switch (i) {
             case 0:
-              // Navigator.pushNamed(context, Routes.plan);
               break;
             case 1:
               Navigator.pushNamed(context, Routes.calendar);
               break;
             case 2:
-              // Navigator.pushNamed(context, Routes.landing); // or pop
-              Navigator.popUntil(context, (r) => r.isFirst);
+              Navigator.pushNamed(context, Routes.landing);
               break;
             case 3:
               Navigator.pushNamed(context, Routes.chat);
               break;
             case 4:
-              // already on profile
               break;
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.event_note_outlined), label: 'Plan'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Calendar'),
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.event_note_outlined), label: 'Plan'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today_outlined), label: 'Calendar'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

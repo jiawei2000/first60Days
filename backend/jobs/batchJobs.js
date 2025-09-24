@@ -14,3 +14,5 @@ cron.schedule('* * * * *', async () => {
         console.error("Error in daily checks job:", error);
     }
 });
+
+

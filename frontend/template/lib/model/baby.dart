@@ -3,5 +3,9 @@ class Baby {
   final String id;
   final String name;
   final String? avatarUrl;
-  const Baby({required this.id, required this.name, this.avatarUrl});
+  final String? age;
+  const Baby({required this.id,
+              required this.name,
+              this.avatarUrl, 
+              this.age});
 }
