@@ -8,6 +8,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
+import '/resources/pages/create_journal_entry_page.dart';
+
 class HomePage extends NyStatefulWidget<HomeController> {
   static RouteView path = ("/home", (_) => HomePage());
 
@@ -39,7 +41,7 @@ class _HomePageState extends NyPage<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           showToastSuccess(title: "Hello 👋", description: "Welcome to Nylo");
-
+          routeTo(CreateJournalEntryPage.path);
           // Uncomment the code below to send a push notifications
           // await PushNotification.sendNotification(
           //     title: "Hello 👋", body: "Welcome to Nylo",

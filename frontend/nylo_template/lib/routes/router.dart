@@ -1,7 +1,7 @@
+import '/resources/pages/create_journal_entry_page.dart';
 import '/resources/pages/not_found_page.dart';
 import '/resources/pages/home_page.dart';
 import 'package:nylo_framework/nylo_framework.dart';
-
 /* App Router
 |--------------------------------------------------------------------------
 | * [Tip] Create pages faster 🚀
@@ -33,4 +33,5 @@ appRouter() => nyRoutes((router) {
       //
       // });
       router.add(NotFoundPage.path).unknownRoute();
-});
+      router.add(CreateJournalEntryPage.path);
+    });
