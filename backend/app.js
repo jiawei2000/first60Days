@@ -9,7 +9,7 @@ const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
 const entryPlannerRouters = require('./routes/entryPlannerRoutes'); 
 // require('./jobs/batchJobs');
-require('./jobs/notifications');
+// require('./jobs/notifications');
 
 // Load env variables
 dotenv.config()
@@ -24,10 +24,10 @@ app.get('/', (req, res) => {
 })
 
 //routes 
-app.use('/users', userRoutes);
-app.use('/babies', babyRoutes);
-app.use('/journalEntries', journalEntryRoutes);
-app.use('/entryPlanner', entryPlannerRouters);
+app.use('/api/users', userRoutes);
+app.use('/api/babies', babyRoutes);
+app.use('/api/journalEntries', journalEntryRoutes);
+app.use('/api/entryPlanner', entryPlannerRouters);
 
 
 // Error handling middleware
