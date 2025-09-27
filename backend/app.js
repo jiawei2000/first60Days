@@ -7,6 +7,7 @@ const morgan = require('morgan')
 const userRoutes = require('./routes/userRoutes');
 const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
+const entryPlannerRouters = require('./routes/entryPlannerRoutes');
 // require('./jobs/batchJobs');
 // require('./jobs/notifications');
 
