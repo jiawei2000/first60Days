@@ -3,7 +3,8 @@ const JournalService = require('../services/journalService');
 const journalController = {
     async createEntry(req, res) {
         try {
-            const { babyId, ...entryData } = req.body;
+            const { babyId } = req.params;
+            const { ...entryData } = req.body;
 
             if (!babyId) {
                 return res.status(400).json({ error: "babyId is required" });
@@ -23,7 +24,8 @@ const journalController = {
 
     async editEntry(req, res) {
         try {
-            const { babyId, entryId, updateData } = req.body;
+            const { babyId, entryId } = req.params;
+            const { ...updateData } = req.body;
             // const updateData = req.body;
 
             if (!babyId || !entryId) {
@@ -45,7 +47,7 @@ const journalController = {
 
     async getEntries(req, res) {
         try {
-            const { babyId } = req.body;
+            const { babyId } = req.params;
             const entries = await JournalService.getEntries(babyId);
 
             if (entries.length === 0) {
@@ -61,7 +63,7 @@ const journalController = {
 
     async getEntryById(req, res) {
         try {
-            const { babyId, entryId } = req.body;
+            const { babyId, entryId } = req.params;
 
             // Fetch journal entry from service
             const entry = await JournalService.getEntryById(babyId, entryId);
@@ -81,7 +83,7 @@ const journalController = {
 
     async getCurrentCycleNo(req, res) {
         try {
-            const { babyId } = req.body;
+            const { babyId } = req.params;
             const cycleNo = await JournalService.getCurrentCycleNo(babyId);
 
             return res.status(200).json({ cycleNo });
