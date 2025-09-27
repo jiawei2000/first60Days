@@ -62,7 +62,7 @@ class EntryPlanner {
                 intervalsNeeded += 1;
                 spacehours = totalDuration / intervalsNeeded;
             }
-            else if (spacehours < 2.5) {
+            else if (spacehours < 2) {
                 console.log(`${spacehours} hr interval, less feed needed. Reducing total Feed by 1`)
                 this.totalFeeds -= 1;
                 intervalsNeeded -= 1;

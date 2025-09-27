@@ -4,13 +4,13 @@ const userController = require('../controllers/userController');
 const { authenticateToken } = require('../config/authMiddleware');
 
 // Public routes
-router.post('/', userController.registerNew);
+router.post('/registerNew', userController.registerNew);
 router.post('/login', userController.login);
 
 // Protected routes
 router.post('/registerSub', authenticateToken, userController.registerSub);
-router.put('/password', authenticateToken, userController.updatePassword);
-router.delete('/:userId', authenticateToken, userController.deleteUser);
-router.get('/:userId', authenticateToken, userController.getUserById)
+router.put('/updatePassword', authenticateToken, userController.updatePassword);
+router.delete('/delete', authenticateToken, userController.deleteUser);
+router.get('/getUserById', authenticateToken, userController.getUserById)
 
 module.exports = router;

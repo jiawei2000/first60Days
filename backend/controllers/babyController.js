@@ -13,7 +13,7 @@ const BabyController = {
                 babyId: baby.id,
                 baby,
             });
-
+    
         } catch (error) {
             console.error("Error in createBaby:", error.message);
             if (error.message === "User not found" || error.message === "Permission reference not found") {
@@ -28,9 +28,9 @@ const BabyController = {
 
     async editProfile(req, res) {
         try {
-            const { name, dob } = req.body;
-            const { babyId } = req.params;
-            const updatedBaby = await BabyService.editProfile(babyId, { name, dob });
+            const { babyId, ...body } = req.body;
+
+            const updatedBaby = await BabyService.editProfile(babyId, body);
 
             res.status(200).json({
                 message: "Baby profile updated successfully",
@@ -48,7 +48,9 @@ const BabyController = {
     async deleteProfile(req, res) {
         try {
             const userId = req.user.id;
-            const { babyId } = req.params;
+            const { babyId } = req.body;
+            console.log(babyId);
+            console.log(userId);
             const result = await BabyService.deleteProfile(userId, babyId);
 
             res.status(200).json(result);
@@ -78,7 +80,7 @@ const BabyController = {
 
     async getProfileById(req, res) {
         try {
-            const { babyId } = req.params;
+            const { babyId } = req.body;
             const babyProfile = await BabyService.getProfileById(babyId);
 
             res.status(200).json(babyProfile);
