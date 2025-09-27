@@ -7,6 +7,16 @@ const { authenticateToken } = require('./auth');
 router.post('/journal/newEntry', authenticateToken, async (req, res) => {
     //create a new entry for a particular baby 
     try {
+        // --- forensic logs ---
+        console.log('>> /journal/newEntry headers:', req.headers);
+        // show raw keys received
+        console.log('>> keys:', Object.keys(req.body));
+        // show whether cycleNo key exists at all
+        console.log('>> has cycleNo:', Object.prototype.hasOwnProperty.call(req.body, 'cycleNo'));
+        // show the actual value and its JS type
+        console.log('>> cycleNo value:', req.body.cycleNo, 'type:', typeof req.body.cycleNo);
+        // full body (safe-ish)
+        console.log('>> body:', JSON.stringify(req.body));
         const {
             babyId, awakeTime, cycleNo,
             feedType, remarks, sleepDuration,
@@ -18,7 +28,6 @@ router.post('/journal/newEntry', authenticateToken, async (req, res) => {
         if (!babyId) {
             return res.status(400).json({ error: "babyId are required" });
         }
-
         // Reference to the baby's journalEntries subcollection
         const journalRef = db.collection("babies").doc(babyId).collection("journalEntries");
 

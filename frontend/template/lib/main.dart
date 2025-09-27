@@ -1,31 +1,35 @@
-import 'dart:io';
-import 'package:best_flutter_ui_templates/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-
-import 'routes.dart';
-import 'screens/onboarding_screen.dart'; 
-import 'screens/landing_page.dart';
-import 'screens/create_journal_entry.dart';
-import 'screens/profile_page.dart';
-import 'screens/choose_baby_screen.dart';
-import 'screens/chat_page.dart';
-import 'model/baby.dart';
-import 'screens/calendar/calendar_screen.dart';
-
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:provider/provider.dart';
+import 'screens/providers/auth_provider.dart'; // <-- import your AuthProvider
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:io';
+import 'app_theme.dart';
+import 'router.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
   await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-  ]).then((_) => runApp(const MyApp()));
+  ]);
+
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    throw Exception("Failed to load .env file: $e");
+  }
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: const MyApp(), // wrapped in provider
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -44,6 +48,7 @@ class MyApp extends StatelessWidget {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
+
     return MaterialApp(
       title: 'Digital Nanny',
       debugShowCheckedModeBanner: false,
@@ -54,30 +59,11 @@ class MyApp extends StatelessWidget {
         dividerTheme: const DividerThemeData(color: Color(0xFFE0E0E0)),
       ),
       home: const OnboardingScreen(),
-      routes: {
-            Routes.journal: (_) => const JournalEntryPage(),
-            Routes.profile: (_) => const ProfilePage(),
-            Routes.chooseBaby: (_) => const ChooseBabyScreen(),
-            Routes.chat: (_) => const ChatPage(),
-            Routes.calendar: (_) => const CalendarScreen(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == Routes.landing && settings.arguments is Baby) {
-          final b = settings.arguments as Baby;
-          return MaterialPageRoute(
-            builder: (_) => LandingPage(
-              babyName: b.name,
-              avatarUrl: b.avatarUrl,
-            ),
-          );
-        }
-        return null;
-      },
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }
 
-// 👇 Keep HexColor class here
 class HexColor extends Color {
   HexColor(final String hexColor) : super(_getColorFromHex(hexColor));
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signin_screen.dart';
+import 'signup_screen.dart';
+
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -68,7 +70,10 @@ class LoginScreen extends StatelessWidget {
                         height: 60, // 🔥 taller button
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: push SignUpScreen when ready
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             elevation: 4,
