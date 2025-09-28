@@ -1,5 +1,5 @@
 class User {
-    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID }) {
+    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID, fcmTokens }) {
         this.id = id;
         this.email = email;
         this.password = password;
@@ -9,6 +9,7 @@ class User {
         this.lastLoginAt = lastLoginAt;
         this.deletedAt = deletedAt;
         this.permissionID = permissionID;
+        this.fcmTokens = fcmTokens; // Array, multiple tokens for multiple devices
     }
 
     // convenience method to map Firestore doc -> User instance
@@ -27,7 +28,8 @@ class User {
             createdAt: this.createdAt,
             lastLoginAt: this.lastLoginAt,
             deletedAt: this.deletedAt,
-            permissionID: this.permissionID
+            permissionID: this.permissionID,
+            fcmTokens: this.fcmTokens,
         };
     }
 }
