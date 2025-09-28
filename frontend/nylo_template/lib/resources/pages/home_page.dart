@@ -1,3 +1,6 @@
+import 'package:flutter_app/app/models/journal_entry.dart';
+import 'package:flutter_app/app/networking/journal_api_service.dart';
+
 import '/resources/widgets/theme_toggle_widget.dart';
 import '/app/networking/api_service.dart';
 import '/bootstrap/extensions.dart';
@@ -18,6 +21,8 @@ class HomePage extends NyStatefulWidget<HomeController> {
 
 class _HomePageState extends NyPage<HomePage> {
   int? _stars;
+
+  JournalApiService _journalApiService = JournalApiService();
 
   @override
   get init => () async {
@@ -40,12 +45,21 @@ class _HomePageState extends NyPage<HomePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          showToastSuccess(title: "Hello 👋", description: "Welcome to Nylo");
-          routeTo(CreateJournalEntryPage.path);
+          // showToastSuccess(title: "Hello 👋", description: "Welcome to Nylo");
+          //   routeTo(CreateJournalEntryPage.path);
           // Uncomment the code below to send a push notifications
           // await PushNotification.sendNotification(
-          //     title: "Hello 👋", body: "Welcome to Nylo",
+          //   title: "Hello 👋",
+          //   body: "Welcome to Nylo",
           // );
+
+          // API Call example
+          // Temporary Data
+          String query = "W6bOM4UJxxfbo0bktsmO";
+
+          List<JournalEntry>? entries =
+              await _journalApiService.findAllforBabyId(query: query);
+
         },
         child: const Icon(Icons.notifications),
       ),

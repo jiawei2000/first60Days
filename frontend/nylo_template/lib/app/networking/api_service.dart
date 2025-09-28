@@ -31,21 +31,21 @@ class ApiService extends NyApiService {
         // MyCustomInterceptor: MyCustomInterceptor(),
       };
 
-  Future fetchTestData() async {
-    return await network(
-      request: (request) => request.get("/endpoint-path"),
-    );
-  }
+  // Future fetchTestData() async {
+  //   return await network(
+  //     request: (request) => request.get("/endpoint-path"),
+  //   );
+  // }
 
   /// Example to fetch the Nylo repository info from Github
-  Future githubInfo() async {
-    return await network(
-      request: (request) =>
-          request.get("https://api.github.com/repos/nylo-core/nylo"),
-      cacheKey: "github_nylo_info", // Optional: Cache the response
-      cacheDuration: const Duration(hours: 1),
-    );
-  }
+  // Future githubInfo() async {
+  //   return await network(
+  //     request: (request) =>
+  //         request.get("https://api.github.com/repos/nylo-core/nylo"),
+  //     cacheKey: "github_nylo_info", // Optional: Cache the response
+  //     cacheDuration: const Duration(hours: 1),
+  //   );
+  // }
 
   /* Helpers
   |-------------------------------------------------------------------------- */
@@ -60,7 +60,7 @@ class ApiService extends NyApiService {
   // Future<RequestHeaders> setAuthHeaders(RequestHeaders headers) async {
   //   String? myAuthToken = await Keys.bearerToken.read();
   //   if (myAuthToken != null) {
-  //     headers.addBearerToken( myAuthToken );
+  //     headers.addBearerToken(myAuthToken);
   //   }
   //   return headers;
   // }

@@ -23,7 +23,10 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
       appBar: AppBar(title: Text("Create Journal Entry")),
       body: SafeArea(
         child: NyForm(
-          form: form,
+          form: form, 
+          initialData: {
+            "wake_up_time": DateTime.now(),
+          },
         ),
       ),
     );
