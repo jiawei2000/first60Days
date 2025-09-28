@@ -13,9 +13,15 @@ class UserService {
         const usersRef = db.collection('users');
 
         // Check if email exists
-        const snapshot = await usersRef.where('email', '==', email).get();
-        if (!snapshot.empty) {
-            throw new Error('User already exists');
+        const emailSnapshot = await usersRef.where('email', '==', email).get();
+        if (!emailSnapshot.empty) {
+            throw new Error('Email already exists');
+        }
+
+        // Check if username exists
+        const usernameSnapshot = await usersRef.where('username', '==', username).get();
+        if (!usernameSnapshot.empty) {
+            throw new Error('Username already exists');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -55,9 +61,9 @@ class UserService {
         });
     }
 
-    static async login({ email, password, fcmToken }) {
+    static async login({ username, password, fcmToken }) {
         const usersRef = db.collection('users');
-        const snapshot = await usersRef.where('email', '==', email).get();
+        const snapshot = await usersRef.where('username', '==', username).get();
 
         if (snapshot.empty) {
             throw new Error('Invalid credentials');
@@ -136,7 +142,7 @@ class UserService {
                 permissionType: "sub",
                 createdAt: Timestamp.now(),
                 deletedAt: null,
-                subAccArr: []
+                subAccArr: [],
             });
             t.set(subPermissionRef, subPermission.toFirestore());
 
@@ -149,7 +155,8 @@ class UserService {
                 createdAt: Timestamp.now(),
                 lastLoginAt: null,
                 deletedAt: null,
-                permissionID: subPermissionRef
+                permissionID: subPermissionRef,
+                fcmTokens: []
             });
             t.set(subUserRef, subUser.toFirestore());
 
