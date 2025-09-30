@@ -14,7 +14,17 @@ class JournalEntry extends Model {
 
   static StorageKey key = 'journal_entry';
 
-  JournalEntry() : super(key: key);
+  JournalEntry(
+      {String? this.id,
+      String? this.remarks,
+      DateTime? this.startWakeTime,
+      DateTime? this.startFeedTime,
+      DateTime? this.startPlayTime,
+      DateTime? this.startSleepTime,
+      List<FeedType>? this.feedTypes,
+      bool? this.hasStool,
+      bool? this.hasUrine})
+      : super(key: key);
 
   JournalEntry.fromJson(dynamic data) {
     id = data['id'];
@@ -35,10 +45,10 @@ class JournalEntry extends Model {
         "id": id,
         "remarks": remarks,
         "feedTypes": feedTypes?.map((item) => item.toJson()).toList(),
-        "awakeTime": startWakeTime,
-        "startFeedTime": startFeedTime,
-        "startPlayTime": startPlayTime,
-        "startSleepTime": startSleepTime,
+        "awakeTime": startWakeTime?.toIso8601String(),
+        "startFeedTime": startFeedTime?.toIso8601String(),
+        "startPlayTime": startPlayTime?.toIso8601String(),
+        "startSleepTime": startSleepTime?.toIso8601String(),
         "hasStool": hasStool,
         "hasUrine": hasUrine,
       };

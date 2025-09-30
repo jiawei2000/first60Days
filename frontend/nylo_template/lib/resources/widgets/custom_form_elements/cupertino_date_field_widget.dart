@@ -52,7 +52,8 @@ class _CupertinoDateFieldState extends NyState<CupertinoDateField> {
             use24hFormat: true,
             onDateTimeChanged: (DateTime newDateTime) {
               widget.textController.text =
-                  "${newDateTime.day}/${newDateTime.month}/${newDateTime.year}, ${newDateTime.hour.toString().padLeft(2, '0')}:${newDateTime.minute.toString().padLeft(2, '0')}";
+                  newDateTime.toString();
+              // "${newDateTime.day}/${newDateTime.month}/${newDateTime.year}, ${newDateTime.hour.toString().padLeft(2, '0')}:${newDateTime.minute.toString().padLeft(2, '0')}";
               setState(() {});
             },
           ),

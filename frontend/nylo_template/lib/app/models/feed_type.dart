@@ -7,7 +7,8 @@ class FeedType extends Model {
 
   static StorageKey key = 'feed_type';
 
-  FeedType() : super(key: key);
+  FeedType({String? this.type, int? this.value, String? this.unit})
+      : super(key: key);
 
   FeedType.fromJson(dynamic data) {
     type = data['type'];

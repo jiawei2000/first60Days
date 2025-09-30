@@ -21,7 +21,7 @@ class JournalApiService extends NyApiService {
 
   //TODO: replace with actual token management
   String token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlZERjc1WEdqdG45UTBzaUdyYlZlIiwiZW1haWwiOiJob25nd2VpQGdtYWlsLmNvbSIsImlhdCI6MTc1OTA3OTc4NywiZXhwIjoxNzU5MTY2MTg3fQ.HdZxDGgMgvajm60YRqHASekMGZ3CZAL2vJo6lniB92I";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlZERjc1WEdqdG45UTBzaUdyYlZlIiwiZW1haWwiOiJob25nd2VpQGdtYWlsLmNvbSIsImlhdCI6MTc1OTIxOTQ0MSwiZXhwIjoxNzU5MzA1ODQxfQ.IkVH1YglCXXCB5QWQxvtrAvjijdN5JzZ3NM1EP7bxhU";
 
   /// Return a list of JournalEntry
   // Future<List<JournalEntry>?> fetchAll({dynamic query}) async {
@@ -54,10 +54,11 @@ class JournalApiService extends NyApiService {
   }
 
   /// Create a JournalEntry
-  Future<JournalEntry?> create({required dynamic data}) async {
+  Future<JournalEntry?> create(
+      {required dynamic id, required dynamic data}) async {
     return await network<JournalEntry>(
       request: (request) =>
-          request.post("/journalEntries/createEntry", data: data),
+          request.post("/journalEntries/$id", data: data),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

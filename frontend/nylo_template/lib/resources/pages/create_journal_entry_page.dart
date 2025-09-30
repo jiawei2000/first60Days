@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
-import '/resources/widgets/journal_entry_form_widget.dart';
+import '../widgets/journal_entry_form_widget.dart';
+import '../widgets/buttons/partials/primary_button_widget.dart';
+import '../../app/networking/journal_api_service.dart';
+import '../../app/models/journal_entry.dart';
+import '../../app/models/feed_type.dart';
+
 class CreateJournalEntryPage extends NyStatefulWidget {
   static RouteView path =
       ("/create-journal-entry", (_) => CreateJournalEntryPage());
@@ -11,18 +16,79 @@ class CreateJournalEntryPage extends NyStatefulWidget {
 }
 
 class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
-  JournalEntryForm form = JournalEntryForm();
+  final TextEditingController wakeTimeController = TextEditingController();
+  final TextEditingController feedTimeController = TextEditingController();
+  final TextEditingController sleepTimeController = TextEditingController();
+  final TextEditingController playTimeController = TextEditingController();
+  final List<TextEditingController> feedTypeControllers = [];
+  final List<TextEditingController> feedValueControllers = [];
+  final List<TextEditingController> feedUnitControllers = [];
+  final TextEditingController remarksController = TextEditingController();
+
+  late JournalEntryForm form;
+
+  JournalApiService _journalApiService = JournalApiService();
 
   @override
-  get init => () {};
+  get init => () {
+        //Initialize form
+        form = JournalEntryForm(
+          wakeTimeController: wakeTimeController,
+          feedTimeController: feedTimeController,
+          sleepTimeController: sleepTimeController,
+          playTimeController: playTimeController,
+          feedTypeControllers: feedTypeControllers,
+          feedValueControllers: feedValueControllers,
+          feedUnitControllers: feedUnitControllers,
+          remarksController: remarksController,
+        );
+      };
 
   @override
   Widget view(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Create Journal Entry")),
       body: SafeArea(
-        child: JournalEntryForm()
+        child: Column(
+          children: [
+            Expanded(child: form),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: PrimaryButton(
+                  text: "Submit",
+                  onPressed: () {
+                    createJournalEntry();
+                  }),
+            )
+          ],
+        ),
       ),
     );
+  }
+
+  void createJournalEntry() async {
+    final newEntry = JournalEntry(
+      startWakeTime: parseDateTimeString(wakeTimeController.text),
+      startFeedTime: parseDateTimeString(feedTimeController.text),
+      startSleepTime: parseDateTimeString(sleepTimeController.text),
+      startPlayTime: parseDateTimeString(playTimeController.text),
+      feedTypes: List.generate(feedTypeControllers.length, (index) {
+        return FeedType(
+          type: feedTypeControllers[index].text,
+          value: int.tryParse(feedValueControllers[index].text),
+          unit: feedUnitControllers[index].text,
+        );
+      }),
+      remarks: remarksController.text,
+    );
+
+    // Temporary
+    String babyId = "W6bOM4UJxxfbo0bktsmO";
+    await _journalApiService.create(id: babyId, data: newEntry);
+  }
+
+  DateTime? parseDateTimeString(String dateTimeString) {
+    return DateTime.tryParse(dateTimeString);
   }
 }

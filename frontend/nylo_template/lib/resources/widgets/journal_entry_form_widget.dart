@@ -7,67 +7,86 @@ import 'journal_entry_elements/feed_group_row_widget.dart';
 import 'buttons/partials/text_only_button_widget.dart';
 
 class JournalEntryForm extends StatefulWidget {
-  const JournalEntryForm({super.key});
+  final TextEditingController wakeTimeController;
+  final TextEditingController feedTimeController;
+  final TextEditingController sleepTimeController;
+  final TextEditingController playTimeController;
+  final List<TextEditingController> feedTypeControllers;
+  final List<TextEditingController> feedValueControllers;
+  final List<TextEditingController> feedUnitControllers;
+  final TextEditingController remarksController;
+
+  const JournalEntryForm({
+    super.key,
+    required this.wakeTimeController,
+    required this.feedTimeController,
+    required this.sleepTimeController,
+    required this.playTimeController,
+    required this.feedTypeControllers,
+    required this.feedValueControllers,
+    required this.feedUnitControllers,
+    required this.remarksController,
+  });
 
   @override
   createState() => _JournalEntryFormState();
 }
 
 class _JournalEntryFormState extends NyState<JournalEntryForm> {
-  final TextEditingController wakeTimeController = TextEditingController();
-  final TextEditingController feedTimeController = TextEditingController();
-  final TextEditingController sleepTimeController = TextEditingController();
-  final TextEditingController playTimeController = TextEditingController();
-  final TextEditingController remarksController = TextEditingController();
-
-  int noFeedFields = 1;
-
   @override
-  get init => () {};
+  get init => () {
+        // At least 1 feed field
+        if (widget.feedTypeControllers.isEmpty) {
+          addFeedRow();
+        }
+      };
 
   @override
   Widget view(BuildContext context) {
     return Container(
-        child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            children: [
-          ElevatedButton(
-            onPressed: () {
-              debugPrint(remarksController.text);
-              remarksController.text = "Button Pressed";
-            },
-            child: const Text("Testing"),
-          ),
-          CupertinoDateField(
-              label: 'Awake Time', textController: wakeTimeController),
-          const SizedBox(height: 12),
-          CupertinoDateField(
-              label: 'Feed Time', textController: feedTimeController),
-          LabeledField(label: "Feed Type", child: Container()),
-          for (int i = 0; i < noFeedFields; i++) ...[
-            FeedGroupRow(),
-            const SizedBox(height: 8),
-          ],
-          const SizedBox(height: 8),
-          TextOnlyButton(
-            text: "Add Feed",
-            textColor: const Color(0xFFD61C1C),
-            onPressed: () {
-              setState(() {
-                noFeedFields++;
-              });
-            },
-          ),
-          const SizedBox(height: 12),
-          CupertinoDateField(
-              label: 'Sleep Time', textController: sleepTimeController),
-          const SizedBox(height: 12),
-          CupertinoDateField(
-              label: 'Play Time', textController: playTimeController),
-          LabeledTextField(
-              label: 'Remarks',
-              textController: remarksController,
-              hintText: "Enter remarks"),
-        ]));
+      child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          children: [
+            CupertinoDateField(
+                label: 'Awake Time', textController: widget.wakeTimeController),
+            const SizedBox(height: 12),
+            CupertinoDateField(
+                label: 'Feed Time', textController: widget.feedTimeController),
+            LabeledField(label: "Feed Type", child: Container()),
+            for (int i = 0; i < widget.feedTypeControllers.length; i++) ...[
+              FeedGroupRow(
+                typeController: widget.feedTypeControllers[i],
+                valueController: widget.feedValueControllers[i],
+                unitController: widget.feedUnitControllers[i],
+              ),
+              const SizedBox(height: 4),
+            ],
+            TextOnlyButton(
+              text: "Add Feed",
+              textColor: const Color(0xFFD61C1C),
+              onPressed: () {
+                addFeedRow();
+              },
+            ),
+            CupertinoDateField(
+                label: 'Sleep Time',
+                textController: widget.sleepTimeController),
+            const SizedBox(height: 12),
+            CupertinoDateField(
+                label: 'Play Time', textController: widget.playTimeController),
+            LabeledTextField(
+                label: 'Remarks',
+                textController: widget.remarksController,
+                hintText: "Enter remarks"),
+          ]),
+    );
+  }
+
+  addFeedRow() {
+    setState(() {
+      widget.feedTypeControllers.add(TextEditingController());
+      widget.feedValueControllers.add(TextEditingController());
+      widget.feedUnitControllers.add(TextEditingController());
+    });
   }
 }

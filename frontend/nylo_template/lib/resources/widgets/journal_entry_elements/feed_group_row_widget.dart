@@ -3,16 +3,21 @@ import 'package:nylo_framework/nylo_framework.dart';
 import 'package:flutter/services.dart';
 
 class FeedGroupRow extends StatefulWidget {
-  const FeedGroupRow({super.key});
+  final TextEditingController typeController;
+  final TextEditingController valueController;
+  final TextEditingController unitController;
+
+  const FeedGroupRow(
+      {super.key,
+      required this.typeController,
+      required this.valueController,
+      required this.unitController});
 
   @override
   createState() => _FeedGroupRowState();
 }
 
 class _FeedGroupRowState extends NyState<FeedGroupRow> {
-  final typeController = TextEditingController();
-  final valueController = TextEditingController();
-
   List<DropdownMenuItem> typeItems = [
     const DropdownMenuItem(value: "EBM", child: Text("EBM")),
     const DropdownMenuItem(value: "Formula", child: Text("Formula")),
@@ -31,7 +36,9 @@ class _FeedGroupRowState extends NyState<FeedGroupRow> {
 
   @override
   get init => () {
-        typeController.text = typeItems[0].value;
+        widget.typeController.text = typeItems[0].value;
+        widget.unitController.text =
+            feedUnits[widget.typeController.text] ?? "-";
       };
 
   @override
@@ -51,14 +58,14 @@ class _FeedGroupRowState extends NyState<FeedGroupRow> {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: DropdownButton(
                   items: typeItems,
-                  value: typeController.text,
+                  value: widget.typeController.text,
                   underline: const SizedBox(),
                   onChanged: (selectedValue) {
-                    setState(
-                      () {
-                        typeController.text = selectedValue;
-                      },
-                    );
+                    setState(() {
+                      widget.typeController.text = selectedValue;
+                      widget.unitController.text =
+                          feedUnits[selectedValue] ?? "-";
+                    });
                   },
                 ),
               ),
@@ -77,7 +84,7 @@ class _FeedGroupRowState extends NyState<FeedGroupRow> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        controller: valueController,
+                        controller: widget.valueController,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -94,7 +101,7 @@ class _FeedGroupRowState extends NyState<FeedGroupRow> {
                     const SizedBox(width: 8),
                     // Unit label
                     Text(
-                      feedUnits[typeController.text] ?? "-",
+                      widget.unitController.text,
                       style: const TextStyle(color: Colors.black54),
                     ),
                   ],
