@@ -1,3 +1,4 @@
+import '/resources/pages/edit_journal_entry_page.dart';
 import '/resources/pages/create_journal_entry_page.dart';
 import '/resources/pages/not_found_page.dart';
 import '/resources/pages/home_page.dart';
@@ -34,4 +35,5 @@ appRouter() => nyRoutes((router) {
       // });
       router.add(NotFoundPage.path).unknownRoute();
       router.add(CreateJournalEntryPage.path);
-    });
+      router.add(EditJournalEntryPage.path);
+});
