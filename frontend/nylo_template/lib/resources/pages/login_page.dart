@@ -4,6 +4,8 @@ import '/app/controllers/login_controller.dart';
 import '/app/forms/login_form.dart';
 import '/resources/widgets/logo_widget.dart';
 import '/resources/widgets/buttons/buttons.dart';
+import '/app/networking/user_api_service.dart';
+import '/config/keys.dart';
 
 class LoginPage extends NyStatefulWidget<LoginController> {
   static RouteView path = ("/login", (_) => LoginPage());
@@ -16,8 +18,12 @@ class _LoginPageState extends NyPage<LoginPage> {
   LoginController get controller => widget.controller;
   LoginForm form = LoginForm();
 
+  late UserApiService userApiService;
+
   @override
-  get init => () {};
+  get init => () {
+        userApiService = UserApiService();
+      };
 
   @override
   Widget view(BuildContext context) {
@@ -30,7 +36,7 @@ class _LoginPageState extends NyPage<LoginPage> {
           children: [
             const Logo(),
             Text(
-              "first60Days",
+              "Baby Journal",
             ).displayMedium(),
             const SizedBox(height: 36),
             NyForm(
@@ -41,8 +47,8 @@ class _LoginPageState extends NyPage<LoginPage> {
                   text: "Login",
                   submitForm: (
                     form,
-                    (data) {
-                      debugPrint("Data: $data");
+                    (data) async {
+                      onLogin();
                     }
                   ),
                 ),
@@ -52,5 +58,21 @@ class _LoginPageState extends NyPage<LoginPage> {
         ),
       ),
     );
+  }
+
+  void onLogin() async {
+    var response = await userApiService.login(
+        email: "hongwei@gmail.com", password: "password456");
+
+    // Handle response
+    if (response != null) {
+      showToastSuccess(title: "Login success", description: "Login Successful");
+      await Auth.authenticate(data: {"token": response['token']});
+      await Keys.bearerToken.save(response['token']);
+      // Todo Navigate somewhere
+    } else {
+      // Show error message
+      showToastWarning(title: "Login failed", description: "Please try again");
+    }
   }
 }

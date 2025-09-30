@@ -1,3 +1,4 @@
+import '/app/networking/user_api_service.dart';
 import '/app/controllers/login_controller.dart';
 import '/app/networking/journal_api_service.dart';
 import '/app/controllers/home_controller.dart';
@@ -40,6 +41,8 @@ final Map<Type, dynamic> apiDecoders = {
   // ...
 
   JournalApiService: JournalApiService(),
+
+  UserApiService: UserApiService(),
 };
 
 /* Controller Decoders
