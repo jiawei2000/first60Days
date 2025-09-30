@@ -6,7 +6,7 @@ const admin = require("firebase-admin");
 const User = require('../models/User');
 const Permission = require('../models/Permission');
 
-const { JWT_SECRET } = require('../config/authMiddleware');
+const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 class UserService {
     static async registerNew({ email, password, phoneNo, username }) {
@@ -234,6 +234,17 @@ class UserService {
         }
 
         return new User(userSnap.id, userSnap.data());
+    }
+
+    static async getAllUsers() {
+        const usersRef = db.collection('users');
+        const snapshot = await usersRef.get();
+
+        if (snapshot.empty) {
+            return [];
+        }
+
+        return snapshot.docs.map(doc => User.fromFirestore(doc));
     }
 }
 
