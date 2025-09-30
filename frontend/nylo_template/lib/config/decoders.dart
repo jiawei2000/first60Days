@@ -1,3 +1,4 @@
+import '/app/controllers/login_controller.dart';
 import '/app/networking/journal_api_service.dart';
 import '/app/controllers/home_controller.dart';
 import '/app/models/user.dart';
@@ -51,4 +52,6 @@ final Map<Type, dynamic> controllers = {
   HomeController: () => HomeController(),
 
   // ...
+
+  LoginController: () => LoginController(),
 };
