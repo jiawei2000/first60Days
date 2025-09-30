@@ -10,23 +10,18 @@ class UserApiService extends NyApiService {
   @override
   String get baseUrl => getEnv('API_BASE_URL');
 
-  Future<dynamic> login(
+  Future<Map<String, dynamic>?> login(
       {required String email, required String password}) async {
-    return await network(
-        request: (request) => request.post("/users/login", data: {
-              "email": email,
-              "password": password,
-            }));
+    try {
+      final response = await network(
+          request: (request) => request.post("/users/login", data: {
+                "email": email,
+                "password": password,
+              }));
+      return response as Map<String, dynamic>?;
+    } catch (e) {
+      // Error Handling
+      return null;
+    }
   }
-
-  // Future login({required String email, required String password}) async {
-  //   return await network(
-  //     request: (request) {
-  //       return request.post("/users/login", data: {
-  //         "email": email,
-  //         "password": password,
-  //       });
-  //     },
-  //   );
-  // }
 }

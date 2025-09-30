@@ -48,7 +48,7 @@ class _LoginPageState extends NyPage<LoginPage> {
                   submitForm: (
                     form,
                     (data) async {
-                      onLogin();
+                      onLogin(data['email'], data['password']);
                     }
                   ),
                 ),
@@ -60,9 +60,8 @@ class _LoginPageState extends NyPage<LoginPage> {
     );
   }
 
-  void onLogin() async {
-    var response = await userApiService.login(
-        email: "hongwei@gmail.com", password: "password456");
+  void onLogin(String email, String password) async {
+    var response = await userApiService.login(email: email, password: password);
 
     // Handle response
     if (response != null) {
