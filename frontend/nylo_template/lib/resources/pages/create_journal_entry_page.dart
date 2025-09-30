@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
-import '/app/forms/journal_entry_form.dart';
-
+import '/resources/widgets/journal_entry_form_widget.dart';
 class CreateJournalEntryPage extends NyStatefulWidget {
   static RouteView path =
       ("/create-journal-entry", (_) => CreateJournalEntryPage());
@@ -22,12 +21,7 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
     return Scaffold(
       appBar: AppBar(title: Text("Create Journal Entry")),
       body: SafeArea(
-        child: NyForm(
-          form: form, 
-          initialData: {
-            "wake_up_time": DateTime.now(),
-          },
-        ),
+        child: JournalEntryForm()
       ),
     );
   }

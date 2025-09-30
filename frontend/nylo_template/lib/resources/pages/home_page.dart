@@ -55,10 +55,13 @@ class _HomePageState extends NyPage<HomePage> {
 
           // API Call example
           // Temporary Data
-          String query = "W6bOM4UJxxfbo0bktsmO";
+          //   String query = "W6bOM4UJxxfbo0bktsmO";
 
-          List<JournalEntry>? entries =
-              await _journalApiService.findAllforBabyId(query: query);
+          //   List<JournalEntry>? entries =
+          //       await _journalApiService.findAllforBabyId(query: query);
+
+          // Go to Create Journal Entry Page
+          routeTo(CreateJournalEntryPage.path);
 
         },
         child: const Icon(Icons.notifications),
