@@ -1,5 +1,6 @@
 import '/resources/pages/feeding_schedule_page.dart';
 import '/resources/pages/calendar_page.dart';
+import '/resources/pages/onboard_journey_navigation_hub.dart';
 import '/resources/pages/base_navigation_hub.dart';
 import '/resources/pages/login_page.dart';
 import '/resources/pages/edit_journal_entry_page.dart';
@@ -25,7 +26,7 @@ import 'package:nylo_framework/nylo_framework.dart';
 |-------------------------------------------------------------------------- */
 
 appRouter() => nyRoutes((router) {
-      router.add(HomePage.path).initialRoute();
+      router.add(HomePage.path);
 
       // Add your routes here ...
       // router.add(NewPage.path, transitionType: TransitionType.fade());
@@ -44,4 +45,5 @@ appRouter() => nyRoutes((router) {
       router.add(BaseNavigationHub.path);
       router.add(CalendarPage.path);
       router.add(FeedingSchedulePage.path);
-});
+      router.add(OnboardJourneyNavigationHub.path).initialRoute();
+    });

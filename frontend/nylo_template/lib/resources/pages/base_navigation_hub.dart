@@ -43,7 +43,7 @@ class _BaseNavigationHubState extends NavigationHub<BaseNavigationHub> {
               activeIcon: Icon(Icons.home),
             ),
             1: NavigationTab(
-              title: "Baby Jouranl",
+              title: "Baby Journal",
               page: SplashScreen(),
               icon: Icon(Icons.book),
               activeIcon: Icon(Icons.book),

@@ -16,7 +16,10 @@ class LoginForm extends NyFormData {
             autofocus: true,
             validate: FormValidator.rule("email"),
             style: "compact"),
-        Field.password("Password",
-            validate: FormValidator.password(strength: 1), style: "compact"),
+        Field.password(
+          "Password",
+          validate: FormValidator.rule("not_empty"),
+          style: "compact",
+        ),
       ];
 }
