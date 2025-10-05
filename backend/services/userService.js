@@ -6,16 +6,22 @@ const admin = require("firebase-admin");
 const User = require('../models/User');
 const Permission = require('../models/Permission');
 
-const { JWT_SECRET } = require('../config/authMiddleware');
+const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 class UserService {
     static async registerNew({ email, password, phoneNo, username }) {
         const usersRef = db.collection('users');
 
         // Check if email exists
-        const snapshot = await usersRef.where('email', '==', email).get();
-        if (!snapshot.empty) {
-            throw new Error('User already exists');
+        const emailSnapshot = await usersRef.where('email', '==', email).get();
+        if (!emailSnapshot.empty) {
+            throw new Error('Email already exists');
+        }
+
+        // Check if username exists
+        const usernameSnapshot = await usersRef.where('username', '==', username).get();
+        if (!usernameSnapshot.empty) {
+            throw new Error('Username already exists');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,7 +40,8 @@ class UserService {
                 createdAt: Timestamp.now(),
                 lastLoginAt: null,
                 deletedAt: null,
-                permissionID: permissionRef
+                permissionID: permissionRef,
+                fcmTokens: []
             });
 
             // create permission model
@@ -54,9 +61,9 @@ class UserService {
         });
     }
 
-    static async login({ email, password }) {
+    static async login({ username, password, fcmToken }) {
         const usersRef = db.collection('users');
-        const snapshot = await usersRef.where('email', '==', email).get();
+        const snapshot = await usersRef.where('username', '==', username).get();
 
         if (snapshot.empty) {
             throw new Error('Invalid credentials');
@@ -73,6 +80,13 @@ class UserService {
         // Update lastLoginAt
         await usersRef.doc(user.id).update({ lastLoginAt: Timestamp.now() });
         user.lastLoginAt = Timestamp.now();
+
+        if (fcmToken) {
+        await usersRef.doc(user.id).update({
+            fcmTokens: admin.firestore.FieldValue.arrayUnion(fcmToken)
+        });
+            user.fcmTokens = [...(user.fcmTokens || []), fcmToken];
+        }
 
         // Load permission object
         const permissionDoc = await user.permissionID.get();
@@ -128,7 +142,7 @@ class UserService {
                 permissionType: "sub",
                 createdAt: Timestamp.now(),
                 deletedAt: null,
-                subAccArr: []
+                subAccArr: [],
             });
             t.set(subPermissionRef, subPermission.toFirestore());
 
@@ -141,7 +155,8 @@ class UserService {
                 createdAt: Timestamp.now(),
                 lastLoginAt: null,
                 deletedAt: null,
-                permissionID: subPermissionRef
+                permissionID: subPermissionRef,
+                fcmTokens: []
             });
             t.set(subUserRef, subUser.toFirestore());
 
@@ -219,6 +234,17 @@ class UserService {
         }
 
         return new User(userSnap.id, userSnap.data());
+    }
+
+    static async getAllUsers() {
+        const usersRef = db.collection('users');
+        const snapshot = await usersRef.get();
+
+        if (snapshot.empty) {
+            return [];
+        }
+
+        return snapshot.docs.map(doc => User.fromFirestore(doc));
     }
 }
 
