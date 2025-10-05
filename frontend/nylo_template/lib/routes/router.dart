@@ -1,3 +1,4 @@
+import '/resources/pages/calendar_page.dart';
 import '/resources/pages/base_navigation_hub.dart';
 import '/resources/pages/login_page.dart';
 import '/resources/pages/edit_journal_entry_page.dart';
@@ -40,4 +41,5 @@ appRouter() => nyRoutes((router) {
       router.add(EditJournalEntryPage.path);
       router.add(LoginPage.path);
       router.add(BaseNavigationHub.path);
+      router.add(CalendarPage.path);
 });
