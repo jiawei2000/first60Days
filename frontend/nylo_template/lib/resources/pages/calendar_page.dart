@@ -1,41 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:nylo_framework/nylo_framework.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '/app/controllers/calendar_controller.dart';
 import '/resources/pages/create_journal_entry_page.dart';
+import 'package:nylo_framework/nylo_framework.dart'; // ✅ add this
 
-class CalendarPage extends NyStatefulWidget {
-  static RouteView path = ("/calendar", (_) => CalendarPage());
+class CalendarPage extends StatefulWidget {
+  static RouteView path = ("/calendar", (context) => const CalendarPage());
 
-  CalendarPage({Key? key}) : super(child: () => _CalendarPageState());
+  const CalendarPage({Key? key}) : super(key: key);
+
+  @override
+  State<CalendarPage> createState() => _CalendarPageState();
 }
 
-class _CalendarPageState extends NyPage<CalendarPage> {
-  final CalendarController _controller = CalendarController(); 
+class _CalendarPageState extends State<CalendarPage> {
+  final CalendarController _controller = CalendarController();
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
-
   Map<DateTime, List<Map<String, String>>> _eventData = {};
 
   @override
-  get init => () async {
-        _eventData = await _controller.getCalendarData(); 
-        setState(() {});
-      };
+  void initState() {
+    super.initState();
+    _loadEvents();
+  }
+
+  void _loadEvents() async {
+    final events = await _controller.getCalendarData();
+    setState(() {
+      _eventData = events;
+    });
+  }
 
   List<Map<String, String>> _getEventsForDay(DateTime day) {
     return _eventData[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
   @override
-  Widget view(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Baby Chloe"),
         actions: [
           TextButton(
             onPressed: () {
+              /// ✅ Use Nylo's `routeTo` to navigate to CreateJournalEntryPage
               routeTo(CreateJournalEntryPage.path);
             },
             child: Text(
@@ -66,7 +76,7 @@ class _CalendarPageState extends NyPage<CalendarPage> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            // Dismiss logic
+                            // dismiss banner
                           },
                           child: Icon(Icons.close),
                         )
@@ -112,7 +122,7 @@ class _CalendarPageState extends NyPage<CalendarPage> {
                   Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Text(
-                      "Week 3 Day 1", // Still hardcoded
+                      "Events", // later you can show week/day text here
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),

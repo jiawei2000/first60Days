@@ -1,56 +1,57 @@
-import '/app/controllers/controller.dart';
 import '/app/networking/journal_api_service.dart';
+import '/app/networking/user_api_service.dart';
+import '/app/models/journal_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-class CalendarController extends Controller {
+class CalendarController {
   final JournalApiService _journalApiService = JournalApiService();
 
-  @override
-  construct(BuildContext context) async { //test cmmit
-    await super.construct(context);
-    // Any additional init logic can go here
+  /// Fetch calendar events from backend and convert to Map<DateTime, List<Map<String,String>>>
+  Future<Map<DateTime, List<Map<String, String>>>> getCalendarData() async {
+    // Hardcoded baby ID for now
+    const babyId = "W6bOM4UJxxfbo0bktsmO";
+
+    List<JournalEntry>? entries =
+        await _journalApiService.findAllforBabyId(query: babyId);
+
+    Map<DateTime, List<Map<String, String>>> events = {};
+
+    if (entries != null) {
+      for (var entry in entries) {
+        final awakeDate = entry.startWakeTime ?? DateTime.now();
+        final dayKey = DateTime(awakeDate.year, awakeDate.month, awakeDate.day);
+
+        if (!events.containsKey(dayKey)) {
+          events[dayKey] = [];
+        }
+
+        String eventTime = entry.startFeedTime != null
+            ? DateFormat('hh:mm a').format(entry.startFeedTime!.toLocal())
+            : "No time";
+
+        events[dayKey]!.add({
+          "title": "Cycle", // You can add entry.cycleNo if needed
+          "time": eventTime,
+        });
+      }
+    }
+
+    return events;
   }
 
-  /// Returns a map of events per normalized date
-  Future<Map<DateTime, List<Map<String, String>>>> getCalendarData() async {
-    await Future.delayed(Duration(seconds: 1)); 
+  /// 🔐 Manual login test function to verify token retrieval
+  void testLogin() async {
+    UserApiService apiService = UserApiService();
+    final response = await apiService.login(
+      email: "hongwei@gmail.com",
+      password: "password456",
+    );
 
-    // Normalize today
-    DateTime now = DateTime.now();
-    DateTime today = DateTime(now.year, now.month, now.day);
-
-    return {
-      // 🔹 Today - for immediate testing
-      today: [
-        {
-          "title": "Today's Event",
-          "time": "09:00 - 10:00",  
-        },
-        {
-          "title": "Team Check-in",
-          "time": "14:00 - 15:00",
-        },
-      ],
-
-      // 🔹 Future date (for August 2, 2025)
-      DateTime(2025, 8, 2): [
-        {
-          "title": "Cycle 1",
-          "time": "10:00 - 13:00",
-        },
-        {
-          "title": "Cycle 2",
-          "time": "14:00 - 15:00",
-        },
-      ],
-
-      // 🔹 Another future date
-      DateTime(2025, 8, 3): [
-        {
-          "title": "Cycle 3",
-          "time": "08:00 - 09:30",
-        },
-      ],
-    };
+    if (response != null && response.containsKey("token")) {
+      print("✅ Token: ${response['token']}");
+    } else {
+      print("❌ Login failed or token missing.");
+    }
   }
 }
