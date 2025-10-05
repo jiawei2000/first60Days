@@ -1,3 +1,4 @@
+import '/resources/pages/feeding_schedule_page.dart';
 import '/resources/pages/calendar_page.dart';
 import '/resources/pages/base_navigation_hub.dart';
 import '/resources/pages/login_page.dart';
@@ -42,4 +43,5 @@ appRouter() => nyRoutes((router) {
       router.add(LoginPage.path);
       router.add(BaseNavigationHub.path);
       router.add(CalendarPage.path);
+      router.add(FeedingSchedulePage.path);
 });
