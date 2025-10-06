@@ -4,6 +4,7 @@ import 'package:flutter_app/resources/pages/feeding_schedule_page.dart';
 import 'package:flutter_app/resources/pages/profile_page.dart';
 import 'package:flutter_app/resources/widgets/splash_screen.dart';
 import 'package:nylo_framework/nylo_framework.dart';
+import 'package:flutter_app/resources/pages/calendar_page.dart';
 
 class BaseNavigationHub extends NyStatefulWidget with BottomNavPageControls {
   static RouteView path = ("/base", (_) => BaseNavigationHub());
@@ -46,7 +47,7 @@ class _BaseNavigationHubState extends NavigationHub<BaseNavigationHub> {
             ),
             1: NavigationTab(
               title: "Baby Journal",
-              page: SplashScreen(),
+              page: CalendarPage(),
               icon: Icon(Icons.book),
               activeIcon: Icon(Icons.book),
             ),

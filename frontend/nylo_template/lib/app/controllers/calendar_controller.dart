@@ -7,31 +7,35 @@ import 'package:intl/intl.dart';
 class CalendarController {
   final JournalApiService _journalApiService = JournalApiService();
 
-  /// Fetch calendar events from backend and convert to Map<DateTime, List<Map<String,String>>>
+  /// Fetch journal entries and group them by date
   Future<Map<DateTime, List<Map<String, String>>>> getCalendarData() async {
-    // Hardcoded baby ID for now
     const babyId = "W6bOM4UJxxfbo0bktsmO";
 
-    List<JournalEntry>? entries =
-        await _journalApiService.findAllforBabyId(query: babyId);
+    // Fetch raw data from API service
+    final rawData = await _journalApiService.findAllforBabyId(query: babyId);
+
+    // Convert to list of JournalEntry objects safely
+    List<JournalEntry> entries = [];
+    if (rawData != null) {
+      entries = (rawData as List)
+          .map((json) => JournalEntry.fromJson(json))
+          .toList();
+    }
 
     Map<DateTime, List<Map<String, String>>> events = {};
 
-    if (entries != null) {
+    if (entries.isNotEmpty) {
       for (var entry in entries) {
-        final awakeDate = entry.startWakeTime ?? DateTime.now();
-        final dayKey = DateTime(awakeDate.year, awakeDate.month, awakeDate.day);
+        final wakeTime = entry.startWakeTime?.toLocal() ?? DateTime.now();
+        final localDay = DateTime(wakeTime.year, wakeTime.month, wakeTime.day);
 
-        if (!events.containsKey(dayKey)) {
-          events[dayKey] = [];
-        }
-
-        String eventTime = entry.startFeedTime != null
-            ? DateFormat('hh:mm a').format(entry.startFeedTime!.toLocal())
+        final feedTime = entry.startFeedTime?.toLocal();
+        final eventTime = feedTime != null
+            ? DateFormat('hh:mm a').format(feedTime)
             : "No time";
 
-        events[dayKey]!.add({
-          "title": "Cycle", // You can add entry.cycleNo if needed
+        events.putIfAbsent(localDay, () => []).add({
+          "title": "Cycle", // title can be changed if you want something dynamic
           "time": eventTime,
         });
       }
@@ -40,18 +44,18 @@ class CalendarController {
     return events;
   }
 
-  /// 🔐 Manual login test function to verify token retrieval
+  /// Manual test login for debugging
   void testLogin() async {
-    UserApiService apiService = UserApiService();
+    final apiService = UserApiService();
     final response = await apiService.login(
       username: "user123",
       password: "password456",
     );
 
     if (response != null && response.containsKey("token")) {
-      print("✅ Token: ${response['token']}");
+      debugPrint("✅ Token: ${response['token']}");
     } else {
-      print("❌ Login failed or token missing.");
+      debugPrint("❌ Login failed or token missing.");
     }
   }
 }
