@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
 /* Login Form
@@ -12,11 +13,13 @@ class LoginForm extends NyFormData {
 
   @override
   fields() => [
-        Field.text("Username",
-            autofocus: true,
-            // prefixIcon: 
-            validate: FormValidator.rule("not_empty"),
-            style: "compact"),
+        Field.text(
+          "Username",
+          autofocus: true,
+          prefixIcon: const Icon(Icons.person_outline),
+          validate: FormValidator.rule("not_empty"),
+          style: "compact",
+        ),
         Field.password(
           "Password",
           validate: FormValidator.rule("not_empty"),
