@@ -26,9 +26,12 @@ class _FourthWidgetState extends JourneyState<FourthWidget> {
       content: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Fourth', style: Theme.of(context).textTheme.headlineMedium),
+          Text('Digital Nanny', style: Theme.of(context).textTheme.headlineMedium),
+          Image.asset(
+            getImageAsset("fourthwidget.jpg")
+          ),
           const SizedBox(height: 20),
-          Text('This onboarding journey will help you get started.'),
+          Text('Communicate with your trainer'),
         ],
       ),
       nextButton: Button.primary(

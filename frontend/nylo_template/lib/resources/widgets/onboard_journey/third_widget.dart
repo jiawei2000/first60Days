@@ -25,9 +25,12 @@ class _ThirdWidgetState extends JourneyState<ThirdWidget> {
       content: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Third', style: Theme.of(context).textTheme.headlineMedium),
+          Text('Digital Nanny', style: Theme.of(context).textTheme.headlineMedium),
+          Image.asset(
+            getImageAsset("thirdwidget.jpg")
+          ),
           const SizedBox(height: 20),
-          Text('This onboarding journey will help you get started.'),
+          Text('Receive real time notifications'),
         ],
       ),
       nextButton: Button.primary(
