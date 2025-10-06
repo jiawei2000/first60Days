@@ -15,13 +15,14 @@ class EntryPlannerService {
         const planner = new EntryPlanner(plannerRef.id, plannerData);
 
         // Step 3: Generate feed timings & MONInterval
-        planner.generateFeedTimings();
+        let message = planner.generateFeedTimings();
+        //message 
 
         // Step 4: Save to Firestore using toFirestore()
         await plannerRef.set(planner.toFirestore());
 
         // Step 5: Return the planner instance with ID and generated fields
-        return planner;
+        return { planner, message };
     }
 
     static async getPlannerById(babyId, plannerId) {
@@ -59,12 +60,12 @@ class EntryPlannerService {
 
         // Rebuild planner and regenerate fields
         const updatedPlanner = new EntryPlanner(plannerId, mergedData);
-        updatedPlanner.generateFeedTimings();
+        let message = updatedPlanner.generateFeedTimings();
 
         // Update only the necessary fields in Firestore
         await plannerRef.update(updatedPlanner.toFirestore());
 
-        return updatedPlanner;
+        return { updatedPlanner, message };
 
     }
 

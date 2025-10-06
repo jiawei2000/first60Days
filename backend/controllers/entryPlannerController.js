@@ -6,10 +6,10 @@ class EntryPlannerController {
             //firstfeed, last feed 
             const { babyId } = req.params;
             const plannerData = req.body;
-            const planner = await EntryPlannerService.createPlanner(babyId, plannerData);
+            const { planner, message } = await EntryPlannerService.createPlanner(babyId, plannerData);
 
             return res.status(201).json({
-                message: "Entry Planner created successfully",
+                message: "Entry Planner created successfully." + message,
                 planner
             });
         } catch (error) {
@@ -50,10 +50,10 @@ class EntryPlannerController {
         try {
             const { babyId, plannerId } = req.params;
             const updateData = req.body;
-            const updatedPlanner = await EntryPlannerService.updatePlanner(babyId, plannerId, updateData);
+            const { updatedPlanner, message } = await EntryPlannerService.updatePlanner(babyId, plannerId, updateData);
 
             return res.status(200).json({
-                message: "Entry Planner updated successfully",
+                message: "Entry Planner updated successfully." + message,
                 planner: updatedPlanner
             });
         } catch (error) {
