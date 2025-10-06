@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 // const babyController = require('../controllers/babyController');
 const journalController = require('../controllers/journalController')
-const { authenticateToken } = require('../config/authMiddleware')
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 //protected
 router.post('/:babyId', authenticateToken, journalController.createEntry);
