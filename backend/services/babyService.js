@@ -175,6 +175,32 @@ class BabyService {
 
         return new Baby(snapshot.id, snapshot.data());
     }
+
+    static async getWeekNo(babyId) {
+        const babyRef = db.collection("babies").doc(babyId);
+        const snapshot = await babyRef.get();
+
+        if (!snapshot.exists) {
+            throw new Error("Baby profile not found");
+        }
+        const babyData = snapshot.data();
+        const dob = babyData.dob?.toDate ? babyData.dob.toDate() : new Date(babyData.dob); // handle Firestore Timestamp or string
+
+        if (!dob) {
+            throw new Error("Date of birth not found in baby profile");
+        }
+
+        // Calculate the number of weeks since birth
+        const today = new Date();
+        const diffInMs = today - dob;
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+        // First 7 days = Week 1, so we use ceil
+        const weekNo = Math.ceil(diffInDays / 7);
+
+        return { weekNo };
+
+    }
 }
 
 module.exports = BabyService;

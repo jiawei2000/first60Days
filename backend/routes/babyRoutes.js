@@ -9,5 +9,6 @@ router.put('/:babyId', authenticateToken, babyController.editProfile)
 router.delete('/:babyId', authenticateToken, babyController.deleteProfile)
 router.get('/', authenticateToken, babyController.getProfiles)
 router.get('/:babyId', authenticateToken, babyController.getProfileById)
+router.get("/weekNo/:babyId", authenticateToken, babyController.getWeekNo);
 
 module.exports = router;
