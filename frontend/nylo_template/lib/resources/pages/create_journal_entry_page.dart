@@ -47,7 +47,7 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
   @override
   Widget view(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Create Journal Entry")),
+      appBar: AppBar(title: Text("Create Journal Entry"), centerTitle: true),
       body: SafeArea(
         child: Column(
           children: [
