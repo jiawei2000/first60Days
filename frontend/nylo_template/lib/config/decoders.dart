@@ -1,3 +1,4 @@
+import '/app/networking/feeding_schedule_api_service.dart';
 import '../app/controllers/feeding_schedule_controller.dart';
 import '/app/networking/user_api_service.dart';
 import '/app/controllers/login_controller.dart';
@@ -44,6 +45,8 @@ final Map<Type, dynamic> apiDecoders = {
   JournalApiService: JournalApiService(),
 
   UserApiService: UserApiService(),
+
+  FeedingScheduleApiService: FeedingScheduleApiService(),
 };
 
 /* Controller Decoders
