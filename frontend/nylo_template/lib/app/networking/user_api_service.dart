@@ -11,11 +11,11 @@ class UserApiService extends NyApiService {
   String get baseUrl => getEnv('API_BASE_URL');
 
   Future<Map<String, dynamic>?> login(
-      {required String email, required String password}) async {
+      {required String username, required String password}) async {
     try {
       final response = await network(
           request: (request) => request.post("/users/login", data: {
-                "email": email,
+                "username": username,
                 "password": password,
               }));
       return response as Map<String, dynamic>?;

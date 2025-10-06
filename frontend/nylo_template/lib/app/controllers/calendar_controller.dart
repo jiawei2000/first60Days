@@ -44,7 +44,7 @@ class CalendarController {
   void testLogin() async {
     UserApiService apiService = UserApiService();
     final response = await apiService.login(
-      email: "hongwei@gmail.com",
+      username: "user123",
       password: "password456",
     );
 
