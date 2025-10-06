@@ -9,7 +9,7 @@ class Baby {
 
         // Required date
         this.dob = Baby.toTimestamp(dob);
-
+        
         // System fields
         this.createdAt = Baby.toTimestamp(createdAt) || Timestamp.now();
         this.deletedAt = Baby.toTimestamp(deletedAt); // null if not deleted
