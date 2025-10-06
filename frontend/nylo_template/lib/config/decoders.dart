@@ -1,3 +1,4 @@
+import '../app/controllers/feeding_schedule_controller.dart';
 import '/app/networking/user_api_service.dart';
 import '/app/controllers/login_controller.dart';
 import '/app/networking/journal_api_service.dart';
@@ -57,4 +58,6 @@ final Map<Type, dynamic> controllers = {
   // ...
 
   LoginController: () => LoginController(),
+
+  FeedingScheduleController: () => FeedingScheduleController(),
 };

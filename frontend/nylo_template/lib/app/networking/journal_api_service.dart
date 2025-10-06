@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '/config/decoders.dart';
 import 'package:nylo_framework/nylo_framework.dart';
-import '/app/models/journal_entry.dart';
 import '/config/keys.dart';
 
 class JournalApiService extends NyApiService {
@@ -40,9 +39,9 @@ class JournalApiService extends NyApiService {
   //   );
   // }
 
-  Future<List<JournalEntry>?> findAllforBabyId({required dynamic query}) async {
+  Future<dynamic> findAllforBabyId({required dynamic query}) async {
     String token = await Keys.bearerToken.read() ?? "";
-    return await network<List<JournalEntry>>(
+    return await network<dynamic>(
       request: (request) => request.get("/journalEntries/$query"),
       headers: {
         'Content-Type': 'application/json',
@@ -52,10 +51,10 @@ class JournalApiService extends NyApiService {
   }
 
   /// Create a JournalEntry
-  Future<JournalEntry?> create(
+  Future<dynamic> create(
       {required dynamic id, required dynamic data}) async {
     String token = await Keys.bearerToken.read() ?? "";
-    return await network<JournalEntry>(
+    return await network<dynamic>(
       request: (request) => request.post("/journalEntries/$id", data: data),
       headers: {
         'Content-Type': 'application/json',

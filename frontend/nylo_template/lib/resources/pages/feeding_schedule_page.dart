@@ -1,15 +1,16 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import '/app/controllers/feeding_schedule_controller.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
-class FeedingSchedulePage extends NyStatefulWidget {
+class FeedingSchedulePage extends NyStatefulWidget<FeedingScheduleController> {
   static RouteView path = ("/feeding-schedule", (_) => FeedingSchedulePage());
 
   FeedingSchedulePage({super.key}) : super(child: () => _FeedingSchedulePageState());
 }
 
-
 class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
+  FeedingScheduleController get controller => widget.controller;
+
   bool _showBanner = true;
   int _weekNo = 3;
 
