@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/resources/pages/create_journal_entry_page.dart';
+import 'package:flutter_app/resources/pages/profile_page.dart';
 import 'package:flutter_app/resources/widgets/splash_screen.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
@@ -56,7 +57,7 @@ class _BaseNavigationHubState extends NavigationHub<BaseNavigationHub> {
             ),
             3: NavigationTab(
               title: "Profile",
-              page: SplashScreen(),
+              page: ProfilePage(),
               icon: Icon(Icons.person),
               activeIcon: Icon(Icons.person),
             ),
