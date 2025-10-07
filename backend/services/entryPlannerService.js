@@ -4,12 +4,39 @@ const db = require('../config/database');
 
 class EntryPlannerService {
     static async createPlanner(babyId, plannerData) {
-        // Step 1: Firestore doc reference (auto-generated ID)
-        const plannerRef = db
+        //check if there is already an Existing weekNo from plannerData 
+        //if there is an existing weekNo, overide/update that document with the new data instead
+        if (!babyId) throw new Error("babyId is required");
+        if (!plannerData || !plannerData.weekNo) throw new Error("weekNo is required in plannerData");
+
+        const plannerCollection = db
             .collection("babies")
             .doc(babyId)
-            .collection("entryPlanner")
-            .doc(); // generates doc ID
+            .collection("entryPlanner");
+
+        const existingQuery = await plannerCollection
+            .where("weekNo", "==", plannerData.weekNo)
+            .limit(1)
+            .get();
+
+        let plannerRef;
+
+        if (!existingQuery.empty) {
+            // Step 2A: Override existing document
+            const existingDoc = existingQuery.docs[0];
+            plannerRef = plannerCollection.doc(existingDoc.id);
+            console.log(`Updating existing planner for week ${plannerData.weekNo}...`);
+        } else {
+            // Step 2B: Create a new planner document
+            plannerRef = plannerCollection.doc(); // auto-generated ID
+            console.log(`Creating new planner for week ${plannerData.weekNo}...`);
+        }
+        // Step 1: Firestore doc reference (auto-generated ID)
+        // const plannerRef = db
+        //     .collection("babies")
+        //     .doc(babyId)
+        //     .collection("entryPlanner")
+        //     .doc(); // generates doc ID
 
         // Step 2: Initialize EntryPlanner with the generated ID
         const planner = new EntryPlanner(plannerRef.id, plannerData);
@@ -19,7 +46,7 @@ class EntryPlannerService {
         //message 
 
         // Step 4: Save to Firestore using toFirestore()
-        await plannerRef.set(planner.toFirestore());
+        await plannerRef.set(planner.toFirestore(), { merge: false });
 
         // Step 5: Return the planner instance with ID and generated fields
         return { planner, message };
