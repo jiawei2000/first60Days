@@ -55,8 +55,9 @@ class _CalendarPageState extends State<CalendarPage> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: () {
-              routeTo(CreateJournalEntryPage.path);
+            onPressed: () async {
+              await routeTo(CreateJournalEntryPage.path);
+              _loadEvents();
             },
             child: Text(
               "New Entry",
@@ -200,22 +201,22 @@ class _CalendarPageState extends State<CalendarPage> {
                             // Controllers for other fields
                             final wakeTimeController = TextEditingController(
                               text: entry.startWakeTime != null
-                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startWakeTime!.toLocal())
+                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startWakeTime!)
                                   : '',
                             );
                             final feedTimeController = TextEditingController(
                               text: entry.startFeedTime != null
-                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startFeedTime!.toLocal())
+                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startFeedTime!)
                                   : '',
                             );
                             final sleepTimeController = TextEditingController(
                               text: entry.startSleepTime != null
-                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startSleepTime!.toLocal())
+                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startSleepTime!)
                                   : '',
                             );
                             final playTimeController = TextEditingController(
                               text: entry.startPlayTime != null
-                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startPlayTime!.toLocal())
+                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startPlayTime!)
                                   : '',
                             );
                             final remarksController = TextEditingController(text: entry.remarks ?? '');

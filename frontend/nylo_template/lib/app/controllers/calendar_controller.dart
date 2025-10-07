@@ -26,8 +26,12 @@ class CalendarController {
 
     if (entries.isNotEmpty) {
       for (var entry in entries) {
-        final wakeTime = entry.startWakeTime?.toLocal() ?? DateTime.now();
-        final localDay = DateTime(wakeTime.year, wakeTime.month, wakeTime.day);
+
+        
+    final wakeTime = entry.startWakeTime?.toUtc() ?? DateTime.now();
+    final localDay = DateTime(wakeTime.year, wakeTime.month, wakeTime.day);
+
+
 
         final feedTime = entry.startFeedTime?.toLocal();
         final eventTime = wakeTime != null
