@@ -10,8 +10,8 @@ class CaregiverCreateForm extends NyFormData {
   @override
   fields() => [
         Field.text("Username", validate: FormValidator().notEmpty(), style: "compact"),
-        Field.email("Email",   validate: FormValidator.email(),       style: "compact"),
-        Field.text("Phone Number", style: "compact"),
+        Field.email("Email",   validate: FormValidator.email().notEmpty(),       style: "compact"),
+        Field.text("Phone Number", validate: FormValidator().notEmpty(), style: "compact"),
         Field.password("Password",
             validate: FormValidator().notEmpty().minLength(8), style: "compact"),
         Field.password("Confirm password",

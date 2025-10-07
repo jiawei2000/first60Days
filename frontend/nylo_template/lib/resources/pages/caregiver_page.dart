@@ -3,6 +3,7 @@ import 'package:nylo_framework/nylo_framework.dart';
 import '/app/forms/caregiver_form.dart';
 import '/app/forms/create_caregiver_form.dart';
 import '/resources/widgets/buttons/buttons.dart';
+import '/app/networking/caregiver_api_service.dart';
 
 class CaregiverPage extends NyStatefulWidget {
   static RouteView path = ("/caregiver", (_) => CaregiverPage());
@@ -87,18 +88,33 @@ class _CaregiverPageState extends NyPage<CaregiverPage> {
                     },
               footer: Button.primary(
                 text: isAdd ? "Create" : "Save",
-                submitForm: (form, (data) {
-                  // map form data -> list item fields
-                  final mapped = isAdd
-                      ? {
-                          "Name":   "${data["Username"] ?? ""}", // show username as title
-                          "Detail": "${data["Email"] ?? ""}",    // show email as subtitle
-                        }
-                      : {
-                          "Name":   "${data["Name"] ?? ""}",
-                          "Detail": "${data["Detail"] ?? ""}",
-                        };
-                  Navigator.pop(ctx, mapped);
+                submitForm: (form, (data) async {
+                  try {
+                    final username = (data["Username"] ?? "").toString().trim();
+                    final email    = (data["Email"] ?? "").toString().trim();
+                    final phone    = (data["Phone Number"] ?? "").toString().trim();
+                    final password = (data["Password"] ?? "").toString();
+
+                    // TODO: replace with real baby IDs
+                    final babyIDs = <String>["W6bOM4UJxxfbo0bktsm0"];
+
+                    await api<CaregiverApiService>((svc) => svc.registerSub(
+                      email: email,
+                      password: password,
+                      phoneNo: phone,
+                      username: username,
+                      babyIDArr: babyIDs,
+                    ));
+
+                    Navigator.pop(ctx, {
+                      "Name":   username,   // list title
+                      "Detail": email,      // list subtitle
+                    });
+
+                    showToastSuccess(description: "Caregiver created");
+                  } catch (e) {
+                    showToastSorry(description: e.toString());
+                  }
                 }),
               ),
             ),
