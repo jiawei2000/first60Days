@@ -87,7 +87,6 @@ const userController = {
 
     async getSubAccounts(req, res) {
         try {
-            console.log(req.user); //console.log not showing
             const userId = req.user.id; // from JWT
             const result = await UserService.getAllSubUsers(userId);
             //return array of sub accounts 

@@ -249,8 +249,7 @@ class UserService {
     static async getAllSubUsers(userId) {
         // Get main user's permission
         const userSnap = await db.collection('users').doc(userId).get();
-        console.log(userId);//console.log not showing 
-        
+
         if (!userSnap.exists) {
             throw new Error("User not found");
         }
