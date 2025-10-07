@@ -90,6 +90,22 @@ const BabyController = {
             res.status(500).json({ error: "Internal Server Error" });
         }
     },
+
+    async getWeekNo(req, res) {
+        try {
+            const { babyId } = req.params;
+
+            if (!babyId) {
+                return res.status(400).json({ error: "babyId is required" });
+            }
+
+            const result = await BabyService.getWeekNo(babyId);
+            return res.status(200).json(result);
+        } catch (error) {
+            console.error("Error fetching week number:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = BabyController;
