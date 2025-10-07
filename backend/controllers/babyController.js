@@ -4,9 +4,9 @@ const BabyController = {
     async newProfile(req, res) {
         const userId = req.user.id; //from JWT
         try {
-            const { name, dob } = req.body;
+            const { name, dob, expectedDueDate, term, weight, healthConditions } = req.body;
 
-            const baby = await BabyService.newProfile(userId, { name, dob });
+            const baby = await BabyService.newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions });
 
             res.status(201).json({
                 message: "Baby created and added to permissions",
@@ -28,9 +28,9 @@ const BabyController = {
 
     async editProfile(req, res) {
         try {
-            const { name, dob } = req.body;
+            const { name, dob, expectedDueDate, term, weight, healthConditions } = req.body;
             const { babyId } = req.params;
-            const updatedBaby = await BabyService.editProfile(babyId, { name, dob });
+            const updatedBaby = await BabyService.editProfile(babyId, { name, dob, expectedDueDate, term, weight, healthConditions });
 
             res.status(200).json({
                 message: "Baby profile updated successfully",

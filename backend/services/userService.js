@@ -41,6 +41,7 @@ class UserService {
                 lastLoginAt: null,
                 deletedAt: null,
                 permissionID: permissionRef,
+                relation: "Parent", // default relation for main account
                 fcmTokens: []
             });
 
@@ -82,9 +83,9 @@ class UserService {
         user.lastLoginAt = Timestamp.now();
 
         if (fcmToken) {
-        await usersRef.doc(user.id).update({
-            fcmTokens: admin.firestore.FieldValue.arrayUnion(fcmToken)
-        });
+            await usersRef.doc(user.id).update({
+                fcmTokens: admin.firestore.FieldValue.arrayUnion(fcmToken)
+            });
             user.fcmTokens = [...(user.fcmTokens || []), fcmToken];
         }
 
@@ -102,7 +103,7 @@ class UserService {
         return { token, user, permission };
     }
 
-    static async registerSub({ currentUserId, email, password, phoneNo, username, babyIDArr }) {
+    static async registerSub({ currentUserId, username, password, phoneNo, relation, babyIDArr }) {
         const usersRef = db.collection('users');
 
         // Get current main user’s permission
@@ -119,10 +120,10 @@ class UserService {
             throw new Error('Only users with "main" permission can create sub accounts');
         }
 
-        // Ensure email not taken
-        const snapshot = await usersRef.where('email', '==', email).get();
-        if (!snapshot.empty) {
-            throw new Error('User already exists');
+        // Check if username exists
+        const usernameSnapshot = await usersRef.where('username', '==', username).get();
+        if (!usernameSnapshot.empty) {
+            throw new Error('Username already exists');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -148,7 +149,6 @@ class UserService {
 
             // Create sub user
             const subUser = new User(subUserRef.id, {
-                email,
                 password: hashedPassword,
                 phoneNo,
                 username,
@@ -156,6 +156,7 @@ class UserService {
                 lastLoginAt: null,
                 deletedAt: null,
                 permissionID: subPermissionRef,
+                relation: relation,
                 fcmTokens: []
             });
             t.set(subUserRef, subUser.toFirestore());
@@ -173,6 +174,7 @@ class UserService {
             email: result.subUser.email,
             phoneNo: result.subUser.phoneNo,
             username: result.subUser.username,
+            relation: result.subUser.relation,
             permission: result.subPermission
         };
     }
@@ -214,9 +216,6 @@ class UserService {
         await db.collection('users').doc(userId).update({
             deletedAt: Timestamp.now()
         });
-
-        // Optionally update the user instance
-        user.deletedAt = Timestamp.now();
 
         return {
             message: 'User deleted successfully',

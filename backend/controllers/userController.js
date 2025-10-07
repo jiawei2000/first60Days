@@ -19,14 +19,14 @@ const userController = {
         // ... sub-account registration logic
         try {
             const currentUserId = req.user.id; // from JWT
-            const { email, password, phoneNo, username, babyIDArr } = req.body;
+            const { username, password, phoneNo, relation, babyIDArr } = req.body;
 
             const result = await UserService.registerSub({
                 currentUserId,
-                email,
+                username,
                 password,
                 phoneNo,
-                username,
+                relation,
                 babyIDArr
             });
 

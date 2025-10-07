@@ -6,12 +6,25 @@ const { Timestamp } = require('firebase-admin/firestore');
 const admin = require("firebase-admin");
 
 class BabyService {
-    static async newProfile(userId, { name, dob }) {
-        if (!name || !dob) {
-            throw new Error("Name and DOB are required");
+    static async newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions }) {
+        // Required fields check
+        switch (true) {
+            case !name:
+                throw new Error("Name is required");
+            case !dob:
+                throw new Error("Date of Birth is required");
+            case !expectedDueDate:
+                throw new Error("Expected Due Date is required");
+            case !term:
+                throw new Error("Term is required");
+            case !weight:
+                throw new Error("Weight is required");
+            case !healthConditions:
+                throw new Error("Health Conditions are required");
         }
+
         // Use Baby.validateData to normalize fields
-        const formattedData = Baby.validateData({ name, dob });
+        const formattedData = Baby.validateData({ name, dob, expectedDueDate, term, weight, healthConditions });
 
         // Transaction to create baby and update permissions
         const result = await db.runTransaction(async (t) => {
@@ -29,7 +42,7 @@ class BabyService {
                 ...formattedData,
                 createdAt: Timestamp.now(),
                 deletedAt: null,
-                feedSchedule: null,
+                // feedSchedule: null,
             });
 
             // Save baby in Firestore
