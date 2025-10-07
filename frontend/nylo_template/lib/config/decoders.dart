@@ -1,3 +1,4 @@
+import '/app/models/entry_planner.dart';
 import '/app/networking/feeding_schedule_api_service.dart';
 import '../app/controllers/feeding_schedule_controller.dart';
 import '/app/networking/user_api_service.dart';
@@ -27,6 +28,10 @@ final Map<Type, dynamic> modelDecoders = {
   User: (data) => User.fromJson(data),
 
   // User: (data) => User.fromJson(data),
+
+  List<EntryPlanner>: (data) => List.from(data).map((json) => EntryPlanner.fromJson(json)).toList(),
+
+  EntryPlanner: (data) => EntryPlanner.fromJson(data),
 };
 
 /* API Decoders

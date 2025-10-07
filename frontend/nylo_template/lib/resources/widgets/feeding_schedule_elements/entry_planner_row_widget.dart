@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/app/models/entry_planner.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import '/bootstrap/extensions.dart';
 
 class EntryPlannerRow extends StatefulWidget {
-  const EntryPlannerRow({super.key, required this.times});
+  const EntryPlannerRow({super.key, required this.entryPlanner});
 
-  final List<String> times;
+  final EntryPlanner entryPlanner;
 
   @override
   createState() => _EntryPlannerRowState();
@@ -17,7 +18,9 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
 
   @override
   Widget view(BuildContext context) {
-    if (widget.times.isEmpty) {
+    final feedTimings = widget.entryPlanner.feedTimings ?? const <String>[];
+
+    if (feedTimings.isEmpty) {
       return Container(
           child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -29,10 +32,10 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
       padding: EdgeInsets.zero,
       shrinkWrap: true,
       physics: const BouncingScrollPhysics(),
-      itemCount: widget.times.length,
+      itemCount: feedTimings.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (_, index) {
-        final time = widget.times[index];
+        final time = feedTimings[index];
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

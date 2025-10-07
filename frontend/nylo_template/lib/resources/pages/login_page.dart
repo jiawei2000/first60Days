@@ -67,7 +67,7 @@ class _LoginPageState extends NyPage<LoginPage> {
 
     // Handle response
     if (response != null) {
-      showToastSuccess(title: "Login success", description: "Login Successful");
+      // showToastSuccess(title: "Login success", description: "Login Successful");
       await Auth.authenticate(data: {"token": response['token']});
       await Keys.bearerToken.save(response['token']);
       // Navigate to navigation hub

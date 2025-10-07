@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/app/models/entry_planner.dart';
 import 'package:flutter_app/resources/widgets/safearea_widget.dart';
 import '/app/controllers/feeding_schedule_controller.dart';
 import 'package:nylo_framework/nylo_framework.dart';
@@ -16,22 +17,13 @@ class FeedingSchedulePage extends NyStatefulWidget<FeedingScheduleController> {
 class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
   FeedingScheduleController get controller => widget.controller;
 
-  int _weekNo = 3;
-
-  // UI-only mock data (you can replace with real data later)
-  final List<String> _feedTimings = [
-    "06:00 AM",
-    "09:00 AM",
-    "12:00 PM",
-    "03:00 PM",
-    "06:00 PM",
-    "09:00 PM",
-    "12:00 AM",
-    "03:00 AM",
-  ];
+  int _weekNo = 1;
+  List<EntryPlanner> _entryPlanners = [];
 
   @override
-  get init => () {};
+  get init => () {
+        _getEntryPlanners();
+      };
 
   @override
   Widget view(BuildContext context) {
@@ -101,12 +93,13 @@ class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
               child: PrimaryButton(
                   text: "Generate New Schedule",
                   onPressed: () {
-                    // createJournalEntry();
+                    _generateNewSchedule(_weekNo);
                   }),
             ),
 
             Expanded(
-              child: EntryPlannerRow(times: _feedTimings),
+              child: EntryPlannerRow(
+                  entryPlanner: _getFeedTimingsForWeek(_weekNo)),
             ),
           ],
         ),
@@ -116,7 +109,7 @@ class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
 
   void nextWeek() {
     setState(() {
-      _weekNo += 1;
+      if (_weekNo < 10) _weekNo += 1;
     });
   }
 
@@ -124,5 +117,92 @@ class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
     setState(() {
       if (_weekNo > 1) _weekNo -= 1;
     });
+  }
+
+  void _getEntryPlanners() async {
+    final response =
+        // await controller.fetchPlannerByBabyId("YubfhQ3OBeECH6AuYPVK");
+        await controller.fetchPlannerByBabyId("zuCu842rURSUnCHKC56R");
+
+    final plannersData = response?['planner'] as List?;
+    final planners = plannersData
+            ?.whereType<Map<String, dynamic>>()
+            .map(EntryPlanner.fromJson)
+            .toList() ??
+        [];
+    _reloadEntryPlanners(planners);
+  }
+
+  void _reloadEntryPlanners(List<EntryPlanner> planners) {
+    // Reset before repopulating
+    _entryPlanners = planners;
+
+    // Ensure there is a planner for each week 1..10
+    final existingWeeks = _entryPlanners
+        .where((planner) => planner.weekNo != null)
+        .map((planner) => planner.weekNo!)
+        .toSet();
+
+    for (int week = 1; week <= 10; week++) {
+      if (!existingWeeks.contains(week)) {
+        _entryPlanners.add(EntryPlanner(weekNo: week, feedTimings: []));
+      }
+    }
+
+    // Sort planners by week number to maintain order
+    _entryPlanners.sort((a, b) => (a.weekNo ?? 0).compareTo(b.weekNo ?? 0));
+
+    setState(() {});
+  }
+
+  EntryPlanner _getFeedTimingsForWeek(int week) {
+    return _entryPlanners.firstWhere(
+      (planner) => planner.weekNo == week,
+      orElse: () => EntryPlanner(feedTimings: []),
+    );
+  }
+
+  void _generateNewSchedule(int weekNo) async {
+    // Placeholder for schedule generation logic
+    // This could involve complex algorithms or API calls
+    print("Generating new feeding schedule...");
+
+    String babyId = "zuCu842rURSUnCHKC56R";
+    // Date time for 8am to 8pm
+    DateTime now = DateTime.now();
+    DateTime firstFeedTime =
+        new DateTime(now.year, now.month, now.day, 5, 0, 0);
+    DateTime lastFeedTime =
+        new DateTime(now.year, now.month, now.day, 23, 0, 0);
+
+    int totalFeeds = 8;
+
+    final response = await controller.createPlanner(
+        babyId: babyId,
+        weekNo: weekNo,
+        firstFeedTime: firstFeedTime,
+        lastFeedTime: lastFeedTime,
+        totalFeeds: totalFeeds);
+
+    final message = response?['message'];
+    final newPlannerData = response?['planner'];
+
+    final newPlanner = newPlannerData != null
+        ? EntryPlanner.fromJson(newPlannerData)
+        : new EntryPlanner(weekNo: weekNo, feedTimings: []);
+
+    final _newEntryPlanners =
+        _entryPlanners.where((planner) => planner.weekNo == weekNo).toList();
+
+    _newEntryPlanners.add(newPlanner);
+    _reloadEntryPlanners(_newEntryPlanners);
+
+    if (message != null) {
+      // showToastSuccess(title: "Success", description: message);
+    } else {
+      showToastWarning(
+          title: "Error",
+          description: "Failed to create planner. Please try again");
+    }
   }
 }

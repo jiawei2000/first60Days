@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_app/app/models/entry_planner.dart';
 import '/app/controllers/controller.dart';
 import '/app/networking/feeding_schedule_api_service.dart';
 
@@ -24,7 +25,18 @@ class FeedingScheduleController extends Controller {
   }
 
   Future<dynamic> createPlanner(
-      {required String babyId, required Map<String, dynamic> data}) async {
+      // {required String babyId, required Map<String, dynamic> data}) async {
+      {required String babyId,
+      required int weekNo,
+      required DateTime firstFeedTime,
+      required DateTime lastFeedTime,
+      required int totalFeeds}) async {
+    Map<String, dynamic> data = {
+      'weekNo': weekNo,
+      'firstFeedTime': firstFeedTime.toIso8601String(),
+      'lastFeedTime': lastFeedTime.toIso8601String(),
+      'totalFeeds': totalFeeds,
+    };
     return await _feedingScheduleApiService.createPlanner(
       babyId: babyId,
       data: data,
