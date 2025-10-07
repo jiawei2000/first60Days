@@ -8,6 +8,7 @@ import '/app/controllers/home_controller.dart';
 import '/app/models/user.dart';
 import '/app/networking/api_service.dart';
 import '/app/models/journal_entry.dart';
+import '/app/networking/caregiver_api_service.dart';
 
 /* Model Decoders
 |--------------------------------------------------------------------------
@@ -19,13 +20,13 @@ import '/app/models/journal_entry.dart';
 
 final Map<Type, dynamic> modelDecoders = {
   Map<String, dynamic>: (data) => Map<String, dynamic>.from(data),
-
   List<User>: (data) =>
       List.from(data).map((json) => User.fromJson(json)).toList(),
   List<JournalEntry>: (data) =>
       List.from(data).map((json) => JournalEntry.fromJson(json)).toList(),
   //
   User: (data) => User.fromJson(data),
+  
 
   // User: (data) => User.fromJson(data),
 
@@ -52,6 +53,8 @@ final Map<Type, dynamic> apiDecoders = {
   UserApiService: UserApiService(),
 
   FeedingScheduleApiService: FeedingScheduleApiService(),
+
+  CaregiverApiService: CaregiverApiService(), // ← add
 };
 
 /* Controller Decoders

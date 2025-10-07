@@ -56,10 +56,11 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: PrimaryButton(
-                  text: "Submit",
-                  onPressed: () {
-                    createJournalEntry();
-                  }),
+                text: "Submit",
+                onPressed: () {
+                  createJournalEntry();
+                },
+              ),
             )
           ],
         ),
@@ -83,9 +84,33 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
       remarks: remarksController.text,
     );
 
-    // Temporary
-    String babyId = "W6bOM4UJxxfbo0bktsmO";
-    await _journalApiService.create(id: babyId, data: newEntry);
+    const babyId = "W6bOM4UJxxfbo0bktsmO";
+
+    try {
+      await _journalApiService.create(id: babyId, data: newEntry);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Journal entry created successfully!"),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      Navigator.pop(context); 
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to create journal entry."),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   DateTime? parseDateTimeString(String dateTimeString) {
