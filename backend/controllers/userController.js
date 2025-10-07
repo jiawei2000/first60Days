@@ -19,14 +19,14 @@ const userController = {
         // ... sub-account registration logic
         try {
             const currentUserId = req.user.id; // from JWT
-            const { email, password, phoneNo, username, babyIDArr } = req.body;
+            const { username, password, phoneNo, relation, babyIDArr } = req.body;
 
             const result = await UserService.registerSub({
                 currentUserId,
-                email,
+                username,
                 password,
                 phoneNo,
-                username,
+                relation,
                 babyIDArr
             });
 
@@ -76,14 +76,39 @@ const userController = {
         // ... get user by Id
         try {
             // const userId = req.user.id; // from JWT
-            const { userId } = req.params; 
+            const { userId } = req.params;
             const result = await UserService.getUserById(userId);
 
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
-    }
+    },
+
+    async getSubAccounts(req, res) {
+        try {
+            const userId = req.user.id; // from JWT
+            const result = await UserService.getAllSubUsers(userId);
+            //return array of sub accounts 
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async updateUsername(req, res) {
+        // ... update password logic
+        try {
+            const { userId } = req.params;
+            const { newUsername } = req.body;
+
+            const result = await UserService.updateUsername(userId, newUsername);
+
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
 };
 
 module.exports = userController;

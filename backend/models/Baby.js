@@ -1,19 +1,25 @@
 const { Timestamp } = require('firebase-admin/firestore');
 
 class Baby {
-    constructor(id, { name, dob, createdAt, deletedAt, feedSchedule }) {
+    constructor(id, { name, dob, createdAt, deletedAt, expectedDueDate, term, weight, healthConditions }) {
         this.id = id;
 
         // Required string
         this.name = name ? String(name) : null;
 
-        // Required date
+        // Required dates
         this.dob = Baby.toTimestamp(dob);
+        this.expectedDueDate = Baby.toTimestamp(expectedDueDate)
+
+        // Required details
+        this.term = term ? Number(term) : null;
+        this.weight = weight ? Number(weight) : null;
+        this.healthConditions = healthConditions ? String(healthConditions) : null;
 
         // System fields
         this.createdAt = Baby.toTimestamp(createdAt) || Timestamp.now();
         this.deletedAt = Baby.toTimestamp(deletedAt); // null if not deleted
-        this.feedSchedule = feedSchedule || null; // allow null for now
+        // this.feedSchedule = feedSchedule || null; // allow null for now
     }
 
     toFirestore() {
@@ -22,7 +28,11 @@ class Baby {
             dob: this.dob,
             createdAt: this.createdAt,
             deletedAt: this.deletedAt,
-            feedSchedule: this.feedSchedule
+            // feedSchedule: this.feedSchedule
+            expectedDueDate: this.expectedDueDate,
+            term: this.term,
+            weight: this.weight,
+            healthConditions: this.healthConditions
         };
     }
 
@@ -49,7 +59,7 @@ class Baby {
         const formatted = {};
 
         // Define fields
-        const requiredFields = ['name', 'dob'];
+        const requiredFields = ['name', 'dob', 'expectedDueDate', 'term', 'weight', 'healthConditions'];
         const dateFields = ['dob', 'createdAt', 'deletedAt'];
 
         for (const [key, value] of Object.entries(data)) {

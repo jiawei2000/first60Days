@@ -66,6 +66,31 @@ class CheckService {
                         createdAt: Timestamp.now(),
                     });
 
+                    //notification warnings 
+                    if (stats.urineCount < 5){
+                        //Urine count less than 5 
+                    }
+
+                    if (stats.stoolCount == 0){
+                        //if no stool count, check pass 7 days records
+                        //if no stools for the pass 3 days, increase fluid intake 
+                        //in no stools for the pass 7 days, see doctor 
+                    }
+
+                    //number of entry count should technically follow entry planner
+                    //from week 1-5 shud minimally have 8 
+                    //from week 6-10 shud minimally have 7
+                    if (stats.entryCount < 6){
+                        //warning 
+                    }
+
+                    if (stats.interval.count > 0){
+                        //an array of journal entries Id that have less than 2.5hrs 
+                        let entries = stats.interval.cycleNo
+                    }
+
+                    //warning storage 
+
                     console.log(`Processed daily check for baby ${babyId}`);
                 })
             );

@@ -1,7 +1,7 @@
 class User {
-    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID, fcmTokens }) {
+    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID, relation = null, fcmTokens }) {
         this.id = id;
-        this.email = email;
+        this.email = email || null; // null for sub accounts
         this.password = password;
         this.phoneNo = phoneNo;
         this.username = username;
@@ -9,6 +9,8 @@ class User {
         this.lastLoginAt = lastLoginAt;
         this.deletedAt = deletedAt;
         this.permissionID = permissionID;
+        this.relation = relation; // relation to baby (e.g., parent, guardian)
+
         this.fcmTokens = fcmTokens; // Array, multiple tokens for multiple devices
     }
 
@@ -29,6 +31,7 @@ class User {
             lastLoginAt: this.lastLoginAt,
             deletedAt: this.deletedAt,
             permissionID: this.permissionID,
+            relation: this.relation,
             fcmTokens: this.fcmTokens,
         };
     }
