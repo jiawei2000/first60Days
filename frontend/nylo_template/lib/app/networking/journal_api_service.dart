@@ -74,12 +74,25 @@ class JournalApiService extends NyApiService {
     );
   }
   /// Update a JournalEntry
-  // Future<JournalEntry?> update({dynamic query}) async {
-  //   return await network<JournalEntry>(
-  //     request: (request) =>
-  //         request.put("/endpoint-path", queryParameters: query),
-  //   );
-  // }
+Future<dynamic> updateJournalEntry({
+  required String babyId,
+  required String entryId,
+  required Map<String, dynamic> data,
+}) async {
+  String token = await Keys.bearerToken.read() ?? "";
+
+  return await network<dynamic>(
+    request: (request) => request.put(
+      "/journalEntries/$babyId/$entryId",
+      data: data,
+    ),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+}
+
 
   /// Delete a JournalEntry
   // Future<bool?> destroy({required int id}) async {

@@ -48,6 +48,22 @@ class CalendarController {
     return events;
   }
 
+  Future<void> updateJournalEntry({
+  required String entryId,
+  required String babyId,
+  required Map<String, dynamic> data,
+}) async {
+  try {
+    await _journalApiService.updateJournalEntry(
+      entryId: entryId,
+      babyId: babyId,
+      data: data,
+    );
+  } catch (e) {
+    debugPrint("Update failed: $e");
+  }
+}
+
   /// Fetch a specific journal entry from the API by entry ID
   Future<JournalEntry?> getJournalEntryById(String entryId) async {
     const babyId = "W6bOM4UJxxfbo0bktsmO";

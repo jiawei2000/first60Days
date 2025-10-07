@@ -172,78 +172,143 @@ class _CalendarPageState extends State<CalendarPage> {
                                   style: TextStyle(color: Colors.grey))
                             else
                               ...events.map((event) {
-  return InkWell(
-   onTap: () async {
-  final entryId = event['entryId'];
-  final entry = await _controller.getJournalEntryById(entryId);
+                            return InkWell(
+                            onTap: () async {
+                            final entryId = event['entryId'];
+                            final entry = await _controller.getJournalEntryById(entryId);
 
-  if (entry == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Failed to load journal entry")),
-    );
-    return;
-  }
+                            if (entry == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Failed to load journal entry")),
+                              );
+                              return;
+                            }
 
-  // Prepare feed controllers
-  final feedTypeControllers = <TextEditingController>[];
-  final feedValueControllers = <TextEditingController>[];
-  final feedUnitControllers = <TextEditingController>[];
+                            // Prepare feed controllers
+                            final feedTypeControllers = <TextEditingController>[];
+                            final feedValueControllers = <TextEditingController>[];
+                            final feedUnitControllers = <TextEditingController>[];
 
-  if (entry.feedTypes != null && entry.feedTypes!.isNotEmpty) {
-    for (final feed in entry.feedTypes!) {
-      feedTypeControllers.add(TextEditingController(text: feed.type ?? ''));
-      feedValueControllers.add(TextEditingController(text: feed.value?.toString() ?? ''));
-      feedUnitControllers.add(TextEditingController(text: feed.unit ?? ''));
-    }
-  }
+                            if (entry.feedTypes != null && entry.feedTypes!.isNotEmpty) {
+                              for (final feed in entry.feedTypes!) {
+                                feedTypeControllers.add(TextEditingController(text: feed.type ?? ''));
+                                feedValueControllers.add(TextEditingController(text: feed.value?.toString() ?? ''));
+                                feedUnitControllers.add(TextEditingController(text: feed.unit ?? ''));
+                              }
+                            }
 
-  // Show modal with form
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: true,
-    backgroundColor: Colors.transparent,
-    builder: (BuildContext context) {
-      return GestureDetector(
-        onTap: () => Navigator.of(context).pop(),
-        child: Container(
-          color: Colors.transparent,
-          child: GestureDetector(
-            onTap: () {}, // absorb taps inside form
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.8,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              child: JournalEntryForm(
-                wakeTimeController: TextEditingController(
-                  text: entry.startWakeTime != null
-                      ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startWakeTime!.toLocal())
-                      : '',
-                ),
-                feedTimeController: TextEditingController(
-                  text: entry.startFeedTime != null
-                      ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startFeedTime!.toLocal())
-                      : '',
-                ),
-                sleepTimeController: TextEditingController(
-                  text: entry.startSleepTime != null
-                      ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startSleepTime!.toLocal())
-                      : '',
-                ),
-                playTimeController: TextEditingController(
-                  text: entry.startPlayTime != null
-                      ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startPlayTime!.toLocal())
-                      : '',
-                ),
-                remarksController: TextEditingController(
-                  text: entry.remarks ?? '',
-                ),
-                feedTypeControllers: feedTypeControllers,
-                feedValueControllers: feedValueControllers,
-                feedUnitControllers: feedUnitControllers,
+                            // Controllers for other fields
+                            final wakeTimeController = TextEditingController(
+                              text: entry.startWakeTime != null
+                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startWakeTime!.toLocal())
+                                  : '',
+                            );
+                            final feedTimeController = TextEditingController(
+                              text: entry.startFeedTime != null
+                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startFeedTime!.toLocal())
+                                  : '',
+                            );
+                            final sleepTimeController = TextEditingController(
+                              text: entry.startSleepTime != null
+                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startSleepTime!.toLocal())
+                                  : '',
+                            );
+                            final playTimeController = TextEditingController(
+                              text: entry.startPlayTime != null
+                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startPlayTime!.toLocal())
+                                  : '',
+                            );
+                            final remarksController = TextEditingController(text: entry.remarks ?? '');
+
+                            // Show modal with form + Save button
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              isDismissible: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (BuildContext context) {
+                                return GestureDetector(
+                                  onTap: () => Navigator.of(context).pop(),
+                                  child: Container(
+                                    color: Colors.transparent,
+                                    child: GestureDetector(
+                                      onTap: () {}, // absorb taps inside form
+                                      child: Container(
+                                        height: MediaQuery.of(context).size.height * 0.5,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: JournalEntryForm(
+                                                wakeTimeController: wakeTimeController,
+                                                feedTimeController: feedTimeController,
+                                                sleepTimeController: sleepTimeController,
+                                                playTimeController: playTimeController,
+                                                remarksController: remarksController,
+                                                feedTypeControllers: feedTypeControllers,
+                                                feedValueControllers: feedValueControllers,
+                                                feedUnitControllers: feedUnitControllers,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            ElevatedButton(
+                                              onPressed: () async {
+                            DateTime? tryParseDate(String text) {
+                              if (text.isEmpty) return null;
+
+                              try {
+                                return DateTime.parse(text); // ISO 8601
+                              } catch (_) {}
+
+                              try {
+                                return DateFormat('yyyy-MM-dd – hh:mm a').parse(text);
+                              } catch (_) {}
+
+                              try {
+                                return DateFormat('yyyy-MM-dd HH:mm:ss').parse(text);
+                              } catch (_) {}
+
+                              return null;
+                            }
+
+                            final updatedData = {
+                              "awakeTime": tryParseDate(wakeTimeController.text)?.toIso8601String(),
+                              "startFeedTime": tryParseDate(feedTimeController.text)?.toIso8601String(),
+                              "startPlayTime": tryParseDate(playTimeController.text)?.toIso8601String(),
+                              "startSleepTime": tryParseDate(sleepTimeController.text)?.toIso8601String(),
+                              "remarks": remarksController.text,
+                              "feedType": List.generate(feedTypeControllers.length, (i) {
+                                return {
+                                  "type": feedTypeControllers[i].text,
+                                  "value": int.tryParse(feedValueControllers[i].text) ?? 0,
+                                  "unit": feedUnitControllers[i].text,
+                                };
+                              }),
+                            };
+
+                            // 🔄 Call update API
+                            await _controller.updateJournalEntry(
+                              entryId: entry.id!,
+                              babyId: "W6bOM4UJxxfbo0bktsmO",
+                              data: updatedData,
+                            );
+
+                            // ✅ Close modal and refresh events
+                            Navigator.pop(context);
+                            _loadEvents();
+                          }
+                          ,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    child: const Text("Save Changes"),
+                  ),
+                ],
               ),
             ),
           ),
@@ -252,6 +317,7 @@ class _CalendarPageState extends State<CalendarPage> {
     },
   );
 },
+
     child: EventTile(
       title: event['title'] ?? 'No Title',
       subtitle: event['time'] ?? '',
