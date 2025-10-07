@@ -55,17 +55,20 @@ class EntryPlanner {
         let spacehours = totalDuration / intervalsNeeded;
 
         //keeping interval between 2.5-3hrs. tbc
+        let feedChange = 0;
         while (spacehours < 2.5 || spacehours > 3) {
             if (spacehours > 3) {
                 console.log(`${spacehours} hr interval, more feed needed. Incrementing total Feed by 1`)
                 this.totalFeeds += 1;
                 intervalsNeeded += 1;
+                feedChange += 1 
                 spacehours = totalDuration / intervalsNeeded;
             }
             else if (spacehours < 2.5) {
                 console.log(`${spacehours} hr interval, less feed needed. Reducing total Feed by 1`)
                 this.totalFeeds -= 1;
                 intervalsNeeded -= 1;
+                feedChange -= 1;
                 spacehours = totalDuration / intervalsNeeded;
             }
         }
@@ -124,7 +127,15 @@ class EntryPlanner {
             hour12: true
         }));
 
-        return this.feedTimings;
+        let message = ""
+        //total feed increased by {} to achieve idead interval 
+        if (feedChange > 0){
+            message = ` Total Feed increased by ${feedChange}`
+        }
+        else if (feedChange < 0){
+            message = ` Total Feed decreased by ${Math.abs(feedChange)}`
+        }
+        return message;
     }
 
 

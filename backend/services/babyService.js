@@ -6,12 +6,25 @@ const { Timestamp } = require('firebase-admin/firestore');
 const admin = require("firebase-admin");
 
 class BabyService {
-    static async newProfile(userId, { name, dob }) {
-        if (!name || !dob) {
-            throw new Error("Name and DOB are required");
+    static async newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions }) {
+        // Required fields check
+        switch (true) {
+            case !name:
+                throw new Error("Name is required");
+            case !dob:
+                throw new Error("Date of Birth is required");
+            case !expectedDueDate:
+                throw new Error("Expected Due Date is required");
+            case !term:
+                throw new Error("Term is required");
+            case !weight:
+                throw new Error("Weight is required");
+            case !healthConditions:
+                throw new Error("Health Conditions are required");
         }
+
         // Use Baby.validateData to normalize fields
-        const formattedData = Baby.validateData({ name, dob });
+        const formattedData = Baby.validateData({ name, dob, expectedDueDate, term, weight, healthConditions });
 
         // Transaction to create baby and update permissions
         const result = await db.runTransaction(async (t) => {
@@ -29,7 +42,7 @@ class BabyService {
                 ...formattedData,
                 createdAt: Timestamp.now(),
                 deletedAt: null,
-                feedSchedule: null,
+                // feedSchedule: null,
             });
 
             // Save baby in Firestore
@@ -174,6 +187,32 @@ class BabyService {
         }
 
         return new Baby(snapshot.id, snapshot.data());
+    }
+
+    static async getWeekNo(babyId) {
+        const babyRef = db.collection("babies").doc(babyId);
+        const snapshot = await babyRef.get();
+
+        if (!snapshot.exists) {
+            throw new Error("Baby profile not found");
+        }
+        const babyData = snapshot.data();
+        const dob = babyData.dob?.toDate ? babyData.dob.toDate() : new Date(babyData.dob); // handle Firestore Timestamp or string
+
+        if (!dob) {
+            throw new Error("Date of birth not found in baby profile");
+        }
+
+        // Calculate the number of weeks since birth
+        const today = new Date();
+        const diffInMs = today - dob;
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+        // First 7 days = Week 1, so we use ceil
+        const weekNo = Math.ceil(diffInDays / 7);
+
+        return { weekNo };
+
     }
 }
 

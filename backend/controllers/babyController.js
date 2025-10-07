@@ -4,9 +4,9 @@ const BabyController = {
     async newProfile(req, res) {
         const userId = req.user.id; //from JWT
         try {
-            const { name, dob } = req.body;
+            const { name, dob, expectedDueDate, term, weight, healthConditions } = req.body;
 
-            const baby = await BabyService.newProfile(userId, { name, dob });
+            const baby = await BabyService.newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions });
 
             res.status(201).json({
                 message: "Baby created and added to permissions",
@@ -28,9 +28,9 @@ const BabyController = {
 
     async editProfile(req, res) {
         try {
-            const { name, dob } = req.body;
+            const { name, dob, expectedDueDate, term, weight, healthConditions } = req.body;
             const { babyId } = req.params;
-            const updatedBaby = await BabyService.editProfile(babyId, { name, dob });
+            const updatedBaby = await BabyService.editProfile(babyId, { name, dob, expectedDueDate, term, weight, healthConditions });
 
             res.status(200).json({
                 message: "Baby profile updated successfully",
@@ -90,6 +90,22 @@ const BabyController = {
             res.status(500).json({ error: "Internal Server Error" });
         }
     },
+
+    async getWeekNo(req, res) {
+        try {
+            const { babyId } = req.params;
+
+            if (!babyId) {
+                return res.status(400).json({ error: "babyId is required" });
+            }
+
+            const result = await BabyService.getWeekNo(babyId);
+            return res.status(200).json(result);
+        } catch (error) {
+            console.error("Error fetching week number:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = BabyController;
