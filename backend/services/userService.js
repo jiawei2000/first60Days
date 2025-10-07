@@ -276,6 +276,31 @@ class UserService {
         }
         return retSubAccArr
     }
+
+      static async updateUsername(userId, newUsername) {
+        const userDoc = await db.collection('users').doc(userId).get();
+
+        if (!userDoc.exists) {
+            throw new Error('User not found');
+        }
+
+        const user = User.fromFirestore(userDoc);
+
+        // const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await db.collection('users').doc(userId).update({
+            username: newUsername
+        });
+
+        // Update the user instance (optional)
+        user.newUsername = newUsername;
+
+        return {
+            message: 'Username updated successfully',
+            userId: user.id
+        };
+    }
+    
 }
 
 module.exports = UserService;

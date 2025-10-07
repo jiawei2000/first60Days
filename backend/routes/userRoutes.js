@@ -18,4 +18,6 @@ router.get('/:userId', authenticateToken, userController.getUserById)
 //to get all sub users created by main
 router.get('/subAccounts', authenticateToken, userController.getSubAccounts)
 
+router.put('/username/:userId', authenticateToken, userController.updateUsername)
+
 module.exports = router;
