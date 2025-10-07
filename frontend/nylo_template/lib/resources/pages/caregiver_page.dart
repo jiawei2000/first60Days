@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import '/app/forms/caregiver_form.dart';
+import '/app/forms/create_caregiver_form.dart';
+import '/resources/widgets/buttons/buttons.dart';
 
 class CaregiverPage extends NyStatefulWidget {
   static RouteView path = ("/caregiver", (_) => CaregiverPage());
@@ -9,9 +11,9 @@ class CaregiverPage extends NyStatefulWidget {
 
 class _CaregiverPageState extends NyPage<CaregiverPage> {
   /// Stubbed data – replace with DB later
-  final List<Map<String, dynamic>> _caregivers = [
-    {"Name": "Jane Doe", "Price": "20.00", "Favourite Color": "Blue", "Bio": "Nanny"},
-    {"Name": "Mary Peters", "Price": "0.00", "Favourite Color": "Green", "Bio": "Grandmother"},
+  final List<Map<String, String>> _caregivers = [
+    {"Name": "Jane Doe", "Detail": "Nanny"},
+    {"Name": "Mary Peters", "Detail": "Grandmother"},
   ];
 
   @override
@@ -41,14 +43,7 @@ class _CaregiverPageState extends NyPage<CaregiverPage> {
             return ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(c["Name"] ?? "", style: t.titleMedium),
-              subtitle: Text(
-                [
-                  if ((c["Bio"] ?? "").toString().isNotEmpty) c["Bio"],
-                  if ((c["Favourite Color"] ?? "").toString().isNotEmpty) "Fav: ${c["Favourite Color"]}",
-                  if ((c["Price"] ?? "").toString().isNotEmpty) "Rate: \$${c["Price"]}"
-                ].join(" • "),
-                style: t.bodyMedium,
-              ),
+              subtitle: Text(c["Detail"] ?? "", style: t.bodyMedium),
               trailing: IconButton(
                 tooltip: "Edit",
                 icon: const Icon(Icons.edit),
@@ -72,51 +67,53 @@ class _CaregiverPageState extends NyPage<CaregiverPage> {
     int? index,
     Map<String, dynamic>? initial,
   }) async {
-    final form = CaregiverForm();
+    final isAdd = mode == "add";
+    final NyFormData form = isAdd ? CaregiverCreateForm() : CaregiverForm();
 
-    // Prefill when editing – keys must match your Field labels
-    if (initial != null) {
-      if (initial["Name"] != null) form.setValue("Name", initial["Name"]);
-      if (initial["Price"] != null) form.setValue("Price", initial["Price"]);
-      if (initial["Favourite Color"] != null) form.setValue("Favourite Color", initial["Favourite Color"]);
-      if (initial["Bio"] != null) form.setValue("Bio", initial["Bio"]);
-    }
-
-    final result = await showDialog<Map<String, dynamic>>(
+    final result = await showDialog<Map<String, String>>(
       context: context,
-      builder: (context) {
+      barrierDismissible: false,
+      builder: (ctx) {
         return AlertDialog(
-          title: Text(mode == "edit" ? "Edit Caregiver" : "Add Caregiver"),
+          title: Text(isAdd ? "Create Caregiver Profile" : "Edit Caregiver"),
           content: SingleChildScrollView(
-            child: NyForm(form: form),
+            child: NyForm(
+              form: form,
+              initialData: isAdd
+                  ? const {}
+                  : {
+                      if (initial?["Name"] != null) "Name": initial!["Name"],
+                      if (initial?["Detail"] != null) "Detail": initial!["Detail"],
+                    },
+              footer: Button.primary(
+                text: isAdd ? "Create" : "Save",
+                submitForm: (form, (data) {
+                  // map form data -> list item fields
+                  final mapped = isAdd
+                      ? {
+                          "Name":   "${data["Username"] ?? ""}", // show username as title
+                          "Detail": "${data["Email"] ?? ""}",    // show email as subtitle
+                        }
+                      : {
+                          "Name":   "${data["Name"] ?? ""}",
+                          "Detail": "${data["Detail"] ?? ""}",
+                        };
+                  Navigator.pop(ctx, mapped);
+                }),
+              ),
+            ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final Map<String, dynamic> ok = await form.validate();
-                if (ok.isEmpty) return;
-                Navigator.pop(context, {
-                  "Name": form.value("Name"),
-                  "Price": form.value("Price"),
-                  "Favourite Color": form.value("Favourite Color"),
-                  "Bio": form.value("Bio"),
-                });
-              },
-              child: const Text("Save"),
-            ),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
           ],
         );
       },
     );
 
-    if (result == null) return;
+    if (!mounted || result == null) return;
 
     setState(() {
-      if (mode == "edit" && index != null) {
+      if (!isAdd && index != null) {
         _caregivers[index] = result;
       } else {
         _caregivers.add(result);
