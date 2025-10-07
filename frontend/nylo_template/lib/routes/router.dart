@@ -1,4 +1,4 @@
-// import '/resources/pages/caregiver_page.dart';
+import '/resources/pages/caregiver_page.dart';
 import '/resources/pages/profile_page.dart';
 import '/resources/pages/feeding_schedule_page.dart';
 import '/resources/pages/calendar_page.dart';
@@ -49,5 +49,5 @@ appRouter() => nyRoutes((router) {
       router.add(FeedingSchedulePage.path);
       router.add(OnboardJourneyNavigationHub.path).initialRoute();
       router.add(ProfilePage.path);
-  // router.add(CaregiverPage.path);
+      router.add(CaregiverPage.path);
 });

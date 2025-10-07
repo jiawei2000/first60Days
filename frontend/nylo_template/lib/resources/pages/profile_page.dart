@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import '/resources/widgets/buttons/buttons.dart';
-// import 'caregiver_page.dart'; // <-- add this import
+import 'caregiver_page.dart'; // <-- add this import
 // If you want a Babies page later, create it similarly and import here.
 
 class ProfilePage extends NyStatefulWidget {
@@ -77,51 +77,35 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             const Divider(),
 
             // Manage Babies (expandable -> will navigate to list page later)
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: Text("Manage Babies", style: t.titleMedium),
-              childrenPadding: EdgeInsets.zero,
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text("Open Babies"),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // TODO: push BabiesPage when ready
-                  },
+            FilledButton.tonalIcon(
+              onPressed: () {
+                // TODO: routeTo(BabyPage.path.name);
+              },
+              icon: const Icon(Icons.child_care_outlined),
+              label: const Text("Manage Babies"),
+              style: FilledButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
+              ),
             ),
 
             const Divider(),
 
             // Manage Caregivers (expandable & visible by default)
-            ExpansionTile(
-              initiallyExpanded: true,
-              tilePadding: EdgeInsets.zero,
-              title: Text("Manage Caregivers", style: t.titleMedium),
-              childrenPadding: EdgeInsets.zero,
-              children: [
-                // Preview rows (stubbed). You’ll replace with DB data later.
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text("Jane Doe"),
-                  subtitle: const Text("Nanny"),
+            FilledButton.tonalIcon(
+              onPressed: () => routeTo(CaregiverPage.path),
+              icon: const Icon(Icons.elderly_outlined),
+              label: const Text("Manage Caregivers"),
+              style: FilledButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text("Mary Peters"),
-                  subtitle: const Text("Grandmother"),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text("Open Caregivers"),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // routeTo(CaregiverPage.path.name);
-                  },
-                ),
-              ],
+              ),
             ),
 
             const SizedBox(height: 16),
@@ -137,21 +121,6 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 4,
-        selectedItemColor: const Color(0xFF2B6BF3),
-        unselectedItemColor: Colors.grey,
-        onTap: (_) {},
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Plan"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today), label: "Calendar"),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: "Chat"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
       ),
     );
   }
