@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import '/resources/widgets/buttons/buttons.dart';
-// import 'caregiver_page.dart'; // <-- add this import
+import 'caregiver_page.dart'; // <-- add this import
 // If you want a Babies page later, create it similarly and import here.
 
 class ProfilePage extends NyStatefulWidget {
@@ -95,18 +95,18 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             const Divider(),
 
             // Manage Caregivers (expandable & visible by default)
-            // FilledButton.tonalIcon(
-            //   // onPressed: () => routeTo(CaregiverPage.path),
-            //   icon: const Icon(Icons.elderly_outlined),
-            //   label: const Text("Manage Caregivers"),
-            //   style: FilledButton.styleFrom(
-            //     padding:
-            //         const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(12),
-            //     ),
-            //   ),
-            // ),
+            FilledButton.tonalIcon(
+              onPressed: () => routeTo(CaregiverPage.path),
+              icon: const Icon(Icons.elderly_outlined),
+              label: const Text("Manage Caregivers"),
+              style: FilledButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
 
             const SizedBox(height: 16),
             const Divider(),
