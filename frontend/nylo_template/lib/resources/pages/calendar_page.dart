@@ -8,7 +8,10 @@ import '/resources/pages/create_journal_entry_page.dart';
 
 import '/resources/widgets/calendar/info_banner.dart';
 import '/resources/widgets/calendar/event_tile.dart';
+import '/app/models/journal_entry.dart';
 import '/resources/widgets/calendar/day_section_header.dart';
+import '/resources/widgets/journal_entry_form_widget.dart';
+
 
 class CalendarPage extends StatefulWidget {
   static RouteView path = ("/calendar", (context) => const CalendarPage());
@@ -23,7 +26,7 @@ class _CalendarPageState extends State<CalendarPage> {
   final CalendarController _controller = CalendarController();
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
-  Map<DateTime, List<Map<String, String>>> _eventData = {};
+  Map<DateTime, List<Map<String, dynamic>>> _eventData = {};
   bool _showBanner = true;
 
   @override
@@ -39,7 +42,7 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
-  List<Map<String, String>> _getEventsForDay(DateTime day) {
+  List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
     final localDay = DateTime(day.year, day.month, day.day);
     return _eventData[localDay] ?? [];
   }
@@ -168,11 +171,95 @@ class _CalendarPageState extends State<CalendarPage> {
                               const Text("No events found",
                                   style: TextStyle(color: Colors.grey))
                             else
-                              ...events.map((event) => EventTile(
-                                    title: event['title'] ?? 'No Title',
-                                    subtitle: event['time'] ?? '',
-                                    color: Colors.purple,
-                                  )),
+                              ...events.map((event) {
+  return InkWell(
+   onTap: () async {
+  final entryId = event['entryId'];
+  final entry = await _controller.getJournalEntryById(entryId);
+
+  if (entry == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Failed to load journal entry")),
+    );
+    return;
+  }
+
+  // Prepare feed controllers
+  final feedTypeControllers = <TextEditingController>[];
+  final feedValueControllers = <TextEditingController>[];
+  final feedUnitControllers = <TextEditingController>[];
+
+  if (entry.feedTypes != null && entry.feedTypes!.isNotEmpty) {
+    for (final feed in entry.feedTypes!) {
+      feedTypeControllers.add(TextEditingController(text: feed.type ?? ''));
+      feedValueControllers.add(TextEditingController(text: feed.value?.toString() ?? ''));
+      feedUnitControllers.add(TextEditingController(text: feed.unit ?? ''));
+    }
+  }
+
+  // Show modal with form
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    isDismissible: true,
+    backgroundColor: Colors.transparent,
+    builder: (BuildContext context) {
+      return GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: Container(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onTap: () {}, // absorb taps inside form
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.8,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: JournalEntryForm(
+                wakeTimeController: TextEditingController(
+                  text: entry.startWakeTime != null
+                      ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startWakeTime!.toLocal())
+                      : '',
+                ),
+                feedTimeController: TextEditingController(
+                  text: entry.startFeedTime != null
+                      ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startFeedTime!.toLocal())
+                      : '',
+                ),
+                sleepTimeController: TextEditingController(
+                  text: entry.startSleepTime != null
+                      ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startSleepTime!.toLocal())
+                      : '',
+                ),
+                playTimeController: TextEditingController(
+                  text: entry.startPlayTime != null
+                      ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startPlayTime!.toLocal())
+                      : '',
+                ),
+                remarksController: TextEditingController(
+                  text: entry.remarks ?? '',
+                ),
+                feedTypeControllers: feedTypeControllers,
+                feedValueControllers: feedValueControllers,
+                feedUnitControllers: feedUnitControllers,
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+},
+    child: EventTile(
+      title: event['title'] ?? 'No Title',
+      subtitle: event['time'] ?? '',
+      color: Colors.purple,
+    ),
+  );
+}),
+
                           ],
                         ),
                       );

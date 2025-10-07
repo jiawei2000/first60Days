@@ -8,7 +8,7 @@ class CalendarController {
   final JournalApiService _journalApiService = JournalApiService();
 
   /// Fetch journal entries and group them by date
-  Future<Map<DateTime, List<Map<String, String>>>> getCalendarData() async {
+  Future<Map<DateTime, List<Map<String, dynamic>>>> getCalendarData() async {
     const babyId = "W6bOM4UJxxfbo0bktsmO";
 
     // Fetch raw data from API service
@@ -22,7 +22,7 @@ class CalendarController {
           .toList();
     }
 
-    Map<DateTime, List<Map<String, String>>> events = {};
+    Map<DateTime, List<Map<String, dynamic>>> events = {};
 
     if (entries.isNotEmpty) {
       for (var entry in entries) {
@@ -30,18 +30,39 @@ class CalendarController {
         final localDay = DateTime(wakeTime.year, wakeTime.month, wakeTime.day);
 
         final feedTime = entry.startFeedTime?.toLocal();
-        final eventTime = feedTime != null
-            ? DateFormat('hh:mm a').format(feedTime)
+        final eventTime = wakeTime != null
+            ? DateFormat('hh:mm a').format(wakeTime)
             : "No time";
 
         events.putIfAbsent(localDay, () => []).add({
-          "title": "Cycle", // title can be changed if you want something dynamic
+          "title": "Cycle",
           "time": eventTime,
+          "entryId": entry.id, 
         });
       }
     }
 
     return events;
+  }
+
+  /// Fetch a specific journal entry from the API by entry ID
+  Future<JournalEntry?> getJournalEntryById(String entryId) async {
+    const babyId = "W6bOM4UJxxfbo0bktsmO";
+
+    try {
+      final response = await _journalApiService.findJournalEntryById(
+        babyId: babyId,
+        entryId: entryId,
+      );
+
+      if (response != null) {
+        return JournalEntry.fromJson(response);
+      }
+    } catch (e) {
+      debugPrint("❌ Error fetching journal entry: $e");
+    }
+
+    return null;
   }
 
   /// Manual test login for debugging
