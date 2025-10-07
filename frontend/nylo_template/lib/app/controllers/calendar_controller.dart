@@ -37,7 +37,10 @@ class CalendarController {
         events.putIfAbsent(localDay, () => []).add({
           "title": "Cycle",
           "time": eventTime,
-          "entryId": entry.id, 
+          "entryId": entry.id,
+          "status": (entry.startFeedTime != null && entry.startSleepTime != null)
+      ? "Complete"
+      : "Incomplete",
         });
       }
     }

@@ -256,6 +256,7 @@ class _CalendarPageState extends State<CalendarPage> {
       title: event['title'] ?? 'No Title',
       subtitle: event['time'] ?? '',
       color: Colors.purple,
+      status: event['status'] ?? 'Incomplete',
     ),
   );
 }),
