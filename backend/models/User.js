@@ -1,5 +1,5 @@
 class User {
-    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID, relation, fcmTokens }) {
+    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID, relation = null, fcmTokens }) {
         this.id = id;
         this.email = email || null; // null for sub accounts
         this.password = password;

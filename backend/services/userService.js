@@ -245,6 +245,37 @@ class UserService {
 
         return snapshot.docs.map(doc => User.fromFirestore(doc));
     }
+
+    static async getAllSubUsers(userId) {
+        // Get main user's permission
+        const userSnap = await db.collection('users').doc(userId).get();
+        console.log(userId);//console.log not showing 
+        
+        if (!userSnap.exists) {
+            throw new Error("User not found");
+        }
+
+        //get main user permission 
+        const permissionRef = userSnap.data().permissionID;
+        if (!permissionRef) {
+            throw new Error("Main user's permission not found");
+        }
+
+        const permissionSnap = await permissionRef.get();
+        if (!permissionSnap.exists) {
+            throw new Error("Main user's permission not found");
+        }
+        
+        //get an array of sub user reference 
+        const { subAccArr } = permissionSnap.data(); // array of sub-user references
+        let retSubAccArr = [] //return an array of user (sub) object 
+        for (const subUserRef of subAccArr) {
+            // Get sub-user's permission doc
+            let subUserSnap = await subUserRef.get()
+            retSubAccArr.push(User.fromFirestore(subUserSnap))  
+        }
+        return retSubAccArr
+    }
 }
 
 module.exports = UserService;

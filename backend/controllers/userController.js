@@ -76,9 +76,21 @@ const userController = {
         // ... get user by Id
         try {
             // const userId = req.user.id; // from JWT
-            const { userId } = req.params; 
+            const { userId } = req.params;
             const result = await UserService.getUserById(userId);
 
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async getSubAccounts(req, res) {
+        try {
+            console.log(req.user); //console.log not showing
+            const userId = req.user.id; // from JWT
+            const result = await UserService.getAllSubUsers(userId);
+            //return array of sub accounts 
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });

@@ -10,7 +10,12 @@ router.post('/login', userController.login);
 // Protected routes
 router.post('/registerSub', authenticateToken, userController.registerSub);
 router.put('/password', authenticateToken, userController.updatePassword);
+//to be updated - should not need user ID in pararm
 router.delete('/:userId', authenticateToken, userController.deleteUser);
+//to get specific userID of sub account
 router.get('/:userId', authenticateToken, userController.getUserById)
+
+//to get all sub users created by main
+router.get('/subAccounts', authenticateToken, userController.getSubAccounts)
 
 module.exports = router;
