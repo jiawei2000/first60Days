@@ -66,7 +66,7 @@ class FeedingScheduleApiService extends NyApiService {
     String token = await Keys.bearerToken.read() ?? "";
     return await network<dynamic>(
       request: (request) =>
-          request.put("/$babyId/$plannerId/feedTimings", data: data),
+          request.put("/feedTimings/$babyId/$plannerId", data: data),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
