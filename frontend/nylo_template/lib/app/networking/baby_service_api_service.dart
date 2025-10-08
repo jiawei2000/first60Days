@@ -50,4 +50,33 @@ class BabyServiceApiService extends NyApiService {
 
     return null;
   }
+
+  /// ✅ Create a new baby
+Future<Baby?> createBaby({
+  required String name,
+  required String dob, 
+}) async {
+  String token = await Keys.bearerToken.read() ?? "";
+
+  final response = await network<dynamic>(
+    request: (request) => request.post(
+      "/babies/",
+      data: {
+        "name": name,
+        "dob": dob,
+      },
+    ),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response != null) {
+    return Baby.fromJson(response);
+  }
+
+  return null;
+}
+
 }

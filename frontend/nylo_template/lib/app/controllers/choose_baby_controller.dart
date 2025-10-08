@@ -13,4 +13,17 @@ class ChooseBabyController {
       return [];
     }
   }
+
+  Future<Baby?> createBaby({
+    required String name,
+    required String dob, // in ISO 8601 format
+  }) async {
+    try {
+      final baby = await _babyService.createBaby(name: name, dob: dob);
+      return baby;
+    } catch (e) {
+      print("❌ Error creating baby: $e");
+      return null;
+    }
+  }
 }
