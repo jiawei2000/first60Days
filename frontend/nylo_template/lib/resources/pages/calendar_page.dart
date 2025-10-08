@@ -11,6 +11,7 @@ import '/resources/widgets/calendar/event_tile.dart';
 import '/app/models/journal_entry.dart';
 import '/resources/widgets/calendar/day_section_header.dart';
 import '/resources/widgets/journal_entry_form_widget.dart';
+import '/config/keys.dart';
 
 
 class CalendarPage extends StatefulWidget {
@@ -294,7 +295,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             // 🔄 Call update API
                             await _controller.updateJournalEntry(
                               entryId: entry.id!,
-                              babyId: "W6bOM4UJxxfbo0bktsmO",
+                              babyId: await Keys.selectedBabyId.read(),
                               data: updatedData,
                             );
 

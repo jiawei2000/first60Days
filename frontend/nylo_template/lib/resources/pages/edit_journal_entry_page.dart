@@ -29,7 +29,7 @@ class _EditJournalEntryPageState extends NyPage<EditJournalEntryPage> {
   JournalApiService _journalApiService = JournalApiService();
   //temp entryid 0uylgiwzLaLoybeIiTws
   final entryId = "1bVzLRQG6mmb0oC4h84B";
-  final babyId = "W6bOM4UJxxfbo0bktsmO";
+  final babyId = "W6bOM4UJxxfbo0bktsmO"; //keeping this since unused for now, as in this page
   @override
   get init => () {
         //Initialize form

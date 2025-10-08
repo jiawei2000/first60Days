@@ -4,6 +4,7 @@ import 'package:flutter_app/app/models/entry_planner.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import '/bootstrap/extensions.dart';
 import 'package:flutter/cupertino.dart';
+import '/config/keys.dart';
 
 class EntryPlannerRow extends StatefulWidget {
   const EntryPlannerRow({super.key, required this.entryPlanner});
@@ -168,9 +169,13 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
       if (timeA == null || timeB == null) return 0;
       return timeA.compareTo(timeB);
     });
-
+    final babyId = await Keys.selectedBabyId.read();
+    if (babyId == null) {
+      debugPrint("❌ No baby selected");
+      return null; // or return null / throw depending on context
+    }
     await controller.updateFeedTimingByPlannerId(
-      babyId: "zuCu842rURSUnCHKC56R",
+      babyId: babyId,
       plannerId: widget.entryPlanner.id!,
       data: {
         'feedTimings': _feedTimings,

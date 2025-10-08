@@ -4,6 +4,7 @@ import 'package:flutter_app/resources/widgets/buttons/partials/primary_button_wi
 import 'package:flutter_app/resources/widgets/custom_form_elements/cupertino_time_field_widget.dart';
 import 'package:flutter_app/resources/widgets/custom_form_elements/labeled_text_field_widget.dart';
 import 'package:nylo_framework/nylo_framework.dart';
+import '/config/keys.dart';
 
 class GenerateScheduleForm extends StatefulWidget {
   const GenerateScheduleForm({
@@ -89,7 +90,11 @@ class _GenerateScheduleFormState extends NyState<GenerateScheduleForm> {
   Future<void> _generateNewSchedule(int weekNo) async {
     final controller = FeedingScheduleController();
 
-    String babyId = "zuCu842rURSUnCHKC56R";
+    final babyId = await Keys.selectedBabyId.read();
+    if (babyId == null) {
+      debugPrint("❌ No baby selected");
+      return null; // or return null / throw depending on context
+    }
 
     DateTime now = DateTime.now();
     DateTime firstFeedTime =

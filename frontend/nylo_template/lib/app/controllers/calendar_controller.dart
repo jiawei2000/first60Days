@@ -3,13 +3,20 @@ import '/app/networking/user_api_service.dart';
 import '/app/models/journal_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '/config/keys.dart';
+import 'package:nylo_framework/nylo_framework.dart';
+
 
 class CalendarController {
   final JournalApiService _journalApiService = JournalApiService();
 
   /// Fetch journal entries and group them by date
   Future<Map<DateTime, List<Map<String, dynamic>>>> getCalendarData() async {
-    const babyId = "W6bOM4UJxxfbo0bktsmO";
+    final babyId = await Keys.selectedBabyId.read();
+    if (babyId == null) {
+      debugPrint("❌ No baby selected");
+      return {}; // or return null / throw depending on context
+    }
 
     // Fetch raw data from API service
     final rawData = await _journalApiService.findAllforBabyId(query: babyId);
@@ -70,7 +77,8 @@ class CalendarController {
 
   /// Fetch a specific journal entry from the API by entry ID
   Future<JournalEntry?> getJournalEntryById(String entryId) async {
-    const babyId = "W6bOM4UJxxfbo0bktsmO";
+    final babyId = await Keys.selectedBabyId.read();
+    debugPrint("👶 Selected Baby ID: $babyId");
 
     try {
       final response = await _journalApiService.findJournalEntryById(

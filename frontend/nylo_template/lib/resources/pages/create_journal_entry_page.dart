@@ -6,6 +6,7 @@ import '../widgets/buttons/partials/primary_button_widget.dart';
 import '../../app/networking/journal_api_service.dart';
 import '../../app/models/journal_entry.dart';
 import '../../app/models/feed_type.dart';
+import '/config/keys.dart';
 
 class CreateJournalEntryPage extends NyStatefulWidget {
   static RouteView path =
@@ -84,7 +85,11 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
       remarks: remarksController.text,
     );
 
-    const babyId = "W6bOM4UJxxfbo0bktsmO";
+    final babyId = await Keys.selectedBabyId.read();
+    if (babyId == null) {
+      debugPrint("❌ No baby selected");
+      return null; // or return null / throw depending on context
+    }
 
     try {
       await _journalApiService.create(id: babyId, data: newEntry);
