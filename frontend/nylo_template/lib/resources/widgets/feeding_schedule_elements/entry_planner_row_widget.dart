@@ -34,65 +34,79 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
       ));
     }
 
-    return ListView.separated(
-      padding: EdgeInsets.zero,
-      shrinkWrap: true,
-      physics: const BouncingScrollPhysics(),
-      itemCount: _feedTimings.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (_, index) {
-        final time = _feedTimings[index];
-
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: context.color.content.withAlpha((255.0 * 0.3).round()),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.center,
+          child: Text('MON Interval: ${calculateMONInterval()}').displaySmall(
+            color: context.color.content.withAlpha((255.0 * 0.6).round()),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView.separated(
+            padding: EdgeInsets.zero,
+            itemCount: _feedTimings.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, index) {
+              final time = _feedTimings[index];
+
+              return Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color:
+                        context.color.content.withAlpha((255.0 * 0.3).round()),
+                  ),
+                ),
+                child: Row(
                   children: [
-                    Text("Feeding ${index + 1}").bodySmall(
-                      color: context.color.content
-                          .withAlpha((255.0 * 0.8).round()),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Feeding ${index + 1}").bodySmall(
+                            color: context.color.content
+                                .withAlpha((255.0 * 0.8).round()),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(time).displaySmall(
+                            color: context.color.content
+                                .withAlpha((255.0 * 0.9).round()),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(time).displaySmall(
-                      color: context.color.content
-                          .withAlpha((255.0 * 0.9).round()),
-                      fontWeight: FontWeight.w600,
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () {
+                        _showCupertinoTimePicker(index, time);
+                      },
+                      splashRadius: 20,
+                      tooltip: "edit",
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () {
+                        setState(() {
+                          _feedTimings.removeAt(index);
+                        });
+                        _updateFeedTiming();
+                      },
+                      splashRadius: 20,
+                      tooltip: "delete",
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                onPressed: () {
-                  _showCupertinoTimePicker(index, time);
-                },
-                splashRadius: 20,
-                tooltip: "edit",
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () {
-                  setState(() {
-                    _feedTimings.removeAt(index);
-                  });
-                  _updateFeedTiming();
-                },
-                splashRadius: 20,
-                tooltip: "delete",
-              ),
-            ],
+              );
+            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -147,6 +161,14 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
   }
 
   Future<void> _updateFeedTiming() async {
+    // Sort _feedTimings by time
+    _feedTimings.sort((a, b) {
+      final timeA = _parseTimeString(a);
+      final timeB = _parseTimeString(b);
+      if (timeA == null || timeB == null) return 0;
+      return timeA.compareTo(timeB);
+    });
+
     await controller.updateFeedTimingByPlannerId(
       babyId: "zuCu842rURSUnCHKC56R",
       plannerId: widget.entryPlanner.id!,
@@ -154,6 +176,36 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
         'feedTimings': _feedTimings,
       },
     );
+  }
+
+  String calculateMONInterval() {
+    final firstTiming = _feedTimings.isNotEmpty ? _feedTimings.first : null;
+    final lastTiming = _feedTimings.isNotEmpty ? _feedTimings.last : null;
+
+    if (firstTiming == null || lastTiming == null) {
+      return '0';
+    }
+
+    final parsedFirst = _parseTimeString(firstTiming);
+    final parsedLast = _parseTimeString(lastTiming);
+
+    final firstTime =
+        TimeOfDay(hour: parsedFirst!.hour, minute: parsedFirst.minute);
+    final lastTime =
+        TimeOfDay(hour: parsedLast!.hour, minute: parsedLast.minute);
+
+    final firstTotalMinutes = firstTime.hour * 60 + firstTime.minute;
+    final lastTotalMinutes = lastTime.hour * 60 + lastTime.minute;
+
+    final differenceMinutes = firstTotalMinutes - lastTotalMinutes + 24 * 60;
+
+    // return difference in hours and minutes
+    final hours = (differenceMinutes ~/ 60).abs();
+    final minutes = (differenceMinutes % 60).abs();
+    if (minutes == 0) {
+      return '$hours h';
+    }
+    return '$hours h $minutes m';
   }
 
   String _formatTimeString(DateTime time) {

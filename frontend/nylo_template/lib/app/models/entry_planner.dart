@@ -5,7 +5,7 @@ class EntryPlanner {
   int? totalFeeds;
   DateTime? firstFeedTime;
   DateTime? lastFeedTime;
-  int? mONInterval;
+  double? mONInterval;
   List<String>? feedTimings;
   int? weekNo;
   DateTime? createdAt;
