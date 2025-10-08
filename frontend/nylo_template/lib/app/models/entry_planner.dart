@@ -28,7 +28,7 @@ class EntryPlanner {
     totalFeeds = json['totalFeeds'];
     firstFeedTime = parseTimestamp(json['firstFeedTime']);
     lastFeedTime = parseTimestamp(json['lastFeedTime']);
-    mONInterval = json['MONInterval'];
+    mONInterval = json['MONInterval'].toDouble();
     if (json['feedTimings'] != null) {
       feedTimings = (json['feedTimings'] as List)
           .map<String>((e) => e.toString())
