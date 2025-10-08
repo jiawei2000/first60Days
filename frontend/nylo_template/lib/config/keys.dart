@@ -15,6 +15,7 @@ class Keys {
         return [
           auth,
           bearerToken,
+          selectedBabyId,
           // coins.defaultValue(10), // give the user 10 coins by default
         ];
       };
@@ -22,6 +23,7 @@ class Keys {
   static StorageKey auth = getEnv('SK_USER', defaultValue: 'SK_USER');
 
   static StorageKey bearerToken = 'SK_BEARER_TOKEN';
+  static StorageKey selectedBabyId = 'SK_SELECTED_BABY_ID';
 
   // static StorageKey coins = 'SK_COINS';
 

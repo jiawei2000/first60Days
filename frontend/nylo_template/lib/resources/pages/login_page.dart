@@ -4,9 +4,9 @@ import '/app/controllers/login_controller.dart';
 import '/app/forms/login_form.dart';
 import '/resources/widgets/logo_widget.dart';
 import '/resources/widgets/buttons/buttons.dart';
-import '/resources/pages//base_navigation_hub.dart';
 import '/app/networking/user_api_service.dart';
 import '/config/keys.dart';
+import '/resources/pages/choose_baby_page.dart';
 
 class LoginPage extends NyStatefulWidget<LoginController> {
   static RouteView path = ("/login", (_) => LoginPage());
@@ -71,8 +71,7 @@ class _LoginPageState extends NyPage<LoginPage> {
       await Auth.authenticate(data: {"token": response['token']});
       await Keys.bearerToken.save(response['token']);
       // Navigate to navigation hub
-      routeTo(BaseNavigationHub.path,
-          navigationType: NavigationType.pushAndForgetAll);
+      routeTo(ChooseBabyPage.path, navigationType: NavigationType.pushAndForgetAll);
     } else {
       // Show error message
       showToastWarning(title: "Login failed", description: "Please try again");

@@ -1,3 +1,6 @@
+import '/app/models/baby.dart';
+import '/app/networking/baby_service_api_service.dart';
+import '/app/controllers/choose_baby_controller.dart';
 import '/app/models/entry_planner.dart';
 import '/app/networking/feeding_schedule_api_service.dart';
 import '../app/controllers/feeding_schedule_controller.dart';
@@ -33,6 +36,10 @@ final Map<Type, dynamic> modelDecoders = {
   List<EntryPlanner>: (data) => List.from(data).map((json) => EntryPlanner.fromJson(json)).toList(),
 
   EntryPlanner: (data) => EntryPlanner.fromJson(data),
+
+  List<Baby>: (data) => List.from(data).map((json) => Baby.fromJson(json)).toList(),
+
+  Baby: (data) => Baby.fromJson(data),
 };
 
 /* API Decoders
@@ -55,6 +62,8 @@ final Map<Type, dynamic> apiDecoders = {
   FeedingScheduleApiService: FeedingScheduleApiService(),
 
   CaregiverApiService: CaregiverApiService(), // ← add
+
+  BabyServiceApiService: BabyServiceApiService(),
 };
 
 /* Controller Decoders
@@ -71,4 +80,6 @@ final Map<Type, dynamic> controllers = {
   LoginController: () => LoginController(),
 
   FeedingScheduleController: () => FeedingScheduleController(),
+
+  ChooseBabyController: () => ChooseBabyController(),
 };
