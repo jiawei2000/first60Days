@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_app/app/models/entry_planner.dart';
 import '/app/controllers/controller.dart';
 import '/app/networking/feeding_schedule_api_service.dart';
 

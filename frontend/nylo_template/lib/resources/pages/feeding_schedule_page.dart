@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/app/models/entry_planner.dart';
+import 'package:flutter_app/resources/widgets/feeding_schedule_elements/generate_schedule_form_widget.dart';
 import 'package:flutter_app/resources/widgets/safearea_widget.dart';
 import '/app/controllers/feeding_schedule_controller.dart';
 import 'package:nylo_framework/nylo_framework.dart';
@@ -91,10 +92,9 @@ class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12.0),
               child: PrimaryButton(
-                  text: "Generate New Schedule",
-                  onPressed: () {
-                    _generateNewSchedule(_weekNo);
-                  }),
+                text: "Generate New Schedule",
+                onPressed: () => _showGenerateScheduleDialog(),
+              ),
             ),
 
             Expanded(
@@ -119,7 +119,7 @@ class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
     });
   }
 
-  void _getEntryPlanners() async {
+  Future<void> _getEntryPlanners() async {
     final response =
         // await controller.fetchPlannerByBabyId("YubfhQ3OBeECH6AuYPVK");
         await controller.fetchPlannerByBabyId("zuCu842rURSUnCHKC56R");
@@ -137,7 +137,7 @@ class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
     // Reset before repopulating
     _entryPlanners = planners;
 
-    // Ensure there is a planner for each week 1..10
+    // Ensure there is a planner for each week 1 to 10
     final existingWeeks = _entryPlanners
         .where((planner) => planner.weekNo != null)
         .map((planner) => planner.weekNo!)
@@ -162,47 +162,16 @@ class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
     );
   }
 
-  void _generateNewSchedule(int weekNo) async {
-    // Placeholder for schedule generation logic
-    // This could involve complex algorithms or API calls
-    print("Generating new feeding schedule...");
-
-    String babyId = "zuCu842rURSUnCHKC56R";
-    // Date time for 8am to 8pm
-    DateTime now = DateTime.now();
-    DateTime firstFeedTime =
-        new DateTime(now.year, now.month, now.day, 5, 0, 0);
-    DateTime lastFeedTime =
-        new DateTime(now.year, now.month, now.day, 23, 0, 0);
-
-    int totalFeeds = 8;
-
-    final response = await controller.createPlanner(
-        babyId: babyId,
-        weekNo: weekNo,
-        firstFeedTime: firstFeedTime,
-        lastFeedTime: lastFeedTime,
-        totalFeeds: totalFeeds);
-
-    final message = response?['message'];
-    final newPlannerData = response?['planner'];
-
-    final newPlanner = newPlannerData != null
-        ? EntryPlanner.fromJson(newPlannerData)
-        : new EntryPlanner(weekNo: weekNo, feedTimings: []);
-
-    final _newEntryPlanners =
-        _entryPlanners.where((planner) => planner.weekNo == weekNo).toList();
-
-    _newEntryPlanners.add(newPlanner);
-    _reloadEntryPlanners(_newEntryPlanners);
-
-    if (message != null) {
-      // showToastSuccess(title: "Success", description: message);
-    } else {
-      showToastWarning(
-          title: "Error",
-          description: "Failed to create planner. Please try again");
-    }
+  void _showGenerateScheduleDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: GenerateScheduleForm(weekNo: _weekNo),
+        );
+      },
+    ).then((_) async {
+      await _getEntryPlanners();
+    });
   }
 }
