@@ -291,9 +291,6 @@ class UserService {
             username: newUsername
         });
 
-        // Update the user instance (optional)
-        user.newUsername = newUsername;
-
         return {
             message: 'Username updated successfully',
             userId: user.id
