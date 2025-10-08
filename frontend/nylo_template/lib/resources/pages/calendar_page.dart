@@ -13,7 +13,6 @@ import '/resources/widgets/calendar/day_section_header.dart';
 import '/resources/widgets/journal_entry_form_widget.dart';
 import '/config/keys.dart';
 
-
 class CalendarPage extends StatefulWidget {
   static RouteView path = ("/calendar", (context) => const CalendarPage());
 
@@ -29,6 +28,7 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime _selectedDay = DateTime.now();
   Map<DateTime, List<Map<String, dynamic>>> _eventData = {};
   bool _showBanner = true;
+  bool _loading = true;
 
   @override
   void initState() {
@@ -37,9 +37,11 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   void _loadEvents() async {
+    setState(() => _loading = true);
     final events = await _controller.getCalendarData();
     setState(() {
-      _eventData = events;
+      _eventData = events ?? {};
+      _loading = false;
     });
   }
 
@@ -52,7 +54,7 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Baby Chloe"),
+        title: const Text("Baby Calendar"),
         centerTitle: true,
         actions: [
           TextButton(
@@ -67,7 +69,7 @@ class _CalendarPageState extends State<CalendarPage> {
           )
         ],
       ),
-      body: _eventData.isEmpty
+      body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
               child: Stack(
@@ -121,8 +123,8 @@ class _CalendarPageState extends State<CalendarPage> {
                               if (events.isNotEmpty) {
                                 return const Positioned(
                                   bottom: 4,
-                                  child:
-                                      Icon(Icons.circle, size: 6, color: Colors.purple),
+                                  child: Icon(Icons.circle,
+                                      size: 6, color: Colors.purple),
                                 );
                               }
                               return null;
@@ -132,7 +134,6 @@ class _CalendarPageState extends State<CalendarPage> {
                       ),
                     ],
                   ),
-
                   DraggableScrollableSheet(
                     initialChildSize: 0.45,
                     minChildSize: 0.2,
@@ -143,7 +144,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       return Container(
                         decoration: const BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(16)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black26,
@@ -170,165 +172,250 @@ class _CalendarPageState extends State<CalendarPage> {
                             DaySectionHeader(date: _selectedDay),
                             const SizedBox(height: 8),
                             if (events.isEmpty)
-                              const Text("No events found",
+                              const Text("No entries to display",
                                   style: TextStyle(color: Colors.grey))
                             else
                               ...events.map((event) {
-                            return InkWell(
-                            onTap: () async {
-                            final entryId = event['entryId'];
-                            final entry = await _controller.getJournalEntryById(entryId);
+                                return InkWell(
+                                  onTap: () async {
+                                    final entryId = event['entryId'];
+                                    final entry = await _controller
+                                        .getJournalEntryById(entryId);
 
-                            if (entry == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Failed to load journal entry")),
-                              );
-                              return;
-                            }
+                                    if (entry == null) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  "Failed to load journal entry")));
+                                      return;
+                                    }
 
-                            // Prepare feed controllers
-                            final feedTypeControllers = <TextEditingController>[];
-                            final feedValueControllers = <TextEditingController>[];
-                            final feedUnitControllers = <TextEditingController>[];
+                                    // Prepare controllers
+                                    final feedTypeControllers =
+                                        <TextEditingController>[];
+                                    final feedValueControllers =
+                                        <TextEditingController>[];
+                                    final feedUnitControllers =
+                                        <TextEditingController>[];
 
-                            if (entry.feedTypes != null && entry.feedTypes!.isNotEmpty) {
-                              for (final feed in entry.feedTypes!) {
-                                feedTypeControllers.add(TextEditingController(text: feed.type ?? ''));
-                                feedValueControllers.add(TextEditingController(text: feed.value?.toString() ?? ''));
-                                feedUnitControllers.add(TextEditingController(text: feed.unit ?? ''));
-                              }
-                            }
+                                    if (entry.feedTypes != null) {
+                                      for (final feed in entry.feedTypes!) {
+                                        feedTypeControllers.add(
+                                            TextEditingController(
+                                                text: feed.type ?? ''));
+                                        feedValueControllers.add(
+                                            TextEditingController(
+                                                text: feed.value?.toString() ??
+                                                    ''));
+                                        feedUnitControllers.add(
+                                            TextEditingController(
+                                                text: feed.unit ?? ''));
+                                      }
+                                    }
 
-                            // Controllers for other fields
-                            final wakeTimeController = TextEditingController(
-                              text: entry.startWakeTime != null
-                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startWakeTime!)
-                                  : '',
-                            );
-                            final feedTimeController = TextEditingController(
-                              text: entry.startFeedTime != null
-                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startFeedTime!)
-                                  : '',
-                            );
-                            final sleepTimeController = TextEditingController(
-                              text: entry.startSleepTime != null
-                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startSleepTime!)
-                                  : '',
-                            );
-                            final playTimeController = TextEditingController(
-                              text: entry.startPlayTime != null
-                                  ? DateFormat('yyyy-MM-dd – hh:mm a').format(entry.startPlayTime!)
-                                  : '',
-                            );
-                            final remarksController = TextEditingController(text: entry.remarks ?? '');
+                                    final wakeTimeController =
+                                        TextEditingController(
+                                            text: entry.startWakeTime != null
+                                                ? DateFormat(
+                                                        'yyyy-MM-dd – hh:mm a')
+                                                    .format(
+                                                        entry.startWakeTime!)
+                                                : '');
+                                    final feedTimeController =
+                                        TextEditingController(
+                                            text: entry.startFeedTime != null
+                                                ? DateFormat(
+                                                        'yyyy-MM-dd – hh:mm a')
+                                                    .format(
+                                                        entry.startFeedTime!)
+                                                : '');
+                                    final sleepTimeController =
+                                        TextEditingController(
+                                            text: entry.startSleepTime != null
+                                                ? DateFormat(
+                                                        'yyyy-MM-dd – hh:mm a')
+                                                    .format(
+                                                        entry.startSleepTime!)
+                                                : '');
+                                    final playTimeController =
+                                        TextEditingController(
+                                            text: entry.startPlayTime != null
+                                                ? DateFormat(
+                                                        'yyyy-MM-dd – hh:mm a')
+                                                    .format(
+                                                        entry.startPlayTime!)
+                                                : '');
+                                    final remarksController =
+                                        TextEditingController(
+                                            text: entry.remarks ?? '');
 
-                            // Show modal with form + Save button
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              isDismissible: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (BuildContext context) {
-                                return GestureDetector(
-                                  onTap: () => Navigator.of(context).pop(),
-                                  child: Container(
-                                    color: Colors.transparent,
-                                    child: GestureDetector(
-                                      onTap: () {}, // absorb taps inside form
-                                      child: Container(
-                                        height: MediaQuery.of(context).size.height * 0.5,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                                        child: Column(
-                                          children: [
-                                            Expanded(
-                                              child: JournalEntryForm(
-                                                wakeTimeController: wakeTimeController,
-                                                feedTimeController: feedTimeController,
-                                                sleepTimeController: sleepTimeController,
-                                                playTimeController: playTimeController,
-                                                remarksController: remarksController,
-                                                feedTypeControllers: feedTypeControllers,
-                                                feedValueControllers: feedValueControllers,
-                                                feedUnitControllers: feedUnitControllers,
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) {
+                                        return GestureDetector(
+                                          onTap: () =>
+                                              Navigator.of(context).pop(),
+                                          child: Container(
+                                            color: Colors.transparent,
+                                            child: GestureDetector(
+                                              onTap: () {},
+                                              child: Container(
+                                                height: MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.5,
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.vertical(
+                                                          top: Radius.circular(
+                                                              16)),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 20),
+                                                child: Column(
+                                                  children: [
+                                                    Expanded(
+                                                      child: JournalEntryForm(
+                                                        wakeTimeController:
+                                                            wakeTimeController,
+                                                        feedTimeController:
+                                                            feedTimeController,
+                                                        sleepTimeController:
+                                                            sleepTimeController,
+                                                        playTimeController:
+                                                            playTimeController,
+                                                        remarksController:
+                                                            remarksController,
+                                                        feedTypeControllers:
+                                                            feedTypeControllers,
+                                                        feedValueControllers:
+                                                            feedValueControllers,
+                                                        feedUnitControllers:
+                                                            feedUnitControllers,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    ElevatedButton(
+                                                      onPressed: () async {
+                                                        DateTime?
+                                                            tryParseDate(
+                                                                String text) {
+                                                          if (text.isEmpty)
+                                                            return null;
+
+                                                          try {
+                                                            return DateTime
+                                                                .parse(text);
+                                                          } catch (_) {}
+
+                                                          try {
+                                                            return DateFormat(
+                                                                    'yyyy-MM-dd – hh:mm a')
+                                                                .parse(text);
+                                                          } catch (_) {}
+
+                                                          try {
+                                                            return DateFormat(
+                                                                    'yyyy-MM-dd HH:mm:ss')
+                                                                .parse(text);
+                                                          } catch (_) {}
+
+                                                          return null;
+                                                        }
+
+                                                        final updatedData = {
+                                                          "awakeTime":
+                                                              tryParseDate(
+                                                                      wakeTimeController
+                                                                          .text)
+                                                                  ?.toIso8601String(),
+                                                          "startFeedTime":
+                                                              tryParseDate(
+                                                                      feedTimeController
+                                                                          .text)
+                                                                  ?.toIso8601String(),
+                                                          "startPlayTime":
+                                                              tryParseDate(
+                                                                      playTimeController
+                                                                          .text)
+                                                                  ?.toIso8601String(),
+                                                          "startSleepTime":
+                                                              tryParseDate(
+                                                                      sleepTimeController
+                                                                          .text)
+                                                                  ?.toIso8601String(),
+                                                          "remarks":
+                                                              remarksController
+                                                                  .text,
+                                                          "feedType": List
+                                                              .generate(
+                                                                  feedTypeControllers
+                                                                      .length,
+                                                                  (i) {
+                                                            return {
+                                                              "type":
+                                                                  feedTypeControllers[
+                                                                          i]
+                                                                      .text,
+                                                              "value": int
+                                                                      .tryParse(
+                                                                          feedValueControllers[i]
+                                                                              .text) ??
+                                                                  0,
+                                                              "unit":
+                                                                  feedUnitControllers[
+                                                                          i]
+                                                                      .text,
+                                                            };
+                                                          }),
+                                                        };
+
+                                                        await _controller
+                                                            .updateJournalEntry(
+                                                          entryId: entry.id!,
+                                                          babyId: await Keys
+                                                              .selectedBabyId
+                                                              .read(),
+                                                          data: updatedData,
+                                                        );
+
+                                                        Navigator.pop(context);
+                                                        _loadEvents();
+                                                      },
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor:
+                                                            Colors.purple,
+                                                        minimumSize:
+                                                            const Size(double
+                                                                .infinity, 48),
+                                                      ),
+                                                      child: const Text(
+                                                          "Save Changes"),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                            const SizedBox(height: 12),
-                                            ElevatedButton(
-                                              onPressed: () async {
-                            DateTime? tryParseDate(String text) {
-                              if (text.isEmpty) return null;
-
-                              try {
-                                return DateTime.parse(text); // ISO 8601
-                              } catch (_) {}
-
-                              try {
-                                return DateFormat('yyyy-MM-dd – hh:mm a').parse(text);
-                              } catch (_) {}
-
-                              try {
-                                return DateFormat('yyyy-MM-dd HH:mm:ss').parse(text);
-                              } catch (_) {}
-
-                              return null;
-                            }
-
-                            final updatedData = {
-                              "awakeTime": tryParseDate(wakeTimeController.text)?.toIso8601String(),
-                              "startFeedTime": tryParseDate(feedTimeController.text)?.toIso8601String(),
-                              "startPlayTime": tryParseDate(playTimeController.text)?.toIso8601String(),
-                              "startSleepTime": tryParseDate(sleepTimeController.text)?.toIso8601String(),
-                              "remarks": remarksController.text,
-                              "feedType": List.generate(feedTypeControllers.length, (i) {
-                                return {
-                                  "type": feedTypeControllers[i].text,
-                                  "value": int.tryParse(feedValueControllers[i].text) ?? 0,
-                                  "unit": feedUnitControllers[i].text,
-                                };
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: EventTile(
+                                    title: event['title'] ?? 'No Title',
+                                    subtitle: event['time'] ?? '',
+                                    color: Colors.purple,
+                                    status:
+                                        event['status'] ?? 'Incomplete',
+                                  ),
+                                );
                               }),
-                            };
-
-                            // 🔄 Call update API
-                            await _controller.updateJournalEntry(
-                              entryId: entry.id!,
-                              babyId: await Keys.selectedBabyId.read(),
-                              data: updatedData,
-                            );
-
-                            // ✅ Close modal and refresh events
-                            Navigator.pop(context);
-                            _loadEvents();
-                          }
-                          ,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      minimumSize: const Size(double.infinity, 48),
-                    ),
-                    child: const Text("Save Changes"),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-  );
-},
-
-    child: EventTile(
-      title: event['title'] ?? 'No Title',
-      subtitle: event['time'] ?? '',
-      color: Colors.purple,
-      status: event['status'] ?? 'Incomplete',
-    ),
-  );
-}),
-
                           ],
                         ),
                       );
