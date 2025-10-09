@@ -123,7 +123,7 @@ class _HomePageState extends NyPage<HomePage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        "This week your baby will lift their head slightly and turn their head towards familiar sounds.",
+                        "This week your baby will start to lift their head slightly and be able to turn their head towards familiar sounds.",
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),

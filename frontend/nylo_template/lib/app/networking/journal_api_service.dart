@@ -51,8 +51,7 @@ class JournalApiService extends NyApiService {
   }
 
   /// Create a JournalEntry
-  Future<dynamic> create(
-      {required dynamic id, required dynamic data}) async {
+  Future<dynamic> create({required dynamic id, required dynamic data}) async {
     String token = await Keys.bearerToken.read() ?? "";
     return await network<dynamic>(
       request: (request) => request.post("/journalEntries/$id", data: data),
@@ -62,8 +61,10 @@ class JournalApiService extends NyApiService {
       },
     );
   }
+
   // Fine a JournalEntry by Id
-  Future<dynamic> findJournalEntryById({required dynamic babyId, required dynamic entryId}) async {
+  Future<dynamic> findJournalEntryById(
+      {required dynamic babyId, required dynamic entryId}) async {
     String token = await Keys.bearerToken.read() ?? "";
     return await network<dynamic>(
       request: (request) => request.get("/journalEntries/$babyId/$entryId"),
@@ -73,26 +74,26 @@ class JournalApiService extends NyApiService {
       },
     );
   }
+
   /// Update a JournalEntry
-Future<dynamic> updateJournalEntry({
-  required String babyId,
-  required String entryId,
-  required Map<String, dynamic> data,
-}) async {
-  String token = await Keys.bearerToken.read() ?? "";
+  Future<dynamic> updateJournalEntry({
+    required String babyId,
+    required String entryId,
+    required dynamic data,
+  }) async {
+    String token = await Keys.bearerToken.read() ?? "";
 
-  return await network<dynamic>(
-    request: (request) => request.put(
-      "/journalEntries/$babyId/$entryId",
-      data: data,
-    ),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-  );
-}
-
+    return await network<dynamic>(
+      request: (request) => request.put(
+        "/journalEntries/$babyId/$entryId",
+        data: data,
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
 
   /// Delete a JournalEntry
   // Future<bool?> destroy({required int id}) async {

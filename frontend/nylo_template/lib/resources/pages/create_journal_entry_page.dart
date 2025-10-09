@@ -119,6 +119,26 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
   }
 
   DateTime? parseDateTimeString(String dateTimeString) {
-    return DateTime.tryParse(dateTimeString);
+    // 10/12/2023, 14:30 --> DateTime
+    final parts = dateTimeString.split(", ");
+    if (parts.length != 2) return null;
+
+    final dateParts = parts[0].split("/");
+    final timeParts = parts[1].split(":");
+    if (dateParts.length != 3 || timeParts.length != 2) return null;
+
+    final day = int.tryParse(dateParts[0]);
+    final month = int.tryParse(dateParts[1]);
+    final year = int.tryParse(dateParts[2]);
+    final hour = int.tryParse(timeParts[0]);
+    final minute = int.tryParse(timeParts[1]);
+
+    if (day == null ||
+        month == null ||
+        year == null ||
+        hour == null ||
+        minute == null) return null;
+
+    return DateTime(year, month, day, hour, minute);
   }
 }

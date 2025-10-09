@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/app/models/feed_type.dart';
+import 'package:flutter_app/app/models/journal_entry.dart';
+import 'package:flutter_app/resources/widgets/buttons/partials/primary_button_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
 import '/app/controllers/calendar_controller.dart';
@@ -8,7 +10,6 @@ import '/resources/pages/create_journal_entry_page.dart';
 
 import '/resources/widgets/calendar/info_banner.dart';
 import '/resources/widgets/calendar/event_tile.dart';
-import '/app/models/journal_entry.dart';
 import '/resources/widgets/calendar/day_section_header.dart';
 import '/resources/widgets/journal_entry_form_widget.dart';
 import '/config/keys.dart';
@@ -27,7 +28,7 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   Map<DateTime, List<Map<String, dynamic>>> _eventData = {};
-  bool _showBanner = true;
+  bool _showBanner = false;
   bool _loading = true;
 
   @override
@@ -54,7 +55,7 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Baby Calendar"),
+        title: const Text("Baby Journal"),
         centerTitle: true,
         actions: [
           TextButton(
@@ -216,35 +217,28 @@ class _CalendarPageState extends State<CalendarPage> {
                                     final wakeTimeController =
                                         TextEditingController(
                                             text: entry.startWakeTime != null
-                                                ? DateFormat(
-                                                        'yyyy-MM-dd – hh:mm a')
-                                                    .format(
-                                                        entry.startWakeTime!)
-                                                : '');
+                                                ? _formatDateTime(
+                                                    entry.startWakeTime!)
+                                                : "");
                                     final feedTimeController =
                                         TextEditingController(
                                             text: entry.startFeedTime != null
-                                                ? DateFormat(
-                                                        'yyyy-MM-dd – hh:mm a')
-                                                    .format(
-                                                        entry.startFeedTime!)
-                                                : '');
+                                                ? _formatDateTime(
+                                                    entry.startFeedTime!)
+                                                : "");
                                     final sleepTimeController =
                                         TextEditingController(
                                             text: entry.startSleepTime != null
-                                                ? DateFormat(
-                                                        'yyyy-MM-dd – hh:mm a')
-                                                    .format(
-                                                        entry.startSleepTime!)
-                                                : '');
+                                                ? _formatDateTime(
+                                                    entry.startSleepTime!)
+                                                : "");
                                     final playTimeController =
                                         TextEditingController(
                                             text: entry.startPlayTime != null
-                                                ? DateFormat(
-                                                        'yyyy-MM-dd – hh:mm a')
-                                                    .format(
-                                                        entry.startPlayTime!)
-                                                : '');
+                                                ? _formatDateTime(
+                                                    entry.startPlayTime!)
+                                                : "");
+
                                     final remarksController =
                                         TextEditingController(
                                             text: entry.remarks ?? '');
@@ -300,81 +294,49 @@ class _CalendarPageState extends State<CalendarPage> {
                                                       ),
                                                     ),
                                                     const SizedBox(height: 12),
-                                                    ElevatedButton(
+                                                    PrimaryButton(
                                                       onPressed: () async {
-                                                        DateTime?
-                                                            tryParseDate(
-                                                                String text) {
-                                                          if (text.isEmpty)
-                                                            return null;
-
-                                                          try {
-                                                            return DateTime
-                                                                .parse(text);
-                                                          } catch (_) {}
-
-                                                          try {
-                                                            return DateFormat(
-                                                                    'yyyy-MM-dd – hh:mm a')
-                                                                .parse(text);
-                                                          } catch (_) {}
-
-                                                          try {
-                                                            return DateFormat(
-                                                                    'yyyy-MM-dd HH:mm:ss')
-                                                                .parse(text);
-                                                          } catch (_) {}
-
-                                                          return null;
-                                                        }
-
-                                                        final updatedData = {
-                                                          "awakeTime":
-                                                              tryParseDate(
-                                                                      wakeTimeController
-                                                                          .text)
-                                                                  ?.toIso8601String(),
-                                                          "startFeedTime":
-                                                              tryParseDate(
-                                                                      feedTimeController
-                                                                          .text)
-                                                                  ?.toIso8601String(),
-                                                          "startPlayTime":
-                                                              tryParseDate(
-                                                                      playTimeController
-                                                                          .text)
-                                                                  ?.toIso8601String(),
-                                                          "startSleepTime":
-                                                              tryParseDate(
-                                                                      sleepTimeController
-                                                                          .text)
-                                                                  ?.toIso8601String(),
-                                                          "remarks":
+                                                        final updatedData =
+                                                            JournalEntry(
+                                                          startWakeTime:
+                                                              parseDateTimeString(
+                                                                  wakeTimeController
+                                                                      .text),
+                                                          startFeedTime:
+                                                              parseDateTimeString(
+                                                                  feedTimeController
+                                                                      .text),
+                                                          startPlayTime:
+                                                              parseDateTimeString(
+                                                                  playTimeController
+                                                                      .text),
+                                                          startSleepTime:
+                                                              parseDateTimeString(
+                                                                  sleepTimeController
+                                                                      .text),
+                                                          remarks:
                                                               remarksController
                                                                   .text,
-                                                          "feedType": List
-                                                              .generate(
-                                                                  feedTypeControllers
-                                                                      .length,
-                                                                  (i) {
-                                                            return {
-                                                              "type":
+                                                          feedTypes: List.generate(
+                                                              feedTypeControllers
+                                                                  .length,
+                                                              (index) {
+                                                            return FeedType(
+                                                              type:
                                                                   feedTypeControllers[
-                                                                          i]
+                                                                          index]
                                                                       .text,
-                                                              "value": int
-                                                                      .tryParse(
-                                                                          feedValueControllers[i]
-                                                                              .text) ??
-                                                                  0,
-                                                              "unit":
+                                                              value: int.tryParse(
+                                                                  feedValueControllers[
+                                                                          index]
+                                                                      .text),
+                                                              unit:
                                                                   feedUnitControllers[
-                                                                          i]
+                                                                          index]
                                                                       .text,
-                                                            };
+                                                            );
                                                           }),
-                                                        };
-
+                                                        );
                                                         await _controller
                                                             .updateJournalEntry(
                                                           entryId: entry.id!,
@@ -387,16 +349,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                                         Navigator.pop(context);
                                                         _loadEvents();
                                                       },
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                        backgroundColor:
-                                                            Colors.purple,
-                                                        minimumSize:
-                                                            const Size(double
-                                                                .infinity, 48),
-                                                      ),
-                                                      child: const Text(
-                                                          "Save Changes"),
+                                                      text: "Save Changes",
                                                     ),
                                                   ],
                                                 ),
@@ -411,8 +364,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                     title: event['title'] ?? 'No Title',
                                     subtitle: event['time'] ?? '',
                                     color: Colors.purple,
-                                    status:
-                                        event['status'] ?? 'Incomplete',
+                                    status: event['status'] ?? 'Incomplete',
                                   ),
                                 );
                               }),
@@ -425,5 +377,33 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ),
     );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return "${dateTime.day}/${dateTime.month}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+  }
+
+  DateTime? parseDateTimeString(String dateTimeString) {
+    // 10/12/2023, 14:30 --> DateTime
+    final parts = dateTimeString.split(", ");
+    if (parts.length != 2) return null;
+
+    final dateParts = parts[0].split("/");
+    final timeParts = parts[1].split(":");
+    if (dateParts.length != 3 || timeParts.length != 2) return null;
+
+    final day = int.tryParse(dateParts[0]);
+    final month = int.tryParse(dateParts[1]);
+    final year = int.tryParse(dateParts[2]);
+    final hour = int.tryParse(timeParts[0]);
+    final minute = int.tryParse(timeParts[1]);
+
+    if (day == null ||
+        month == null ||
+        year == null ||
+        hour == null ||
+        minute == null) return null;
+
+    return DateTime(year, month, day, hour, minute);
   }
 }

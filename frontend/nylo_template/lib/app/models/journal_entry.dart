@@ -44,7 +44,7 @@ class JournalEntry extends Model {
   toJson() => {
         "id": id,
         "remarks": remarks,
-        "feedTypes": feedTypes?.map((item) => item.toJson()).toList(),
+        "feedType": feedTypes?.map((item) => item.toJson()).toList(),
         "awakeTime": startWakeTime?.toIso8601String(),
         "startFeedTime": startFeedTime?.toIso8601String(),
         "startPlayTime": startPlayTime?.toIso8601String(),

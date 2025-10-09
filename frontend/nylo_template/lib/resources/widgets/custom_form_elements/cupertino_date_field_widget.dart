@@ -27,6 +27,12 @@ class _CupertinoDateFieldState extends NyState<CupertinoDateField> {
                 padding: EdgeInsets.zero,
                 child: ReadonlyTextField(textController: widget.textController),
                 onPressed: () {
+                  setState(() {
+                    if (widget.textController.text == "") {
+                      widget.textController.text =
+                          _formatDateTime(DateTime.now());
+                    }
+                  });
                   _showCupertinoDialog();
                 })));
   }
@@ -48,17 +54,44 @@ class _CupertinoDateFieldState extends NyState<CupertinoDateField> {
         child: SafeArea(
           top: false,
           child: CupertinoDatePicker(
-            initialDateTime: DateTime.now(),
+            initialDateTime:
+                parseDateTimeString(widget.textController.text),
             use24hFormat: true,
             onDateTimeChanged: (DateTime newDateTime) {
-              widget.textController.text =
-                  newDateTime.toString();
-              // "${newDateTime.day}/${newDateTime.month}/${newDateTime.year}, ${newDateTime.hour.toString().padLeft(2, '0')}:${newDateTime.minute.toString().padLeft(2, '0')}";
+              widget.textController.text = _formatDateTime(newDateTime);
               setState(() {});
             },
           ),
         ),
       ),
     );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return "${dateTime.day}/${dateTime.month}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+  }
+
+  DateTime? parseDateTimeString(String dateTimeString) {
+    // 10/12/2023, 14:30 --> DateTime
+    final parts = dateTimeString.split(", ");
+    if (parts.length != 2) return null;
+
+    final dateParts = parts[0].split("/");
+    final timeParts = parts[1].split(":");
+    if (dateParts.length != 3 || timeParts.length != 2) return null;
+
+    final day = int.tryParse(dateParts[0]);
+    final month = int.tryParse(dateParts[1]);
+    final year = int.tryParse(dateParts[2]);
+    final hour = int.tryParse(timeParts[0]);
+    final minute = int.tryParse(timeParts[1]);
+
+    if (day == null ||
+        month == null ||
+        year == null ||
+        hour == null ||
+        minute == null) return null;
+
+    return DateTime(year, month, day, hour, minute);
   }
 }

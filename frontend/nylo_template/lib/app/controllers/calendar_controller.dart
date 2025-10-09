@@ -62,7 +62,7 @@ class CalendarController {
   Future<void> updateJournalEntry({
   required String entryId,
   required String babyId,
-  required Map<String, dynamic> data,
+    required dynamic data,
 }) async {
   try {
     await _journalApiService.updateJournalEntry(
