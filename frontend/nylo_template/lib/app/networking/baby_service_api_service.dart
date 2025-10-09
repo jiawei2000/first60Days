@@ -84,4 +84,23 @@ Future<Baby?> createBaby({
   return null;
 }
 
+/// ✅ Get current week number for a baby by babyId
+Future<int?> getWeekNo(String babyId) async {
+  String token = await Keys.bearerToken.read() ?? "";
+
+  final response = await network<dynamic>(
+    request: (request) => request.get("/babies/weekNo/$babyId"),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response != null && response['weekNo'] != null) {
+    return response['weekNo'] as int;
+  }
+
+  return null;
+}
+
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
+import '/config/keys.dart';
+import '/app/models/baby.dart';
 import '/app/controllers/home_controller.dart';
 import '/resources/widgets/safearea_widget.dart';
 import '/resources/pages/create_journal_entry_page.dart';
@@ -15,10 +17,33 @@ class HomePage extends NyStatefulWidget<HomeController> {
 class _HomePageState extends NyPage<HomePage> {
   HomeController get controller => widget.controller;
 
+  Baby? _baby;
+  int? _weekNo;
+  bool _loading = true;
+
   @override
   get init => () async {
-    // init logic if needed
-  };
+        final babyId = await Keys.selectedBabyId.read();
+
+        if (babyId == null) {
+          NyLogger.error("No baby selected.");
+          showToast(
+            title: "Error",
+            description: "No baby selected.",
+            style: ToastNotificationStyleType.danger,
+          );
+          return;
+        }
+
+        final baby = await controller.fetchBabyById(babyId);
+        final weekNo = await controller.fetchWeekNo(babyId);
+
+        setState(() {
+          _baby = baby;
+          _weekNo = weekNo;
+          _loading = false;
+        });
+      };
 
   @override
   LoadingStyle get loadingStyle => LoadingStyle.normal();
@@ -26,6 +51,18 @@ class _HomePageState extends NyPage<HomePage> {
   @override
   Widget view(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final babyName = _baby?.name ?? "Baby";
+    final displayWeek = _weekNo ?? 0;
+    final progress = (_weekNo != null && _weekNo! > 0 && _weekNo! <= 40)
+        ? _weekNo! / 40
+        : 0.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -52,22 +89,23 @@ class _HomePageState extends NyPage<HomePage> {
       ),
       body: SafeAreaWidget(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16), // 👈 Reduced horizontal padding
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch, // 👈 Makes children expand horizontally
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Center(
-              child: Text(
-                "Baby Chloe",
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+              Center(
+                child: Text(
+                  babyName,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+
               /// 🟣 Weekly Update Banner
               Container(
-                width: double.infinity, // 👈 ensures full width
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(10),
@@ -101,7 +139,7 @@ class _HomePageState extends NyPage<HomePage> {
 
               /// 🟢 Progress Card
               Container(
-                width: double.infinity, // 👈 full width
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(10),
@@ -109,7 +147,7 @@ class _HomePageState extends NyPage<HomePage> {
                     color: theme.colorScheme.outlineVariant.withOpacity(0.3),
                   ),
                 ),
-                padding: const EdgeInsets.all(20), // 👈 slightly more spacious
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -120,12 +158,13 @@ class _HomePageState extends NyPage<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text("Week 8", style: theme.textTheme.bodyMedium),
+                    Text("Week $displayWeek",
+                        style: theme.textTheme.bodyMedium),
                     const SizedBox(height: 8),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: LinearProgressIndicator(
-                        value: 0.20,
+                        value: progress,
                         minHeight: 12,
                         color: Colors.blue,
                         backgroundColor: Colors.grey[300],
@@ -155,12 +194,12 @@ class _HomePageState extends NyPage<HomePage> {
 
               /// 🟡 Reminders (Full width)
               _reminderTile(
-                "Baby Chloe’s next feeding time is at",
+                "$babyName’s next feeding time is at",
                 "10:24 AM",
               ),
               const SizedBox(height: 12),
               _reminderTile(
-                "Baby Justin’s next feeding time is at",
+                "$babyName’s next sleep time is at",
                 "11:24 AM",
               ),
             ],
@@ -174,7 +213,7 @@ class _HomePageState extends NyPage<HomePage> {
     final theme = Theme.of(context);
 
     return Container(
-      width: double.infinity, // 👈 fill width
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
