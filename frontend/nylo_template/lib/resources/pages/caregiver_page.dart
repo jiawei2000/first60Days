@@ -4,6 +4,7 @@ import '/app/forms/caregiver_form.dart';
 import '/app/forms/create_caregiver_form.dart';
 import '/resources/widgets/buttons/buttons.dart';
 import '/app/networking/caregiver_api_service.dart';
+import '/app/controllers/caregiver_controller.dart';
 
 class CaregiverPage extends NyStatefulWidget {
   static RouteView path = ("/caregiver", (_) => CaregiverPage());
@@ -12,13 +13,29 @@ class CaregiverPage extends NyStatefulWidget {
 
 class _CaregiverPageState extends NyPage<CaregiverPage> {
   /// Stubbed data – replace with DB later
-  final List<Map<String, String>> _caregivers = [
-    {"Name": "Jane Doe", "Detail": "Nanny"},
-    {"Name": "Mary Peters", "Detail": "Grandmother"},
-  ];
+  final CaregiverController _controller = CaregiverController();
+
+  final List<Map<String, dynamic>> _caregivers = [];
+
+  Future<void> _loadCaregivers() async {
+    try {
+      final result = await _controller.fetchCaregivers();
+      setState(() {
+        _caregivers
+          ..clear()
+          ..addAll(result.map((c) => {
+                "Name": c["username"].toString(),
+                "Detail": c["relation"] ?? c["email"] ?? "",
+              }));
+      });
+    } catch (e) {
+      print("❌ Error loading caregivers: $e");
+      showToastSorry(description: "Failed to load caregivers");
+    }
+  }
 
   @override
-  get init => () {};
+  get init => () => _loadCaregivers();
 
   @override
   Widget view(BuildContext context) {
@@ -88,34 +105,55 @@ class _CaregiverPageState extends NyPage<CaregiverPage> {
                     },
               footer: Button.primary(
                 text: isAdd ? "Create" : "Save",
-                submitForm: (form, (data) async {
-                  try {
-                    final username = (data["Username"] ?? "").toString().trim();
-                    final email    = (data["Email"] ?? "").toString().trim();
-                    final phone    = (data["Phone Number"] ?? "").toString().trim();
-                    final password = (data["Password"] ?? "").toString();
+submitForm: (form, (data) async {
+  try {
+    // DEBUG: see exactly what NyForm is giving us
+    print("NyForm data => $data");
 
-                    // TODO: replace with real baby IDs
-                    final babyIDs = <String>["W6bOM4UJxxfbo0bktsm0"];
+final username = (data["username"] ?? "").toString().trim();
+final email    = (data["email"] ?? "").toString().trim().toLowerCase();
+final phone    = (data["phone_number"] ?? "").toString().trim();
+final password = (data["password"] ?? "").toString();
 
-                    await api<CaregiverApiService>((svc) => svc.registerSub(
-                      email: email,
-                      password: password,
-                      phoneNo: phone,
-                      username: username,
-                      babyIDArr: babyIDs,
-                    ));
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      showToastSorry(description: "Please fill in Username, Email and Password");
+      return;
+    }
 
-                    Navigator.pop(ctx, {
-                      "Name":   username,   // list title
-                      "Detail": email,      // list subtitle
-                    });
+    print("→ creating caregiver payload: {username: $username, email: $email, phoneNo: $phone}");
 
-                    showToastSuccess(description: "Caregiver created");
-                  } catch (e) {
-                    showToastSorry(description: e.toString());
-                  }
-                }),
+    final babyIDs = <String>["W6bOM4UJxxfbo0bktsm0"]; // TODO: use real IDs
+
+    final result = await api<CaregiverApiService>(
+      (svc) => svc.registerSub(
+        email: email,
+        password: password,
+        phoneNo: phone,
+        username: username,
+        babyIDArr: babyIDs,
+      ),
+      onError: (e) {
+        final msg = e.response?.data?['error']?.toString() ??
+            e.message ??
+            "Create failed";
+        showToastSorry(description: msg);
+      },
+    );
+
+    if (result == null) return;
+
+    final createdId = result['id']?.toString();
+    print("✅ created caregiver: id=$createdId, resp=$result");
+
+    Navigator.pop(ctx, {"Name": username, "Detail": email});
+    showToastSuccess(description: createdId != null
+        ? "Caregiver created (id: $createdId)"
+        : "Caregiver created");
+  } catch (e, st) {
+    print("❌ submit error: $e\n$st");
+    showToastSorry(description: e.toString());
+  }
+}),
               ),
             ),
           ),

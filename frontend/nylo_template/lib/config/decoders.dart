@@ -61,7 +61,7 @@ final Map<Type, dynamic> apiDecoders = {
 
   FeedingScheduleApiService: FeedingScheduleApiService(),
 
-  CaregiverApiService: CaregiverApiService(), // ← add
+  CaregiverApiService: CaregiverApiService(),
 
   BabyServiceApiService: BabyServiceApiService(),
 };
