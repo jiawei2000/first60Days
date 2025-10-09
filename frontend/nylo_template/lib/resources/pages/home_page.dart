@@ -7,6 +7,7 @@ import '/app/controllers/home_controller.dart';
 import '/resources/widgets/safearea_widget.dart';
 import '/resources/pages/create_journal_entry_page.dart';
 import '../widgets/buttons/partials/primary_button_widget.dart';
+import '/resources/pages/profile_page.dart';
 
 class HomePage extends NyStatefulWidget<HomeController> {
   static RouteView path = ("/home", (_) => HomePage());
@@ -75,15 +76,16 @@ class _HomePageState extends NyPage<HomePage> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
-              onTap: () {
-                // Handle profile tap
-              },
-              child: const CircleAvatar(
-                radius: 18,
-                backgroundImage:
-                    AssetImage('public/images/baby_icon_animated.png'),
-              ),
+            onTap: () {
+              routeTo(ProfilePage.path);
+            },
+            child: const CircleAvatar(
+              radius: 18,
+              backgroundImage:
+                  AssetImage('public/images/baby_icon_animated.png'),
             ),
+          ),
+
           )
         ],
       ),
