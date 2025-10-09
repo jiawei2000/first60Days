@@ -15,15 +15,32 @@ class ChooseBabyController {
   }
 
   Future<Baby?> createBaby({
-    required String name,
-    required String dob, // in ISO 8601 format
-  }) async {
-    try {
-      final baby = await _babyService.createBaby(name: name, dob: dob);
-      return baby;
-    } catch (e) {
-      print("❌ Error creating baby: $e");
-      return null;
+  required String name,
+  required DateTime dob,
+  required DateTime expectedDueDate,
+  required int term,
+  required double weight,
+  required String healthConditions,
+}) async {
+  try {
+    final response = await _babyService.createBaby(
+      name: name,
+      dob: dob,
+      expectedDueDate: expectedDueDate,
+      term: term,
+      weight: weight,
+      healthConditions: healthConditions,
+    );
+
+    if (response != null) {
+      return response; // Already returns a Baby from service
     }
+
+    return null;
+  } catch (e) {
+    print("❌ Error creating baby: $e");
+    return null;
   }
+}
+
 }

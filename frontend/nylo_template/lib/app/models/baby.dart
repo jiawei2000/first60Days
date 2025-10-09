@@ -30,7 +30,7 @@ class Baby extends Model {
     name = data['name'];
     dob = parseTimestamp(data['dob']);
     expectedDueDate = parseTimestamp(data['expectedDueDate']);
-    term = data['term'];
+    term = data['term']?.toString();
     weight = data['weight']?.toDouble();
     healthConditions = data['healthConditions'];
     createdAt = parseTimestamp(data['createdAt']);
