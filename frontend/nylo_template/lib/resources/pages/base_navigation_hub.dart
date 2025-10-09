@@ -5,6 +5,8 @@ import 'package:flutter_app/resources/pages/profile_page.dart';
 import 'package:flutter_app/resources/widgets/splash_screen.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import 'package:flutter_app/resources/pages/calendar_page.dart';
+import '/resources/pages/home_page.dart';
+
 
 class BaseNavigationHub extends NyStatefulWidget with BottomNavPageControls {
   static RouteView path = ("/base", (_) => BaseNavigationHub());
@@ -41,7 +43,7 @@ class _BaseNavigationHubState extends NavigationHub<BaseNavigationHub> {
           return {
             0: NavigationTab(
               title: "Home",
-              page: CreateJournalEntryPage(),
+              page: HomePage(),
               icon: Icon(Icons.home),
               activeIcon: Icon(Icons.home),
             ),

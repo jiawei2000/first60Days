@@ -1,17 +1,10 @@
-import 'package:flutter_app/app/models/journal_entry.dart';
-import 'package:flutter_app/app/networking/journal_api_service.dart';
-
-import '/resources/widgets/theme_toggle_widget.dart';
-import '/app/networking/api_service.dart';
-import '/bootstrap/extensions.dart';
-import '/resources/widgets/logo_widget.dart';
-import '/resources/widgets/safearea_widget.dart';
-import '/app/controllers/home_controller.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
+import '/app/controllers/home_controller.dart';
+import '/resources/widgets/safearea_widget.dart';
 import '/resources/pages/create_journal_entry_page.dart';
+import '../widgets/buttons/partials/primary_button_widget.dart';
 
 class HomePage extends NyStatefulWidget<HomeController> {
   static RouteView path = ("/home", (_) => HomePage());
@@ -20,173 +13,202 @@ class HomePage extends NyStatefulWidget<HomeController> {
 }
 
 class _HomePageState extends NyPage<HomePage> {
-  int? _stars;
-
-  JournalApiService _journalApiService = JournalApiService();
+  HomeController get controller => widget.controller;
 
   @override
   get init => () async {
-        /// Uncomment the code below to fetch the number of stars for the Nylo repository
-        // Map<String, dynamic>? githubResponse = await api<ApiService>(
-        //         (request) => request.githubInfo(),
-        // );
-        // _stars = githubResponse?["stargazers_count"];
-      };
+    // init logic if needed
+  };
 
-  /// Define the Loading style for the page.
-  /// Options: LoadingStyle.normal(), LoadingStyle.skeletonizer(), LoadingStyle.none()
-  /// uncomment the code below.
   @override
   LoadingStyle get loadingStyle => LoadingStyle.normal();
 
-  /// The [view] method displays your page.
   @override
   Widget view(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // showToastSuccess(title: "Hello 👋", description: "Welcome to Nylo");
-          //   routeTo(CreateJournalEntryPage.path);
-          // Uncomment the code below to send a push notifications
-          // await PushNotification.sendNotification(
-          //   title: "Hello 👋",
-          //   body: "Welcome to Nylo",
-          // );
-
-          // API Call example
-          // Temporary Data
-          //   String query = "W6bOM4UJxxfbo0bktsmO";
-
-          //   List<JournalEntry>? entries =
-          //       await _journalApiService.findAllforBabyId(query: query);
-
-          // Go to Create Journal Entry Page
-          routeTo(CreateJournalEntryPage.path);
-
-        },
-        child: const Icon(Icons.notifications),
+      appBar: AppBar(
+        title: const Text(
+          "Homepage",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () {
+                // Handle profile tap
+              },
+              child: const CircleAvatar(
+                radius: 18,
+                backgroundImage:
+                    AssetImage('public/images/baby_icon_animated.png'),
+              ),
+            ),
+          )
+        ],
       ),
       body: SafeAreaWidget(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16), // 👈 Reduced horizontal padding
           child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Logo(),
-          Text(
-            getEnv("APP_NAME"),
-          ).displayMedium(color: context.color.content),
-          const Text("Micro-framework for Flutter", textAlign: TextAlign.center)
-              .titleMedium(color: context.color.primaryAccent),
-          const Text("Build something amazing 💡", textAlign: TextAlign.center)
-              .bodyMedium()
-              .alignCenter(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              const Divider(),
+            crossAxisAlignment: CrossAxisAlignment.stretch, // 👈 Makes children expand horizontally
+            children: [
+            Center(
+              child: Text(
+                "Baby Chloe",
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+              /// 🟣 Weekly Update Banner
               Container(
-                height: 250,
-                width: double.infinity,
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                width: double.infinity, // 👈 ensures full width
                 decoration: BoxDecoration(
-                    color: context.color.surfaceBackground,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withAlpha((255.0 * 0.1).round()),
-                        spreadRadius: 1,
-                        blurRadius: 9,
-                        offset: const Offset(0, 3),
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.chat_bubble_outline, color: Colors.purple),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "This week your baby will lift their head slightly and turn their head towards familiar sounds.",
+                        style: theme.textTheme.bodyMedium,
                       ),
-                    ]),
-                child: Center(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    children: ListTile.divideTiles(context: context, tiles: [
-                      if (Nylo.containsRoute("/landing"))
-                        ListTile(
-                          leading: FaIcon(FontAwesomeIcons.rocket),
-                          title: Text(
-                            "Start building",
-                          ).bodyLarge(color: context.color.surfaceContent),
-                          subtitle: Text(
-                            "Your project is ready",
-                          ).bodySmall(color: context.color.surfaceContent),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => routeTo("/landing"),
-                        ),
-                      ListTile(
-                        leading: FaIcon(FontAwesomeIcons.readme),
-                        title: Text(
-                          "Documentation",
-                        ).bodyLarge(color: context.color.surfaceContent),
-                        subtitle: Text(
-                          "Master the framework",
-                        ).bodySmall(color: context.color.surfaceContent),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: widget.controller.onTapDocumentation,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        // Handle dismiss
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// 🟢 Progress Card
+              Container(
+                width: double.infinity, // 👈 full width
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                  ),
+                ),
+                padding: const EdgeInsets.all(20), // 👈 slightly more spacious
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Progression",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      ListTile(
-                        leading: FaIcon(FontAwesomeIcons.github),
-                        title: Text(
-                          "Github",
-                        ).bodyLarge(color: context.color.surfaceContent),
-                        subtitle: Text(
-                          _stars == null ? "Source code" : "$_stars Stars",
-                        ).bodySmall(color: context.color.surfaceContent),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: widget.controller.onTapGithub,
+                    ),
+                    const SizedBox(height: 8),
+                    Text("Week 8", style: theme.textTheme.bodyMedium),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: LinearProgressIndicator(
+                        value: 0.20,
+                        minHeight: 12,
+                        color: Colors.blue,
+                        backgroundColor: Colors.grey[300],
                       ),
-                      ListTile(
-                        leading: FaIcon(FontAwesomeIcons.newspaper),
-                        title: Text(
-                          "Updates",
-                        ).bodyLarge(color: context.color.surfaceContent),
-                        subtitle: Text(
-                          "View the changelog",
-                        ).bodySmall(color: context.color.surfaceContent),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: widget.controller.onTapChangeLog,
-                      ),
-                      ListTile(
-                        leading: FaIcon(FontAwesomeIcons.youtube),
-                        title: Text(
-                          "YouTube Channel",
-                        ).bodyLarge(color: context.color.surfaceContent),
-                        subtitle: Text(
-                          "Tutorial videos",
-                        ).bodySmall(color: context.color.surfaceContent),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: widget.controller.onTapYouTube,
-                      ),
-                      ListTile(
-                        leading: FaIcon(FontAwesomeIcons.xTwitter),
-                        title: Text(
-                          "Follow us on X",
-                        ).bodyLarge(color: context.color.surfaceContent),
-                        subtitle: Text(
-                          "Stay updated",
-                        ).bodySmall(color: context.color.surfaceContent),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: widget.controller.onTapX,
-                      ),
-                    ]).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// 🩵 Log Journal Entry Button (Full width)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: PrimaryButton(
+                    text: "Log Baby Journal Entry",
+                    onPressed: () {
+                      routeTo(CreateJournalEntryPage.path);
+                    },
                   ),
                 ),
               ),
-              const Text(
-                "Framework Version: $nyloVersion",
-              ).bodyMedium().setColor(context, (color) => Colors.grey),
-              ThemeToggle(),
+
+              const SizedBox(height: 20),
+
+              /// 🟡 Reminders (Full width)
+              _reminderTile(
+                "Baby Chloe’s next feeding time is at",
+                "10:24 AM",
+              ),
+              const SizedBox(height: 12),
+              _reminderTile(
+                "Baby Justin’s next feeding time is at",
+                "11:24 AM",
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _reminderTile(String message, String time) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity, // 👈 fill width
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.amber.withOpacity(0.5),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(Icons.info_outline, color: Colors.orange),
+          const SizedBox(width: 12),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                text: "$message ",
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+                children: [
+                  TextSpan(
+                    text: time,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
-      )),
+      ),
     );
   }
 }
