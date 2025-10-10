@@ -61,8 +61,8 @@ class _HomePageState extends NyPage<HomePage> {
 
     final babyName = _baby?.name ?? "Baby";
     final displayWeek = _weekNo ?? 0;
-    final progress = (_weekNo != null && _weekNo! > 0 && _weekNo! <= 40)
-        ? _weekNo! / 40
+    final progress = (_weekNo != null && _weekNo! > 0 && _weekNo! <= 10)
+        ? _weekNo! / 10
         : 0.0;
 
     return Scaffold(
