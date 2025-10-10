@@ -12,6 +12,7 @@ class CaregiverCreateForm extends NyFormData {
         Field.text("Username", validate: FormValidator().notEmpty(), style: "compact"),
         Field.email("Email",   validate: FormValidator.email().notEmpty(),       style: "compact"),
         Field.text("Phone Number", validate: FormValidator().notEmpty(), style: "compact"),
+        Field.text("Relation", style: "compact"),
         Field.password("Password",
             validate: FormValidator().notEmpty().minLength(8), style: "compact"),
         Field.password("Confirm password",

@@ -17,6 +17,7 @@ class CaregiverApiService extends NyApiService {
     required String phoneNo,
     required String username,
     required List<String> babyIDArr,
+    String? relation, // ← add
   }) async {
     final token = await Keys.bearerToken.read() ?? "";
     final body = {
@@ -25,6 +26,7 @@ class CaregiverApiService extends NyApiService {
       "phoneNo": phoneNo,
       "username": username,
       "babyIDArr": babyIDArr,
+      "relation": relation, // ← add
     };
     NyLogger.info("→ POST /users/registerSub body=$body"); // DEBUG
 
@@ -52,4 +54,17 @@ class CaregiverApiService extends NyApiService {
     return (response as List?) ?? [];
   }
 
+  Future<dynamic> updateUsername({
+    required String userId,
+    required String newUsername,
+  }) async {
+    final token = await Keys.bearerToken.read() ?? "";
+    return await network<dynamic>(
+      request: (r) => r.put("/username/$userId", data: {"newUsername": newUsername}),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
 }

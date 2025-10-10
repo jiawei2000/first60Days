@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import '/app/forms/caregiver_form.dart';
 import '/app/forms/create_caregiver_form.dart';
+import '/app/forms/edit_caregiver_form.dart';
 import '/resources/widgets/buttons/buttons.dart';
 import '/app/networking/caregiver_api_service.dart';
 import '/app/controllers/caregiver_controller.dart';
@@ -24,6 +25,7 @@ class _CaregiverPageState extends NyPage<CaregiverPage> {
         _caregivers
           ..clear()
           ..addAll(result.map((c) => {
+                "Id": c["id"].toString(),
                 "Name": c["username"].toString(),
                 "Detail": c["relation"] ?? c["email"] ?? "",
               }));
@@ -86,7 +88,7 @@ class _CaregiverPageState extends NyPage<CaregiverPage> {
     Map<String, dynamic>? initial,
   }) async {
     final isAdd = mode == "add";
-    final NyFormData form = isAdd ? CaregiverCreateForm() : CaregiverForm();
+    final NyFormData form = isAdd ? CaregiverCreateForm() : EditCaregiverForm();
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -101,7 +103,6 @@ class _CaregiverPageState extends NyPage<CaregiverPage> {
                   ? const {}
                   : {
                       if (initial?["Name"] != null) "Name": initial!["Name"],
-                      if (initial?["Detail"] != null) "Detail": initial!["Detail"],
                     },
               footer: Button.primary(
                 text: isAdd ? "Create" : "Save",
@@ -110,12 +111,17 @@ submitForm: (form, (data) async {
     // DEBUG: see exactly what NyForm is giving us
     print("NyForm data => $data");
 
-final username = (data["username"] ?? "").toString().trim();
-final email    = (data["email"] ?? "").toString().trim().toLowerCase();
-final phone    = (data["phone_number"] ?? "").toString().trim();
-final password = (data["password"] ?? "").toString();
+    final username = (data["Username"] ?? data["username"] ?? "").toString().trim();
+    final email    = (data["Email"] ?? data["email"] ?? "").toString().trim().toLowerCase();
+    final phone    = (data["Phone Number"] ?? data["phone_number"] ?? "").toString().trim();
+    final password = (data["Password"] ?? data["password"] ?? "").toString();
+    final relation = (data["Relation"] ?? data["relation"] ?? "").toString().trim();
 
-    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+    if (!isAdd && username.isEmpty) {
+      showToastSorry(description: "Please enter a Username");
+      return;
+    }
+    if (isAdd && (username.isEmpty || email.isEmpty || password.isEmpty)) {
       showToastSorry(description: "Please fill in Username, Email and Password");
       return;
     }
@@ -124,31 +130,48 @@ final password = (data["password"] ?? "").toString();
 
     final babyIDs = <String>["W6bOM4UJxxfbo0bktsm0"]; // TODO: use real IDs
 
-    final result = await api<CaregiverApiService>(
-      (svc) => svc.registerSub(
+    if (!isAdd) {
+      // EDIT: update username only
+      final userId = (initial?["Id"] ?? "").toString();
+      if (userId.isEmpty) {
+        showToastSorry(description: "Missing caregiver ID");
+        return;
+      }
+      await _controller.updateCaregiverUsername(
+        userId: userId,
+        newUsername: username,
+      );
+      showToastSuccess(description: "Username updated");
+      Navigator.pop(ctx, {
+        "Name": username,
+        "Detail": relation.isNotEmpty ? relation : email,
+      });
+      await _loadCaregivers();
+    } else {
+      // CREATE: create sub-account
+      final created = await _controller.createCaregiver(
         email: email,
         password: password,
         phoneNo: phone,
         username: username,
         babyIDArr: babyIDs,
-      ),
-      onError: (e) {
-        final msg = e.response?.data?['error']?.toString() ??
-            e.message ??
-            "Create failed";
-        showToastSorry(description: msg);
-      },
-    );
-
-    if (result == null) return;
-
-    final createdId = result['id']?.toString();
-    print("✅ created caregiver: id=$createdId, resp=$result");
-
-    Navigator.pop(ctx, {"Name": username, "Detail": email});
-    showToastSuccess(description: createdId != null
-        ? "Caregiver created (id: $createdId)"
-        : "Caregiver created");
+        relation: relation.isNotEmpty ? relation : null,
+      );
+      if (created == null) return;
+      final createdId = created['id']?.toString();
+      print("✅ created caregiver: id=$createdId, resp=$created");
+      Navigator.pop(ctx, {
+        "Name": username,
+        "Detail": relation.isNotEmpty ? relation : email, // prefer relation
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadCaregivers();
+      });
+      await _loadCaregivers();
+      showToastSuccess(description: createdId != null
+          ? "Caregiver created (id: $createdId)"
+          : "Caregiver created");
+    }
   } catch (e, st) {
     print("❌ submit error: $e\n$st");
     showToastSorry(description: e.toString());
@@ -166,12 +189,12 @@ final password = (data["password"] ?? "").toString();
 
     if (!mounted || result == null) return;
 
-    setState(() {
-      if (!isAdd && index != null) {
-        _caregivers[index] = result;
-      } else {
-        _caregivers.add(result);
-      }
-    });
+    // setState(() {
+    //   if (!isAdd && index != null) {
+    //     _caregivers[index] = result;
+    //   } else {
+    //     _caregivers.add(result);
+    //   }
+    // });
   }
 }

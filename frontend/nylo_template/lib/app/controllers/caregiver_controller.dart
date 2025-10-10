@@ -28,6 +28,7 @@ class CaregiverController extends Controller {
     required String phoneNo,
     required String username,
     required List<String> babyIDArr,
+    String? relation, // ← add
   }) async {
     try {
       final result = await _caregiverApiService.registerSub(
@@ -36,6 +37,7 @@ class CaregiverController extends Controller {
         phoneNo: phoneNo,
         username: username,
         babyIDArr: babyIDArr,
+        relation: relation, // ← add
       );
       print("✅ Created caregiver: $result");
       return result;
@@ -43,5 +45,15 @@ class CaregiverController extends Controller {
       print("❌ Error creating caregiver: $e");
       rethrow;
     }
+  }
+
+  Future<void> updateCaregiverUsername({
+    required String userId,
+    required String newUsername,
+  }) async {
+    await _caregiverApiService.updateUsername(
+      userId: userId,
+      newUsername: newUsername,
+    );
   }
 }
