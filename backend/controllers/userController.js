@@ -60,12 +60,26 @@ const userController = {
         }
     },
 
-    async deleteUser(req, res) {
-        // ... delete user (soft delete)
-        try {
-            const userId = req.user.id; // from JWT
+    // async deleteUser(req, res) {
+    //     // ... delete user (soft delete)
+    //     try {
+    //         const userId = req.user.id; // from JWT
 
-            const result = await UserService.deleteUser(userId);
+    //         const result = await UserService.deleteUser(userId);
+
+    //         res.status(200).json(result);
+    //     } catch (error) {
+    //         res.status(400).json({ error: error.message });
+    //     }
+    // },
+    async deleteUser(req, res) {
+        try {
+            // ID from URL parameter
+            const { userId } = req.params;
+            const requesterId = req.user.id;
+            console.log(`Trainer ${requesterId} requested deletion of user ${userId}`);
+
+            const result = await UserService.deleteUser(userId); // delete target user
 
             res.status(200).json(result);
         } catch (error) {

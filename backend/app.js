@@ -8,6 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
 const entryPlannerRouters = require('./routes/entryPlannerRoutes');
+const trainerRoutes = require('./routes/trainerRoutes');
 // require('./jobs/batchJobs');
 // require('./jobs/notifications');
 
@@ -28,7 +29,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/babies', babyRoutes);
 app.use('/api/journalEntries', journalEntryRoutes);
 app.use('/api/entryPlanner', entryPlannerRouters);
-
+app.use('/api/trainers', trainerRoutes);
 
 // Error handling middleware
 app.use((req, res, next) => {
