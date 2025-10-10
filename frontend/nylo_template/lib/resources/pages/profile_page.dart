@@ -22,14 +22,12 @@ class _ProfilePageState extends NyPage<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2B6BF3),
         centerTitle: true,
-        title: const Text("My Profile",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+        title: const Text(
+          "My Profile",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: ListView(

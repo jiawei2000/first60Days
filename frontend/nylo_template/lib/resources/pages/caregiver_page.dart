@@ -45,7 +45,6 @@ class _CaregiverPageState extends NyPage<CaregiverPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2B6BF3),
         centerTitle: true,
         title: const Text("Caregivers", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         leading: IconButton(
