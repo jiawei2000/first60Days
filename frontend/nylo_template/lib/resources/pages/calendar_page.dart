@@ -115,7 +115,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             titleCentered: true,
                             formatButtonVisible: false,
                             titleTextStyle: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -361,7 +361,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                     );
                                   },
                                   child: EventTile(
-                                    title: event['title'] ?? 'No Title',
+                                    title: event['title'] ?? 'Feed',
                                     subtitle: event['time'] ?? '',
                                     color: Colors.purple,
                                     status: event['status'] ?? 'Incomplete',

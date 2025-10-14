@@ -29,29 +29,30 @@ class CalendarController {
           .toList();
     }
 
+    entries.sort((a, b) {
+      final aWake =
+          a.startWakeTime?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bWake =
+          b.startWakeTime?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return aWake.compareTo(bWake);
+    });
+
     Map<DateTime, List<Map<String, dynamic>>> events = {};
 
     if (entries.isNotEmpty) {
-      for (var entry in entries) {
-
-        
-    final wakeTime = entry.startWakeTime?.toUtc() ?? DateTime.now();
-    final localDay = DateTime(wakeTime.year, wakeTime.month, wakeTime.day);
-
-
-
-        final feedTime = entry.startFeedTime?.toLocal();
-        final eventTime = wakeTime != null
-            ? DateFormat('hh:mm a').format(wakeTime)
-            : "No time";
+      for (var i = 0; i < entries.length; i++) {
+        final entry = entries[i];
+        final wakeTime = entry.startWakeTime?.toUtc() ?? DateTime.now();
+        final localDay = DateTime(wakeTime.year, wakeTime.month, wakeTime.day);
+        final eventTime = DateFormat('hh:mm a').format(wakeTime);
 
         events.putIfAbsent(localDay, () => []).add({
-          "title": "Cycle",
+          "title": "Feed ${i + 1}",
           "time": eventTime,
           "entryId": entry.id,
           "status": (entry.startFeedTime != null && entry.startSleepTime != null)
-      ? "Complete"
-      : "Incomplete",
+                  ? "Complete"
+                  : "Incomplete",
         });
       }
     }

@@ -10,8 +10,8 @@ class ProfilePage extends NyStatefulWidget {
 }
 
 class _ProfilePageState extends NyPage<ProfilePage> {
-  String accountName = "Melissa Peters";
-  String currentBabyName = "Baby Noah"; // update when you switch babies
+  String accountName = "Jiawei";
+  String currentBabyName = "Kai Wong"; // update when you switch babies
 
   @override
   get init => () {};
@@ -22,12 +22,14 @@ class _ProfilePageState extends NyPage<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
+        // backgroundColor: const Color(0xFF2B6BF3),
         centerTitle: true,
-        title: const Text(
-          "My Profile",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        automaticallyImplyLeading: false,
+        title: const Text("My Profile",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
       ),
       body: SafeArea(
         child: ListView(

@@ -78,6 +78,15 @@ class _JournalEntryFormState extends NyState<JournalEntryForm> {
                 label: 'Remarks',
                 textController: widget.remarksController,
                 hintText: "Enter remarks"),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Checkbox(value: false, onChanged: (value) {}),
+                const Text('Poo', style: TextStyle(fontSize: 20)),
+                Checkbox(value: false, onChanged: (value) {}),
+                const Text('Pee', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ]),
     );
   }

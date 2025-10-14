@@ -197,12 +197,12 @@ class _HomePageState extends NyPage<HomePage> {
               /// 🟡 Reminders (Full width)
               _reminderTile(
                 "$babyName’s next feeding time is at",
-                "10:24 AM",
+                "10:34 AM",
               ),
               const SizedBox(height: 12),
               _reminderTile(
-                "$babyName’s next sleep time is at",
-                "11:24 AM",
+                "$babyName’s only had 4 urine records yesterday. Try to increase fluid intake. Aim for 6-8 per day.",
+                "",
               ),
             ],
           ),

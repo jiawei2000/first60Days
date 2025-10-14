@@ -19,13 +19,13 @@ class LoginForm extends NyFormData {
           prefixIcon: const Icon(Icons.person_outline),
           validate: FormValidator.rule("not_empty"),
           style: "compact",
-          value: "user123",
+          value: "jiawei11",
         ),
         Field.password(
           "Password",
           validate: FormValidator.rule("not_empty"),
           style: "compact",
-          value: "password456",
+          value: "password123",
         ),
       ];
 }

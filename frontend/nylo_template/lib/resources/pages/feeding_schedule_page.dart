@@ -7,6 +7,8 @@ import 'package:nylo_framework/nylo_framework.dart';
 import '../widgets/buttons/partials/primary_button_widget.dart';
 import '../widgets/feeding_schedule_elements/entry_planner_row_widget.dart';
 import '/bootstrap/extensions.dart';
+import '/config/keys.dart';
+
 
 class FeedingSchedulePage extends NyStatefulWidget<FeedingScheduleController> {
   static RouteView path = ("/feeding-schedule", (_) => FeedingSchedulePage());
@@ -120,9 +122,14 @@ class _FeedingSchedulePageState extends NyPage<FeedingSchedulePage> {
   }
 
   Future<void> _getEntryPlanners() async {
+    final babyId = await Keys.selectedBabyId.read();
+    if (babyId == null) {
+      debugPrint("❌ No baby selected");
+      return null; // or return null / throw depending on context
+    }
     final response =
         // await controller.fetchPlannerByBabyId("YubfhQ3OBeECH6AuYPVK");
-        await controller.fetchPlannerByBabyId("zuCu842rURSUnCHKC56R");
+        await controller.fetchPlannerByBabyId(babyId);
 
     final plannersData = response?['planner'] as List?;
     final planners = plannersData
