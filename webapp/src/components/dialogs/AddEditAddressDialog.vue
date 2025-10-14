@@ -1,45 +1,34 @@
-<script setup lang="ts">
-interface BillingAddress {
-  firstName: string | undefined
-  lastName: string | undefined
-  selectedCountry: string | null
-  addressLine1: string
-  addressLine2: string
-  landmark: string
-  contact: string
-  country: string | null
-  city: string
-  state: string
-  zipCode: number | null
-}
-interface Props {
-  billingAddress?: BillingAddress
-  isDialogVisible: boolean
-}
-interface Emit {
-  (e: 'update:isDialogVisible', value: boolean): void
-  (e: 'submit', value: BillingAddress): void
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  billingAddress: () => ({
-    firstName: '',
-    lastName: '',
-    selectedCountry: null,
-    addressLine1: '',
-    addressLine2: '',
-    landmark: '',
-    contact: '',
-    country: null,
-    city: '',
-    state: '',
-    zipCode: null,
-  }),
+<script setup>
+const props = defineProps({
+  billingAddress: {
+    type: Object,
+    required: false,
+    default: () => ({
+      firstName: '',
+      lastName: '',
+      selectedCountry: null,
+      addressLine1: '',
+      addressLine2: '',
+      landmark: '',
+      contact: '',
+      country: null,
+      city: '',
+      state: '',
+      zipCode: null,
+    }),
+  },
+  isDialogVisible: {
+    type: Boolean,
+    required: true,
+  },
 })
 
-const emit = defineEmits<Emit>()
+const emit = defineEmits([
+  'update:isDialogVisible',
+  'submit',
+])
 
-const billingAddress = ref<BillingAddress>(structuredClone(toRaw(props.billingAddress)))
+const billingAddress = ref(structuredClone(toRaw(props.billingAddress)))
 
 const resetForm = () => {
   emit('update:isDialogVisible', false)
@@ -55,13 +44,19 @@ const selectedAddress = ref('Home')
 
 const addressTypes = [
   {
-    icon: { icon: 'bx-home', size: '28' },
+    icon: {
+      icon: 'bx-home',
+      size: '28',
+    },
     title: 'Home',
     desc: 'Delivery Time (9am - 9pm)',
     value: 'Home',
   },
   {
-    icon: { icon: 'bx-briefcase', size: '28' },
+    icon: {
+      icon: 'bx-briefcase',
+      size: '28',
+    },
     title: 'Office',
     desc: 'Delivery Time (9am - 5pm)',
     value: 'Office',

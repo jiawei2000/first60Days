@@ -1,17 +1,18 @@
-<script setup lang="ts">
+<script setup>
 const bufferValue = ref(20)
 const progressValue = ref(10)
 const isFallbackState = ref(false)
-const interval = ref<ReturnType<typeof setInterval>>()
+const interval = ref()
 const showProgress = ref(false)
 
-watch([progressValue, isFallbackState], () => {
+watch([
+  progressValue,
+  isFallbackState,
+], () => {
   if (progressValue.value > 80 && isFallbackState.value)
     progressValue.value = 82
-
   startBuffer()
 })
-
 function startBuffer() {
   clearInterval(interval.value)
   interval.value = setInterval(() => {
@@ -30,7 +31,6 @@ const fallbackHandle = () => {
 const resolveHandle = () => {
   isFallbackState.value = false
   progressValue.value = 100
-
   setTimeout(() => {
     clearInterval(interval.value)
     progressValue.value = 0

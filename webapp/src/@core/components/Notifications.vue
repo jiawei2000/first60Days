@@ -1,25 +1,29 @@
-<script lang="ts" setup>
+<script setup>
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
-import type { Notification } from '@layouts/types'
 
-interface Props {
-  notifications: Notification[]
-  badgeProps?: object
-  location?: any
-}
-interface Emit {
-  (e: 'read', value: number[]): void
-  (e: 'unread', value: number[]): void
-  (e: 'remove', value: number): void
-  (e: 'click:notification', value: Notification): void
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  location: 'bottom end',
-  badgeProps: undefined,
+const props = defineProps({
+  notifications: {
+    type: Array,
+    required: true,
+  },
+  badgeProps: {
+    type: Object,
+    required: false,
+    default: undefined,
+  },
+  location: {
+    type: null,
+    required: false,
+    default: 'bottom end',
+  },
 })
 
-const emit = defineEmits<Emit>()
+const emit = defineEmits([
+  'read',
+  'unread',
+  'remove',
+  'click:notification',
+])
 
 const isAllMarkRead = computed(() => {
   return props.notifications.some(item => item.isSeen === false)
@@ -27,7 +31,6 @@ const isAllMarkRead = computed(() => {
 
 const markAllReadOrUnread = () => {
   const allNotificationsIds = props.notifications.map(item => item.id)
-
   if (!isAllMarkRead.value)
     emit('unread', allNotificationsIds)
   else
@@ -38,7 +41,7 @@ const totalUnseenNotifications = computed(() => {
   return props.notifications.filter(item => item.isSeen === false).length
 })
 
-const toggleReadUnread = (isSeen: boolean, Id: number) => {
+const toggleReadUnread = (isSeen, Id) => {
   if (isSeen)
     emit('unread', [Id])
   else

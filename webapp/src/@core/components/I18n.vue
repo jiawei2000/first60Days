@@ -1,18 +1,14 @@
-<script setup lang="ts">
-import type { I18nLanguage } from '@layouts/types'
-
-interface Props {
-  languages: I18nLanguage[]
-  location?: any
-}
-
-interface Props {
-  languages: I18nLanguage[]
-  location?: any
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  location: 'bottom end',
+<script setup>
+const props = defineProps({
+  languages: {
+    type: Array,
+    required: true,
+  },
+  location: {
+    type: null,
+    required: false,
+    default: 'bottom end',
+  },
 })
 
 const { locale } = useI18n({ useScope: 'global' })

@@ -7,9 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 5050",
-    "typecheck": "vue-tsc --noEmit",
     "lint": "eslint . -c .eslintrc.cjs --fix --ext .ts,.js,.cjs,.vue,.tsx,.jsx",
-    "build:icons": "tsx src/plugins/iconify/build-icons.ts",
+    "build:icons": "tsx src/plugins/iconify/build-icons.js",
     "msw:init": "msw init public/ --save",
     "postinstall": "npm run build:icons && npm run msw:init"
   },
@@ -78,11 +77,6 @@
     "@tiptap/extension-subscript": "^2.10.4",
     "@tiptap/extension-superscript": "^2.10.4",
     "@tiptap/extension-underline": "^2.10.4",
-    "@types/mapbox-gl": "3.4.1",
-    "@types/node": "22.10.2",
-    "@types/webfontloader": "1.6.38",
-    "@typescript-eslint/eslint-plugin": "7.18.0",
-    "@typescript-eslint/parser": "7.18.0",
     "@videojs-player/vue": "1.0.0",
     "@vitejs/plugin-vue": "5.2.1",
     "@vitejs/plugin-vue-jsx": "4.1.1",
@@ -106,8 +100,6 @@
     "stylelint-config-standard-scss": "13.0.0",
     "stylelint-use-logical-spec": "5.0.1",
     "tsx": "4.19.2",
-    "type-fest": "4.31.0",
-    "typescript": "5.7.2",
     "unplugin-auto-import": "0.18.6",
     "unplugin-vue-components": "0.27.5",
     "unplugin-vue-router": "0.8.8",
@@ -117,8 +109,7 @@
     "vite-plugin-vue-layouts": "0.11.0",
     "vite-plugin-vuetify": "2.0.3",
     "vite-svg-loader": "5.1.0",
-    "vue-shepherd": "3.0.0",
-    "vue-tsc": "2.2.0"
+    "vue-shepherd": "3.0.0"
   },
   "resolutions": {
     "postcss": "^8",

@@ -4,13 +4,11 @@ module.exports = {
     es2021: true,
   },
   extends: [
-    '@antfu/eslint-config-vue',
+    '.eslintrc-auto-import.json',
     'plugin:vue/vue3-recommended',
     'plugin:import/recommended',
-    'plugin:import/typescript',
     'plugin:promise/recommended',
     'plugin:sonarjs/recommended',
-    'plugin:@typescript-eslint/recommended',
     'plugin:case-police/recommended',
     'plugin:regexp/recommended',
 
@@ -19,12 +17,10 @@ module.exports = {
   parser: 'vue-eslint-parser',
   parserOptions: {
     ecmaVersion: 13,
-    parser: '@typescript-eslint/parser',
     sourceType: 'module',
   },
   plugins: [
     'vue',
-    '@typescript-eslint',
     'regex',
     'regexp',
   ],
@@ -44,8 +40,6 @@ module.exports = {
       multiline: 'below',
     }],
 
-    'antfu/top-level-function': 'off',
-    '@typescript-eslint/no-explicit-any': 'off',
 
     // indentation (Already present in TypeScript)
     'indent': ['error', 2],
@@ -88,7 +82,6 @@ module.exports = {
     ],
 
     // Ignore _ as unused variable
-    '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_+$', argsIgnorePattern: '^_+$' }],
 
     'array-element-newline': ['error', 'consistent'],
     'array-bracket-newline': ['error', 'consistent'],
@@ -138,9 +131,7 @@ module.exports = {
 
     // Thanks: https://stackoverflow.com/a/63961972/10796681
     'no-shadow': 'off',
-    '@typescript-eslint/no-shadow': ['error'],
 
-    '@typescript-eslint/consistent-type-imports': 'error',
 
     // Plugin: eslint-plugin-promise
     'promise/always-return': 'off',
@@ -232,7 +223,7 @@ module.exports = {
   settings: {
     'import/resolver': {
       node: true,
-      typescript: {},
+      typescript: { project: './jsconfig.json' },
     },
   },
 }

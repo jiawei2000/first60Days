@@ -1,13 +1,19 @@
-<script lang="ts" setup>
+<script setup>
 import { layoutConfig } from '@layouts'
 import { can } from '@layouts/plugins/casl'
 import { useLayoutConfigStore } from '@layouts/stores/config'
-import type { NavLink } from '@layouts/types'
-import { getComputedNavLinkToProp, getDynamicI18nProps, isNavLinkActive } from '@layouts/utils'
+import {
+  getComputedNavLinkToProp,
+  getDynamicI18nProps,
+  isNavLinkActive,
+} from '@layouts/utils'
 
-defineProps<{
-  item: NavLink
-}>()
+const props = defineProps({
+  item: {
+    type: null,
+    required: true,
+  },
+})
 
 const configStore = useLayoutConfigStore()
 const hideTitleAndBadge = configStore.isVerticalNavMini()

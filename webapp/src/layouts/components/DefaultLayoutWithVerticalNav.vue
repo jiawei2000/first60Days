@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import navItems from '@/navigation/vertical'
 import { themeConfig } from '@themeConfig'
 
@@ -15,7 +15,7 @@ import { VerticalNavLayout } from '@layouts'
 const configStore = useConfigStore()
 
 // ℹ️ Provide animation name for vertical nav collapse icon.
-const verticalNavHeaderActionAnimationName = ref<null | 'rotate-180' | 'rotate-back-180'>(null)
+const verticalNavHeaderActionAnimationName = ref(null)
 
 watch([
   () => configStore.isVerticalNavCollapsed,

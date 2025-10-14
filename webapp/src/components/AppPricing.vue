@@ -1,19 +1,56 @@
-<script setup lang="ts">
+<script setup>
 import PricingPlanBasic from '@images/misc/pricing-plan-basic.png'
 import PricingPlanEnterprise from '@images/misc/pricing-plan-enterprise.png'
 import PricingPlanStandard from '@images/misc/pricing-plan-standard.png'
 
-interface Pricing {
-  title?: string
-  cols?: number | string
-  xs?: number | string
-  sm?: number | string
-  md?: string | number
-  lg?: string | number
-  xl?: string | number
-}
-
-const props = defineProps<Pricing>()
+const props = defineProps({
+  title: {
+    type: String,
+    required: false,
+  },
+  cols: {
+    type: [
+      Number,
+      String,
+    ],
+    required: false,
+  },
+  xs: {
+    type: [
+      Number,
+      String,
+    ],
+    required: false,
+  },
+  sm: {
+    type: [
+      Number,
+      String,
+    ],
+    required: false,
+  },
+  md: {
+    type: [
+      String,
+      Number,
+    ],
+    required: false,
+  },
+  lg: {
+    type: [
+      String,
+      Number,
+    ],
+    required: false,
+  },
+  xl: {
+    type: [
+      String,
+      Number,
+    ],
+    required: false,
+  },
+})
 
 const annualMonthlyPlanPriceToggler = ref(true)
 

@@ -1,14 +1,17 @@
-<script setup lang="ts">
+<script setup>
 import laptopGirl from '@images/illustrations/illustration-john.png'
 
-const props = defineProps<{
-  isDialogVisible: boolean
-}>()
+const props = defineProps({
+  isDialogVisible: {
+    type: Boolean,
+    required: true,
+  },
+})
 
-const emit = defineEmits<{
-  (e: 'update:isDialogVisible', val: boolean): void
-  (e: 'updatedData', val: unknown): void
-}>()
+const emit = defineEmits([
+  'update:isDialogVisible',
+  'updatedData',
+])
 
 const currentStep = ref(0)
 
@@ -130,7 +133,7 @@ const createAppData = ref({
   isSave: true,
 })
 
-const dialogVisibleUpdate = (val: boolean) => {
+const dialogVisibleUpdate = val => {
   emit('update:isDialogVisible', val)
   currentStep.value = 0
 }
@@ -141,6 +144,7 @@ watch(props, () => {
 })
 
 const onSubmit = () => {
+
   // eslint-disable-next-line no-alert
   alert('submitted...!!')
   emit('updatedData', createAppData.value)

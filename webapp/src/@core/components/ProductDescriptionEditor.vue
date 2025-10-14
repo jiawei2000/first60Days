@@ -1,18 +1,25 @@
-<script setup lang="ts">
+<script setup>
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { Underline } from '@tiptap/extension-underline'
 import { StarterKit } from '@tiptap/starter-kit'
-import { EditorContent, useEditor } from '@tiptap/vue-3'
+import {
+  EditorContent,
+  useEditor,
+} from '@tiptap/vue-3'
 
-const props = defineProps<{
-  modelValue: string
-  placeholder?: string
-}>()
+const props = defineProps({
+  modelValue: {
+    type: String,
+    required: true,
+  },
+  placeholder: {
+    type: String,
+    required: false,
+  },
+})
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-}>()
+const emit = defineEmits(['update:modelValue'])
 
 const editorRef = ref()
 
@@ -21,27 +28,25 @@ const editor = useEditor({
   extensions: [
     StarterKit,
     TextAlign.configure({
-      types: ['heading', 'paragraph'],
+      types: [
+        'heading',
+        'paragraph',
+      ],
     }),
-    Placeholder.configure({
-      placeholder: props.placeholder ?? 'Write something here...',
-    }),
+    Placeholder.configure({ placeholder: props.placeholder ?? 'Write something here...' }),
     Underline,
   ],
   onUpdate() {
     if (!editor.value)
       return
-
     emit('update:modelValue', editor.value.getHTML())
   },
 })
 
 watch(() => props.modelValue, () => {
   const isSame = editor.value?.getHTML() === props.modelValue
-
   if (isSame)
     return
-
   editor.value?.commands.setContent(props.modelValue)
 })
 </script>

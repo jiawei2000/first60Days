@@ -1,19 +1,16 @@
-<script setup lang="ts">
+<script setup>
 import { themeConfig } from '@themeConfig'
 
-interface Props {
-  isDialogVisible: boolean
-}
+const props = defineProps({
+  isDialogVisible: {
+    type: Boolean,
+    required: true,
+  },
+})
 
-interface Emit {
-  (e: 'update:isDialogVisible', val: boolean): void
-}
+const emit = defineEmits(['update:isDialogVisible'])
 
-const props = defineProps<Props>()
-
-const emit = defineEmits<Emit>()
-
-const dialogVisibleUpdate = (val: boolean) => {
+const dialogVisibleUpdate = val => {
   emit('update:isDialogVisible', val)
 }
 

@@ -1,8 +1,7 @@
-<script setup lang="ts">
+<script setup>
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-
 import authV2LoginIllustration from '@images/pages/auth-v2-login-illustration.png'
 
 definePage({

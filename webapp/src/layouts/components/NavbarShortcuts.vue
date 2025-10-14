@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 const shortcuts = [
   {
     icon: 'bx-calendar',
@@ -34,9 +34,11 @@ const shortcuts = [
     icon: 'bx-cog',
     title: 'Settings',
     subtitle: 'Account Settings',
-    to: { name: 'pages-account-settings-tab', params: { tab: 'account' } },
+    to: {
+      name: 'pages-account-settings-tab',
+      params: { tab: 'account' },
+    },
   },
-
 ]
 </script>
 
