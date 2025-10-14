@@ -5,8 +5,8 @@ export default [
     icon: { icon: 'bx-home-alt' },
   },
   {
-    title: 'Second page',
-    to: { name: 'second-page' },
-    icon: { icon: 'bx-file-blank' },
+      title: 'Manage User',
+      to: { name: 'user-manage-user' },
+      icon: { icon: 'bx-user' },
   },
 ]
