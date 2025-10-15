@@ -123,6 +123,19 @@ const userController = {
             res.status(400).json({ error: error.message });
         }
     },
+
+    async getAllUsers(req, res) {
+        try {
+            const result = await UserService.getAllUsers();
+
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(500).json({
+                message: "Failed to retrieve users",
+                error: error.message,
+            });
+        }
+    }
 };
 
 module.exports = userController;
