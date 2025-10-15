@@ -1,18 +1,18 @@
-<script lang="ts" setup>
+<script setup>
 defineOptions({
   name: 'AppSelect',
   inheritAttrs: false,
 })
 
-const elementId = computed (() => {
+const elementId = computed(() => {
   const attrs = useAttrs()
   const _elementIdToken = attrs.id
   const _id = useId()
-
-  return _elementIdToken ? `app-select-${_elementIdToken}` : _id
+  
+  return _elementIdToken ? `app-select-${ _elementIdToken }` : _id
 })
 
-const label = computed(() => useAttrs().label as string | undefined)
+const label = computed(() => useAttrs().label)
 </script>
 
 <template>

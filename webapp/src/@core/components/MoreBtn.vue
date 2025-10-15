@@ -1,13 +1,22 @@
-<script lang="ts" setup>
-interface Props {
-  menuList?: unknown[]
-  itemProps?: boolean
-  iconSize?: string
-  class?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  class: 'text-disabled',
+<script setup>
+const props = defineProps({
+  menuList: {
+    type: Array,
+    required: false,
+  },
+  itemProps: {
+    type: Boolean,
+    required: false,
+  },
+  iconSize: {
+    type: String,
+    required: false,
+  },
+  class: {
+    type: String,
+    required: false,
+    default: 'text-disabled',
+  },
 })
 </script>
 

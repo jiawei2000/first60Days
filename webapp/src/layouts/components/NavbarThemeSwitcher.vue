@@ -1,7 +1,5 @@
-<script setup lang="ts">
-import type { ThemeSwitcherTheme } from '@layouts/types'
-
-const themes: ThemeSwitcherTheme[] = [
+<script setup>
+const themes = [
   {
     name: 'light',
     icon: 'bx-sun',

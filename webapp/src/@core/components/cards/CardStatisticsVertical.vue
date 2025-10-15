@@ -1,20 +1,42 @@
-<script setup lang="ts">
-interface Props {
-  title: string
-  image: string
-  color: string
-  stats: string
-  change: number
-}
-
-const props = defineProps<Props>()
+<script setup>
+const props = defineProps({
+  title: {
+    type: String,
+    required: true,
+  },
+  image: {
+    type: String,
+    required: true,
+  },
+  color: {
+    type: String,
+    required: true,
+  },
+  stats: {
+    type: String,
+    required: true,
+  },
+  change: {
+    type: Number,
+    required: true,
+  },
+})
 
 const isPositive = controlledComputed(() => props.change, () => Math.sign(props.change) === 1)
 
 const moreList = [
-  { title: 'Yesterday', value: 'yesterday' },
-  { title: 'Last Week', value: 'lastWeek' },
-  { title: 'Last Month', value: 'lastMonth' },
+  {
+    title: 'Yesterday',
+    value: 'yesterday',
+  },
+  {
+    title: 'Last Week',
+    value: 'lastWeek',
+  },
+  {
+    title: 'Last Month',
+    value: 'lastMonth',
+  },
 ]
 </script>
 

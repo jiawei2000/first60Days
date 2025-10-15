@@ -1,21 +1,30 @@
-<script setup lang="ts" generic="T extends unknown">
+<script setup>
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
-import { VList, VListItem } from 'vuetify/components/VList'
+import {
+  VList,
+  VListItem,
+} from 'vuetify/components/VList'
 
-interface Emit {
-  (e: 'update:isDialogVisible', value: boolean): void
-  (e: 'search', value: string): void
-  (e: 'search', value: string): void
-}
+const props = defineProps({
+  isDialogVisible: {
+    type: Boolean,
+    required: true,
+  },
+  searchResults: {
+    type: Array,
+    required: true,
+  },
+  isLoading: {
+    type: Boolean,
+    required: false,
+  },
+})
 
-interface Props {
-  isDialogVisible: boolean
-  searchResults: T[]
-  isLoading?: boolean
-}
+const emit = defineEmits([
+  'update:isDialogVisible',
+  'search',
+])
 
-const props = defineProps<Props>()
-const emit = defineEmits<Emit>()
 
 // 👉 Hotkey
 
@@ -28,17 +37,20 @@ const { ctrl_k, meta_k } = useMagicKeys({
   },
 })
 
-const refSearchList = ref<VList>()
-const refSearchInput = ref<HTMLInputElement>()
+const refSearchList = ref()
+const refSearchInput = ref()
 const searchQueryLocal = ref('')
 
 // 👉 watching control + / to open dialog
+
 /* eslint-disable camelcase */
 watch([
-  ctrl_k, meta_k,
+  ctrl_k,
+  meta_k,
 ], () => {
   emit('update:isDialogVisible', true)
 })
+
 /* eslint-enable */
 
 // 👉 clear search result and close the dialog
@@ -47,28 +59,24 @@ const clearSearchAndCloseDialog = () => {
   emit('update:isDialogVisible', false)
 }
 
-// 👉 get fucus on search list
-const getFocusOnSearchList = (e: KeyboardEvent) => {
+const getFocusOnSearchList = e => {
   if (e.key === 'ArrowDown') {
     e.preventDefault()
     refSearchList.value?.focus('next')
-  }
-  else if (e.key === 'ArrowUp') {
+  } else if (e.key === 'ArrowUp') {
     e.preventDefault()
     refSearchList.value?.focus('prev')
   }
 }
 
-const dialogModelValueUpdate = (val: boolean) => {
+const dialogModelValueUpdate = val => {
   searchQueryLocal.value = ''
   emit('update:isDialogVisible', val)
 }
 
-// 👉 clear search query when redirect to another page
-watch(
-  () => props.isDialogVisible,
-  () => { searchQueryLocal.value = '' },
-)
+watch(() => props.isDialogVisible, () => {
+  searchQueryLocal.value = ''
+})
 </script>
 
 <template>

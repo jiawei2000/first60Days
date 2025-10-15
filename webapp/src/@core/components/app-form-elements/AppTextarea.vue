@@ -1,20 +1,20 @@
-<script lang="ts" setup>
+<script setup>
 defineOptions({
   name: 'AppTextarea',
   inheritAttrs: false,
 })
 
-// const { class: _class, label, variant: _, ...restAttrs } = useAttrs()
 
-const elementId = computed (() => {
+// const { class: _class, label, variant: _, ...restAttrs } = useAttrs()
+const elementId = computed(() => {
   const attrs = useAttrs()
   const _elementIdToken = attrs.id
   const _id = useId()
-
-  return _elementIdToken ? `app-textarea-${_elementIdToken}` : _id
+  
+  return _elementIdToken ? `app-textarea-${ _elementIdToken }` : _id
 })
 
-const label = computed(() => useAttrs().label as string | undefined)
+const label = computed(() => useAttrs().label)
 </script>
 
 <template>

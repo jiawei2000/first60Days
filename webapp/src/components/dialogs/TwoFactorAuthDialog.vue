@@ -1,20 +1,23 @@
-<script setup lang="ts">
-interface Emit {
-  (e: 'update:isDialogVisible', value: boolean): void
-}
-interface Props {
-  isDialogVisible: boolean
-  smsCode?: string
-  authAppCode?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  isDialogVisible: false,
-  smsCode: '',
-  authAppCode: '',
+<script setup>
+const props = defineProps({
+  isDialogVisible: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  smsCode: {
+    type: String,
+    required: false,
+    default: '',
+  },
+  authAppCode: {
+    type: String,
+    required: false,
+    default: '',
+  },
 })
 
-const emit = defineEmits<Emit>()
+const emit = defineEmits(['update:isDialogVisible'])
 
 const authMethods = [
   {

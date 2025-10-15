@@ -1,74 +1,126 @@
-<script setup lang="ts">
+<script setup>
 import Shepherd from 'shepherd.js'
 import { withQuery } from 'ufo'
-import type { RouteLocationRaw } from 'vue-router'
-import type { SearchResults } from '@db/app-bar-search/types'
 import { useConfigStore } from '@core/stores/config'
 
-interface Suggestion {
-  icon: string
-  title: string
-  url: RouteLocationRaw
-}
-
 defineOptions({
+  // 👉 Is App Search Bar Visible
   inheritAttrs: false,
 })
 
 const configStore = useConfigStore()
-
-interface SuggestionGroup {
-  title: string
-  content: Suggestion[]
-}
-
-// 👉 Is App Search Bar Visible
 const isAppSearchBarVisible = ref(false)
 const isLoading = ref(false)
 
 // 👉 Default suggestions
-
-const suggestionGroups: SuggestionGroup[] = [
+const suggestionGroups = [
   {
     title: 'Popular Searches',
     content: [
-      { icon: 'bx-bar-chart', title: 'Analytics', url: { name: 'dashboards-analytics' } },
-      { icon: 'bx-doughnut-chart', title: 'CRM', url: { name: 'dashboards-crm' } },
-      { icon: 'bx-cart', title: 'eCommerce', url: { name: 'dashboards-ecommerce' } },
-      { icon: 'bx-car', title: 'Logistics', url: { name: 'dashboards-logistics' } },
+      {
+        icon: 'bx-bar-chart',
+        title: 'Analytics',
+        url: { name: 'dashboards-analytics' },
+      },
+      {
+        icon: 'bx-doughnut-chart',
+        title: 'CRM',
+        url: { name: 'dashboards-crm' },
+      },
+      {
+        icon: 'bx-cart',
+        title: 'eCommerce',
+        url: { name: 'dashboards-ecommerce' },
+      },
+      {
+        icon: 'bx-car',
+        title: 'Logistics',
+        url: { name: 'dashboards-logistics' },
+      },
     ],
   },
   {
     title: 'Apps & Pages',
     content: [
-      { icon: 'bx-calendar', title: 'Calendar', url: { name: 'apps-calendar' } },
-      { icon: 'bx-lock-alt', title: 'Roles & Permissions', url: { name: 'apps-roles' } },
-      { icon: 'bx-cog', title: 'Account Settings', url: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
-      { icon: 'bx-copy', title: 'Dialog Examples', url: { name: 'pages-dialog-examples' } },
+      {
+        icon: 'bx-calendar',
+        title: 'Calendar',
+        url: { name: 'apps-calendar' },
+      },
+      {
+        icon: 'bx-lock-alt',
+        title: 'Roles & Permissions',
+        url: { name: 'apps-roles' },
+      },
+      {
+        icon: 'bx-cog',
+        title: 'Account Settings',
+        url: {
+          name: 'pages-account-settings-tab',
+          params: { tab: 'account' },
+        },
+      },
+      {
+        icon: 'bx-copy',
+        title: 'Dialog Examples',
+        url: { name: 'pages-dialog-examples' },
+      },
     ],
   },
   {
     title: 'User Interface',
     content: [
-      { icon: 'bx-text', title: 'Typography', url: { name: 'pages-typography' } },
-      { icon: 'bx-menu', title: 'Accordion', url: { name: 'components-expansion-panel' } },
-      { icon: 'bx-error', title: 'Alert', url: { name: 'components-alert' } },
-      { icon: 'bx-check-square', title: 'Cards', url: { name: 'pages-cards-card-basic' } },
+      {
+        icon: 'bx-text',
+        title: 'Typography',
+        url: { name: 'pages-typography' },
+      },
+      {
+        icon: 'bx-menu',
+        title: 'Accordion',
+        url: { name: 'components-expansion-panel' },
+      },
+      {
+        icon: 'bx-error',
+        title: 'Alert',
+        url: { name: 'components-alert' },
+      },
+      {
+        icon: 'bx-check-square',
+        title: 'Cards',
+        url: { name: 'pages-cards-card-basic' },
+      },
     ],
   },
   {
     title: 'Forms & Tables',
     content: [
-      { icon: 'bx-radio-circle-marked', title: 'Radio', url: { name: 'forms-radio' } },
-      { icon: 'bx-file', title: 'Form Layouts', url: { name: 'forms-form-layouts' } },
-      { icon: 'bx-table', title: 'Table', url: { name: 'tables-data-table' } },
-      { icon: 'bx-edit', title: 'Editor', url: { name: 'forms-editors' } },
+      {
+        icon: 'bx-radio-circle-marked',
+        title: 'Radio',
+        url: { name: 'forms-radio' },
+      },
+      {
+        icon: 'bx-file',
+        title: 'Form Layouts',
+        url: { name: 'forms-form-layouts' },
+      },
+      {
+        icon: 'bx-table',
+        title: 'Table',
+        url: { name: 'tables-data-table' },
+      },
+      {
+        icon: 'bx-edit',
+        title: 'Editor',
+        url: { name: 'forms-editors' },
+      },
     ],
   },
 ]
 
 // 👉 No Data suggestion
-const noDataSuggestions: Suggestion[] = [
+const noDataSuggestions = [
   {
     title: 'Analytics',
     icon: 'bx-bar-chart',
@@ -87,14 +139,13 @@ const noDataSuggestions: Suggestion[] = [
 ]
 
 const searchQuery = ref('')
-
 const router = useRouter()
-const searchResult = ref<SearchResults[]>([])
+const searchResult = ref([])
 
 const fetchResults = async () => {
   isLoading.value = true
 
-  const { data } = await useApi<any>(withQuery('/app-bar/search', { q: searchQuery.value }))
+  const { data } = await useApi(withQuery('/app-bar/search', { q: searchQuery.value }))
 
   searchResult.value = data.value
 
@@ -111,9 +162,8 @@ const closeSearchBar = () => {
   searchQuery.value = ''
 }
 
-// 👉 redirect the selected page
-const redirectToSuggestedPage = (selected: Suggestion) => {
-  router.push(selected.url as string)
+const redirectToSuggestedPage = selected => {
+  router.push(selected.url)
   closeSearchBar()
 }
 

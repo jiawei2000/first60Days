@@ -1,44 +1,53 @@
-<script lang="ts" setup>
-import type { Component } from 'vue'
+<script setup>
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import { VNodeRenderer } from './VNodeRenderer'
 import { layoutConfig } from '@layouts'
-import { VerticalNavGroup, VerticalNavLink, VerticalNavSectionTitle } from '@layouts/components'
+import {
+  VerticalNavGroup,
+  VerticalNavLink,
+  VerticalNavSectionTitle,
+} from '@layouts/components'
 import { useLayoutConfigStore } from '@layouts/stores/config'
 import { injectionKeyIsVerticalNavHovered } from '@layouts/symbols'
-import type { NavGroup, NavLink, NavSectionTitle, VerticalNavItems } from '@layouts/types'
 
-interface Props {
-  tag?: string | Component
-  navItems: VerticalNavItems
-  isOverlayNavActive: boolean
-  toggleIsOverlayNavActive: (value: boolean) => void
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  tag: 'aside',
+const props = defineProps({
+  tag: {
+    type: null,
+    required: false,
+    default: 'aside',
+  },
+  navItems: {
+    type: null,
+    required: true,
+  },
+  isOverlayNavActive: {
+    type: Boolean,
+    required: true,
+  },
+  toggleIsOverlayNavActive: {
+    type: Function,
+    required: true,
+  },
 })
 
 const refNav = ref()
-
 const isHovered = useElementHover(refNav)
 
 provide(injectionKeyIsVerticalNavHovered, isHovered)
 
 const configStore = useLayoutConfigStore()
 
-const resolveNavItemComponent = (item: NavLink | NavSectionTitle | NavGroup): unknown => {
+const resolveNavItemComponent = item => {
   if ('heading' in item)
     return VerticalNavSectionTitle
   if ('children' in item)
     return VerticalNavGroup
-
+  
   return VerticalNavLink
 }
 
-/*
-  ℹ️ Close overlay side when route is changed
-  Close overlay vertical nav when link is clicked
+/*ℹ️ Close overlay side when route is changed
+Close overlay vertical nav when link is clicked
 */
 const route = useRoute()
 
@@ -47,10 +56,10 @@ watch(() => route.name, () => {
 })
 
 const isVerticalNavScrolled = ref(false)
-const updateIsVerticalNavScrolled = (val: boolean) => isVerticalNavScrolled.value = val
+const updateIsVerticalNavScrolled = val => isVerticalNavScrolled.value = val
 
-const handleNavScroll = (evt: Event) => {
-  isVerticalNavScrolled.value = (evt.target as HTMLElement).scrollTop > 0
+const handleNavScroll = evt => {
+  isVerticalNavScrolled.value = evt.target.scrollTop > 0
 }
 
 const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)

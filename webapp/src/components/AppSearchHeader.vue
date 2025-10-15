@@ -1,22 +1,37 @@
-<script setup lang="ts">
+<script setup>
 import AppSearchHeaderBg from '@images/pages/app-search-header-bg.png'
 
-interface Props {
-  title?: string
-  subtitle?: string
-  customClass?: string
-  placeholder?: string
-  density?: 'comfortable' | 'compact' | 'default'
-  isReverse?: boolean
-}
+const props = defineProps({
+  title: {
+    type: String,
+    required: false,
+  },
+  subtitle: {
+    type: String,
+    required: false,
+  },
+  customClass: {
+    type: String,
+    required: false,
+  },
+  placeholder: {
+    type: String,
+    required: false,
+  },
+  density: {
+    type: String,
+    required: false,
+    default: 'comfortable',
+  },
+  isReverse: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+})
 
 defineOptions({
   inheritAttrs: false,
-})
-
-const props = withDefaults(defineProps<Props>(), {
-  density: 'comfortable',
-  isReverse: false,
 })
 </script>
 

@@ -1,20 +1,22 @@
-<script lang="ts" setup>
-import type { CustomInputContent, GridColumn } from '@core/types'
+<script setup>
+const props = defineProps({
+  selectedCheckbox: {
+    type: Array,
+    required: true,
+  },
+  checkboxContent: {
+    type: Array,
+    required: true,
+  },
+  gridColumn: {
+    type: null,
+    required: false,
+  },
+})
 
-interface Props {
-  selectedCheckbox: string[]
-  checkboxContent: CustomInputContent[]
-  gridColumn?: GridColumn
-}
+const emit = defineEmits(['update:selectedCheckbox'])
 
-interface Emit {
-  (e: 'update:selectedCheckbox', value: string[]): void
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emit>()
-
-const updateSelectedOption = (value: string[] | null) => {
+const updateSelectedOption = value => {
   if (typeof value !== 'boolean' && value !== null)
     emit('update:selectedCheckbox', value)
 }

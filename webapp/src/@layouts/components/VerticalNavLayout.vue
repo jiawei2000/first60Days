@@ -1,39 +1,30 @@
-<script lang="ts" setup>
+<script setup>
 import { VerticalNav } from '@layouts/components'
 import { useLayoutConfigStore } from '@layouts/stores/config'
-import type { VerticalNavItems } from '@layouts/types'
 
-interface Props {
-  navItems: VerticalNavItems
-  verticalNavAttrs?: {
-    wrapper?: string
-    wrapperProps?: Record<string, unknown>
-  }
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  verticalNavAttrs: () => ({}),
+const props = defineProps({
+  navItems: {
+    type: null,
+    required: true,
+  },
+  verticalNavAttrs: {
+    type: Object,
+    required: false,
+    default: () => ({}),
+  },
 })
 
 const { width: windowWidth } = useWindowSize()
 const configStore = useLayoutConfigStore()
-
 const isOverlayNavActive = ref(false)
 const isLayoutOverlayVisible = ref(false)
 const toggleIsOverlayNavActive = useToggle(isOverlayNavActive)
 
 // ℹ️ This is alternative to below two commented watcher
+
 // We want to show overlay if overlay nav is visible and want to hide overlay if overlay is hidden and vice versa.
 syncRef(isOverlayNavActive, isLayoutOverlayVisible)
 
-// watch(isOverlayNavActive, value => {
-//   // Sync layout overlay with overlay nav
-//   isLayoutOverlayVisible.value = value
-// })
-
-// watch(isLayoutOverlayVisible, value => {
-//   // If overlay is closed via click, close hide overlay nav
-//   if (!value) isOverlayNavActive.value = false
 // })
 
 // ℹ️ Hide overlay if user open overlay nav in <md and increase the window width without closing overlay nav
@@ -45,8 +36,13 @@ watch(windowWidth, () => {
 const verticalNavAttrs = computed(() => {
   const vNavAttrs = toRef(props, 'verticalNavAttrs')
 
-  const { wrapper: verticalNavWrapper, wrapperProps: verticalNavWrapperProps, ...additionalVerticalNavAttrs } = vNavAttrs.value
+  const {
+    wrapper: verticalNavWrapper,
+    wrapperProps: verticalNavWrapperProps,
+    ...additionalVerticalNavAttrs
+  } = vNavAttrs.value
 
+  
   return {
     verticalNavWrapper,
     verticalNavWrapperProps,

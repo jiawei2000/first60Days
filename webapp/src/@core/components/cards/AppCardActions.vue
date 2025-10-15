@@ -1,37 +1,54 @@
-<script setup lang="ts">
-interface Props {
-  collapsed?: boolean
-  noActions?: boolean
-  actionCollapsed?: boolean
-  actionRefresh?: boolean
-  actionRemove?: boolean
-  loading?: boolean | undefined
-  title?: string
-}
+<script setup>
+const props = defineProps({
+  collapsed: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  noActions: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  actionCollapsed: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  actionRefresh: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  actionRemove: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  loading: {
+    type: Boolean,
+    required: false,
+    skipCheck: true,
+    default: undefined,
+  },
+  title: {
+    type: String,
+    required: false,
+    default: undefined,
+  },
+})
 
-interface Emit {
-  (e: 'collapsed', isContentCollapsed: boolean): void
-  (e: 'refresh', stopLoading: () => void): void
-  (e: 'trash'): void
-  (e: 'initialLoad'): void
-  (e: 'update:loading', loading: boolean): void
-}
+const emit = defineEmits([
+  'collapsed',
+  'refresh',
+  'trash',
+  'initialLoad',
+  'update:loading',
+])
 
 defineOptions({
   inheritAttrs: false,
 })
-
-const props = withDefaults(defineProps<Props>(), {
-  collapsed: false,
-  noActions: false,
-  actionCollapsed: false,
-  actionRefresh: false,
-  actionRemove: false,
-  loading: undefined,
-  title: undefined,
-})
-
-const emit = defineEmits<Emit>()
 
 const _loading = ref(false)
 
@@ -39,8 +56,7 @@ const $loading = computed({
   get() {
     return props.loading !== undefined ? props.loading : _loading.value
   },
-
-  set(value: boolean) {
+  set(value) {
     props.loading !== undefined ? emit('update:loading', value) : _loading.value = value
   },
 })

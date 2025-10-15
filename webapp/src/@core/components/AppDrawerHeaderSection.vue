@@ -1,11 +1,12 @@
-<script setup lang="ts">
-const props = defineProps<{
-  title: string
-}>()
+<script setup>
+const props = defineProps({
+  title: {
+    type: String,
+    required: true,
+  },
+})
 
-defineEmits<{
-  (e: 'cancel', el: MouseEvent): void
-}>()
+const emit = defineEmits(['cancel'])
 </script>
 
 <template>

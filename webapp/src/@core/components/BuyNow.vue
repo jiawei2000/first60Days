@@ -1,7 +1,5 @@
-<script lang="ts" setup>
-const buyNowUrl = (typeof window !== 'undefined' && 'isMarketplace' in window && window.isMarketplace)
-  ? 'https://store.vuetifyjs.com/products/sneat-vuetify-vuejs-admin-template'
-  : 'https://themeselection.com/item/sneat-vuetify-vuejs-admin-template/'
+<script setup>
+const buyNowUrl = typeof window !== 'undefined' && 'isMarketplace' in window && window.isMarketplace ? 'https://store.vuetifyjs.com/products/sneat-vuetify-vuejs-admin-template' : 'https://themeselection.com/item/sneat-vuetify-vuejs-admin-template/'
 </script>
 
 <template>

@@ -1,11 +1,14 @@
-<script setup lang="ts">
-interface Props {
-  title: string
-  divider?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  divider: true,
+<script setup>
+const props = defineProps({
+  title: {
+    type: String,
+    required: true,
+  },
+  divider: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
 })
 </script>
 

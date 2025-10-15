@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import misc404 from '@images/pages/404.png'
 
 definePage({

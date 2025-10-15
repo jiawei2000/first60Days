@@ -1,17 +1,14 @@
-<script setup lang="ts">
-interface Props {
-  isDialogVisible: boolean
-}
+<script setup>
+const props = defineProps({
+  isDialogVisible: {
+    type: Boolean,
+    required: true,
+  },
+})
 
-interface Emit {
-  (e: 'update:isDialogVisible', val: boolean): void
-}
+const emit = defineEmits(['update:isDialogVisible'])
 
-const props = defineProps<Props>()
-
-const emit = defineEmits<Emit>()
-
-const dialogVisibleUpdate = (val: boolean) => {
+const dialogVisibleUpdate = val => {
   emit('update:isDialogVisible', val)
 }
 </script>

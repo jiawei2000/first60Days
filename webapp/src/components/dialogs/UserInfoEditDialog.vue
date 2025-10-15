@@ -1,67 +1,45 @@
-<script setup lang="ts">
-interface UserData {
-  id: number | null
-  fullName: string
-  firstName: string
-  lastName: string
-  company: string
-  username: string
-  role: string
-  country: string
-  contact: string | undefined
-  email: string | undefined
-  currentPlan: string
-  status: string | undefined
-  avatar: string
-  taskDone: number | null
-  projectDone: number | null
-  taxId: string
-  language: string
-}
-
-interface Props {
-  userData?: UserData
-  isDialogVisible: boolean
-}
-
-interface Emit {
-  (e: 'submit', value: UserData): void
-  (e: 'update:isDialogVisible', val: boolean): void
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  userData: () => ({
-    id: 0,
-    fullName: '',
-    firstName: '',
-    lastName: '',
-    company: '',
-    role: '',
-    username: '',
-    country: '',
-    contact: '',
-    email: '',
-    currentPlan: '',
-    status: '',
-    avatar: '',
-    taskDone: null,
-    projectDone: null,
-    taxId: '',
-    language: '',
-  }),
+<script setup>
+const props = defineProps({
+  userData: {
+    type: Object,
+    required: false,
+    default: () => ({
+      id: 0,
+      fullName: '',
+      firstName: '',
+      lastName: '',
+      company: '',
+      role: '',
+      username: '',
+      country: '',
+      contact: '',
+      email: '',
+      currentPlan: '',
+      status: '',
+      avatar: '',
+      taskDone: null,
+      projectDone: null,
+      taxId: '',
+      language: '',
+    }),
+  },
+  isDialogVisible: {
+    type: Boolean,
+    required: true,
+  },
 })
 
-const emit = defineEmits<Emit>()
+const emit = defineEmits([
+  'submit',
+  'update:isDialogVisible',
+])
 
-const userData = ref<UserData>(structuredClone(toRaw(props.userData)))
+const userData = ref(structuredClone(toRaw(props.userData)))
 const isUseAsBillingAddress = ref(false)
 
-watch(
-  () => props,
-  () => {
-    userData.value = structuredClone(toRaw(props.userData))
-  },
-)
+watch(() => props, () => {
+  userData.value = structuredClone(toRaw(props.userData))
+})
 
 const onFormSubmit = () => {
   emit('update:isDialogVisible', false)
@@ -70,11 +48,10 @@ const onFormSubmit = () => {
 
 const onFormReset = () => {
   userData.value = structuredClone(toRaw(props.userData))
-
   emit('update:isDialogVisible', false)
 }
 
-const dialogModelValueUpdate = (val: boolean) => {
+const dialogModelValueUpdate = val => {
   emit('update:isDialogVisible', val)
 }
 </script>
