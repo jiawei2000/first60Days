@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import '/app/controllers/baby_controller.dart';
-import '/app/forms/create_baby_form.dart';
-import '/app/forms/edit_baby_form.dart';
-import '/resources/widgets/buttons/buttons.dart';
 
 class BabyPage extends NyStatefulWidget {
   static RouteView path = ("/babies", (_) => BabyPage());
@@ -355,91 +352,6 @@ class _BabyPageState extends NyPage<BabyPage> {
     // Last resort: DateTime.parse (handles full ISO strings)
     final dt = DateTime.tryParse(s);
     return dt == null ? "" : dt.toIso8601String().substring(0, 10);
-  }
-
-  Future<void> _openBabyDialog({required String mode, Map<String, dynamic>? initial}) async {
-    final isAdd = mode == "add";
-    final form = isAdd ? CreateBabyForm() : EditBabyForm();
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return AlertDialog(
-          title: Text(isAdd ? "Create Baby Profile" : "Edit Baby Profile"),
-          content: SingleChildScrollView(
-            child: NyForm(
-              form: form,
-              initialData: isAdd
-                  ? const {}
-                  : {
-                      "Name": initial?["Name"] ?? "",
-                      "Date of Birth": initial?["DOB"] ?? "",
-                      if ((initial?["Term"] ?? "").toString().isNotEmpty) "Term (weeks)": initial?["Term"],
-                      if ((initial?["Weight"] ?? "").toString().isNotEmpty) "Weight (kg)": initial?["Weight"],
-                    },
-              footer: Button.primary(
-                text: isAdd ? "Create" : "Save",
-                submitForm: (form, (data) async {
-                  try {
-                    final name  = (data["Name"] ?? "").toString().trim();
-                    final dob   = (data["Date of Birth"] ?? "").toString().trim();
-                    if (isAdd) {
-                      final name   = (data["Name"] ?? data["name"] ?? "").toString().trim();
-                      final dob    = _toIsoDate(data["Date of Birth"] ?? data["dob"]);
-                      final eDD    = _toIsoDate(data["Expected Due Date"] ?? data["expectedDueDate"]);
-                      final termS  = (data["Term (weeks)"] ?? data["term"] ?? "").toString().trim();
-                      final wtS    = (data["Weight (kg)"] ?? data["weight"] ?? "").toString().trim();
-                      final health = (data["Health Conditions"] ?? data["healthConditions"] ?? "").toString().trim();
-
-                      if (name.isEmpty) { showToastSorry(description: "Please enter a name"); return; }
-                      if (dob.isEmpty) { showToastSorry(description: "Please enter a valid Date of Birth (e.g. 2025-10-19)"); return; }
-                      if (eDD.isEmpty) { showToastSorry(description: "Please enter a valid Expected Due Date (e.g. 2025-10-19)"); return; }
-                      if (termS.isEmpty) { showToastSorry(description: "Please enter term (weeks)"); return; }
-                      if (wtS.isEmpty) { showToastSorry(description: "Please enter weight (kg)"); return; }
-                      if (health.isEmpty) { showToastSorry(description: "Please enter health conditions (if none, type 'none')"); return; }
-
-                      final term = int.tryParse(termS);
-                      if (term == null) { showToastSorry(description: "Term must be a whole number"); return; }
-                      final weight = double.tryParse(wtS);
-                      if (weight == null) { showToastSorry(description: "Weight must be a number (e.g. 3.2)"); return; }
-
-                      await _controller.createBaby(
-                        name: name,
-                        dob: dob,
-                        expectedDueDate: eDD,
-                        term: term,
-                        weight: weight,
-                        healthConditions: health,
-                      );
-                      if (context.mounted) Navigator.pop(ctx);
-                      showToastSuccess(description: "Baby created");
-                      await _load();
-                    } else {
-                      final id = (initial?["Id"] ?? "").toString();
-                      if (id.isEmpty) { showToastSorry(description: "Missing baby ID"); return; }
-                      final ok = await _controller.editBaby(
-                        babyId: id,
-                        name: name.isEmpty ? null : name,
-                        dob:  dob.isEmpty  ? null : DateTime.tryParse(dob),
-                      );
-                      if (!ok) { showToastSorry(description: "Failed to update baby"); return; }
-                      if (context.mounted) Navigator.pop(ctx);
-                      showToastSuccess(description: "Baby updated");
-                      await _load();
-                    }
-                  } catch (e, st) {
-                    NyLogger.error("❌ baby submit: $e\n$st");
-                    showToastSorry(description: e.toString());
-                  }
-                }),
-              ),
-            ),
-          ),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel"))],
-        );
-      },
-    );
   }
 
   Future<void> _openEditBabyDialogWithPicker({required Map<String, dynamic> initial}) async {

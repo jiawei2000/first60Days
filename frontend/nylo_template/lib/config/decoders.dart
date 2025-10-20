@@ -1,6 +1,5 @@
 import '/app/models/baby.dart';
 import '/app/networking/baby_service_api_service.dart';
-import '/app/networking/baby_api_service.dart';
 import '/app/controllers/choose_baby_controller.dart';
 import '/app/models/entry_planner.dart';
 import '/app/networking/feeding_schedule_api_service.dart';
@@ -64,9 +63,8 @@ final Map<Type, dynamic> apiDecoders = {
 
   CaregiverApiService: CaregiverApiService(),
 
-  // Baby-related API services (two variants used in codebase)
+  // Baby-related API service
   BabyServiceApiService: BabyServiceApiService(),
-  BabyApiService: BabyApiService(),
 };
 
 /* Controller Decoders
