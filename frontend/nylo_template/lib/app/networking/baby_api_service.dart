@@ -17,14 +17,28 @@ class BabyApiService extends NyApiService {
 
   Future<dynamic> createBaby({
     required String name,
-    required String dob, // yyyy-mm-dd
+    required String dob,               // ISO yyyy-mm-dd
+    required String expectedDueDate,   // ISO yyyy-mm-dd
+    required int term,                 // weeks
+    required double weight,            // kg
+    required String healthConditions,
   }) async {
     final token = await Keys.bearerToken.read() ?? "";
-    final body = {"name": name, "dob": dob};
+    final body = {
+      "name": name,
+      "dob": dob,
+      "expectedDueDate": expectedDueDate,
+      "term": term,
+      "weight": weight,
+      "healthConditions": healthConditions,
+    };
     NyLogger.info("→ POST /babyProfile/newBaby body=$body");
     return await network<dynamic>(
       request: (r) => r.post("/babyProfile/newBaby", data: body),
-      headers: _headers(token),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
     );
   }
 

@@ -22,8 +22,19 @@ class BabyController extends Controller {
   Future<void> createBaby({
     required String name,
     required String dob,
+    required String expectedDueDate,
+    required int term,
+    required double weight,
+    required String healthConditions,
   }) async {
-    await _api.createBaby(name: name, dob: dob);
+    await _api.createBaby(
+      name: name,
+      dob: dob,
+      expectedDueDate: expectedDueDate,
+      term: term,
+      weight: weight,
+      healthConditions: healthConditions,
+    );
   }
 
   Future<void> editBaby({
