@@ -84,6 +84,41 @@ Future<Baby?> createBaby({
   return null;
 }
 
+  /// Update an existing baby
+  Future<Baby?> updateBaby({
+    required String babyId,
+    String? name,
+    DateTime? dob,
+    DateTime? expectedDueDate,
+    int? term,
+    double? weight,
+    String? healthConditions,
+  }) async {
+    String token = await Keys.bearerToken.read() ?? "";
+    final Map<String, dynamic> body = {
+      if (name != null) "name": name,
+      if (dob != null) "dob": dob.toIso8601String(),
+      if (expectedDueDate != null) "expectedDueDate": expectedDueDate.toIso8601String(),
+      if (term != null) "term": term,
+      if (weight != null) "weight": weight,
+      if (healthConditions != null) "healthConditions": healthConditions,
+    };
+
+    final response = await network<dynamic>(
+      request: (request) => request.put("/babies/$babyId", data: body),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response != null) {
+      return Baby.fromJson(response);
+    }
+
+    return null;
+  }
+
 /// ✅ Get current week number for a baby by babyId
 Future<int?> getWeekNo(String babyId) async {
   String token = await Keys.bearerToken.read() ?? "";

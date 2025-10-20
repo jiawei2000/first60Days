@@ -35,18 +35,29 @@ class _BabyPageState extends NyPage<BabyPage> {
   }
 
   static String _formatDate(dynamic dob) {
-    // Handles Firestore Timestamp, millis, or ISO string
+    // Normalize to a fixed display timezone (SGT, UTC+8) to avoid off-by-one issues
+    const int tzOffsetHours = 8; // Adjust if your app uses a different region
     try {
       if (dob == null) return "";
-      if (dob is Map && dob["_seconds"] != null) {
-        return DateTime.fromMillisecondsSinceEpoch((dob["_seconds"] as int) * 1000)
-            .toIso8601String()
-            .substring(0, 10);
+      DateTime dtUtc;
+      if (dob is Map && (dob["_seconds"] != null || dob["seconds"] != null)) {
+        final sec = (dob["_seconds"] ?? dob["seconds"]) as int;
+        final nanos = dob["_nanoseconds"] ?? dob["nanoseconds"] ?? 0;
+        final ms = sec * 1000 + ((nanos is int) ? (nanos ~/ 1000000) : 0);
+        dtUtc = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toUtc();
+      } else if (dob is int) {
+        // Treat epoch millis as UTC
+        dtUtc = DateTime.fromMillisecondsSinceEpoch(dob, isUtc: true).toUtc();
+      } else {
+        final parsed = DateTime.tryParse(dob.toString());
+        if (parsed == null) return dob.toString();
+        dtUtc = parsed.toUtc();
       }
-      if (dob is int) {
-        return DateTime.fromMillisecondsSinceEpoch(dob).toIso8601String().substring(0, 10);
-      }
-      return DateTime.parse(dob.toString()).toIso8601String().substring(0, 10);
+      final dtSgt = dtUtc.add(const Duration(hours: tzOffsetHours));
+      final y = dtSgt.year.toString().padLeft(4, '0');
+      final m = dtSgt.month.toString().padLeft(2, '0');
+      final d = dtSgt.day.toString().padLeft(2, '0');
+      return "$y-$m-$d";
     } catch (_) {
       return dob.toString();
     }
@@ -93,7 +104,7 @@ class _BabyPageState extends NyPage<BabyPage> {
                         IconButton(
                           tooltip: "Edit",
                           icon: const Icon(Icons.edit),
-                          onPressed: () => _openBabyDialog(mode: "edit", initial: b),
+                          onPressed: () => _openEditBabyDialogWithPicker(initial: b),
                         ),
                         IconButton(
                           tooltip: "Delete",
@@ -102,7 +113,7 @@ class _BabyPageState extends NyPage<BabyPage> {
                         ),
                       ],
                     ),
-                    onTap: () => _openBabyDialog(mode: "edit", initial: b),
+                    onTap: () => _openEditBabyDialogWithPicker(initial: b),
                   );
                 },
               ),
@@ -115,6 +126,10 @@ class _BabyPageState extends NyPage<BabyPage> {
     );
   }
 
+  // Local helpers for date handling (keep consistent within this file)
+  String _fmtDate(DateTime d) => "${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+  DateTime? _tryParseIso(String s) => s.isEmpty ? null : DateTime.tryParse(s);
+  
   Future<void> _openAddBabyDialogWithPickers() async {
     final nameCtrl = TextEditingController();
     final dobCtrl = TextEditingController();
@@ -123,19 +138,16 @@ class _BabyPageState extends NyPage<BabyPage> {
     final weightCtrl = TextEditingController();
     final healthCtrl = TextEditingController();
 
-    String fmt(DateTime d) => "${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-    DateTime? parseIso(String s) => s.isEmpty ? null : DateTime.tryParse(s);
-
     Future<void> pickDate(TextEditingController c, {DateTime? first, DateTime? last, DateTime? initial}) async {
       final now = DateTime.now();
-      final init = initial ?? parseIso(c.text) ?? now;
+      final init = initial ?? _tryParseIso(c.text) ?? now;
       final picked = await showDatePicker(
         context: context,
         initialDate: init,
         firstDate: first ?? DateTime(2000),
         lastDate: last ?? DateTime(2100),
       );
-      if (picked != null) c.text = fmt(picked);
+      if (picked != null) c.text = _fmtDate(picked);
     }
 
     await showDialog<void>(
@@ -210,7 +222,7 @@ class _BabyPageState extends NyPage<BabyPage> {
                   final term = int.tryParse(termS); if (term == null) { showToastSorry(description: "Term must be a whole number"); return; }
                   final weight = double.tryParse(wtS); if (weight == null) { showToastSorry(description: "Weight must be a number"); return; }
 
-                  await _controller.createBaby(
+                  final ok = await _controller.createBaby(
                     name: name,
                     dob: dob,
                     expectedDueDate: eDD,
@@ -218,6 +230,10 @@ class _BabyPageState extends NyPage<BabyPage> {
                     weight: weight,
                     healthConditions: health,
                   );
+                  if (!ok) {
+                    showToastSorry(description: "Failed to create baby");
+                    return;
+                  }
                   if (context.mounted) Navigator.pop(ctx);
                   showToastSuccess(description: "Baby created");
                   await _load();
@@ -402,11 +418,12 @@ class _BabyPageState extends NyPage<BabyPage> {
                     } else {
                       final id = (initial?["Id"] ?? "").toString();
                       if (id.isEmpty) { showToastSorry(description: "Missing baby ID"); return; }
-                      await _controller.editBaby(
+                      final ok = await _controller.editBaby(
                         babyId: id,
                         name: name.isEmpty ? null : name,
-                        dob:  dob.isEmpty  ? null : dob,
+                        dob:  dob.isEmpty  ? null : DateTime.tryParse(dob),
                       );
+                      if (!ok) { showToastSorry(description: "Failed to update baby"); return; }
                       if (context.mounted) Navigator.pop(ctx);
                       showToastSuccess(description: "Baby updated");
                       await _load();
@@ -420,6 +437,82 @@ class _BabyPageState extends NyPage<BabyPage> {
             ),
           ),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel"))],
+        );
+      },
+    );
+  }
+
+  Future<void> _openEditBabyDialogWithPicker({required Map<String, dynamic> initial}) async {
+    final nameCtrl = TextEditingController(text: (initial["Name"] ?? "").toString());
+    final dobCtrl = TextEditingController(text: (initial["DOB"] ?? "").toString());
+
+    Future<void> pickDate(TextEditingController c, {DateTime? first, DateTime? last, DateTime? initial}) async {
+      final now = DateTime.now();
+      final init = initial ?? _tryParseIso(c.text) ?? now;
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: init,
+        firstDate: first ?? DateTime(2000),
+        lastDate: last ?? DateTime(2100),
+      );
+      if (picked != null) c.text = _fmtDate(picked);
+    }
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text("Edit Baby Profile"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: "Name"),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: dobCtrl,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: "Date of Birth",
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  onTap: () => pickDate(dobCtrl, last: DateTime.now()),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+            FilledButton(
+              onPressed: () async {
+                try {
+                  final id = (initial["Id"] ?? "").toString();
+                  if (id.isEmpty) { showToastSorry(description: "Missing baby ID"); return; }
+
+                  final name = nameCtrl.text.trim();
+                  final dobText = dobCtrl.text.trim();
+                  final dob = dobText.isEmpty ? null : DateTime.tryParse(dobText);
+
+                  await _controller.editBaby(
+                    babyId: id,
+                    name: name.isEmpty ? null : name,
+                    dob: dob,
+                  );
+                  if (context.mounted) Navigator.pop(ctx);
+                  showToastSuccess(description: "Baby updated");
+                  await _load();
+                } catch (e, st) {
+                  NyLogger.error("Edit baby error: $e\n$st");
+                  showToastSorry(description: e.toString());
+                }
+              },
+              child: const Text("Save"),
+            ),
+          ],
         );
       },
     );
