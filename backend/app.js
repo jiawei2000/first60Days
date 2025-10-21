@@ -9,8 +9,10 @@ const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
 const entryPlannerRouters = require('./routes/entryPlannerRoutes');
 const trainerRoutes = require('./routes/trainerRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 // require('./jobs/batchJobs');
-// require('./jobs/notifications');
+// require('./jobs/topicNotifications');
+// require('./jobs/personalNotifications');
 
 // Load env variables
 dotenv.config()
@@ -30,6 +32,7 @@ app.use('/api/babies', babyRoutes);
 app.use('/api/journalEntries', journalEntryRoutes);
 app.use('/api/entryPlanner', entryPlannerRouters);
 app.use('/api/trainers', trainerRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handling middleware
 app.use((req, res, next) => {

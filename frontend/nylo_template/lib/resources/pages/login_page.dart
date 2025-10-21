@@ -8,6 +8,8 @@ import '/app/networking/user_api_service.dart';
 import '/config/keys.dart';
 import '/resources/pages/choose_baby_page.dart';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 class LoginPage extends NyStatefulWidget<LoginController> {
   static RouteView path = ("/login", (_) => LoginPage());
 
@@ -61,9 +63,34 @@ class _LoginPageState extends NyPage<LoginPage> {
     );
   }
 
+  Future<String?> _getFcmTokenWithPermission() async {
+    final messaging = FirebaseMessaging.instance;
+
+    // Request notification permission (iOS + Android 13+)
+    final settings = await messaging.requestPermission(
+      alert: true, badge: true, sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.denied) {
+      showToastWarning(
+        title: "Notifications disabled",
+        description: "Enable them in Settings to receive alerts.",
+      );
+      return null;
+    }
+
+    final token = await messaging.getToken();
+    if (token == null) {
+      showToastWarning(title: "No FCM token", description: "Could not register this device for notifications.");
+    }
+    return token;
+  }
+
   void onLogin(String username, String password) async {
+    final fcmToken = await _getFcmTokenWithPermission();
+
     var response =
-        await userApiService.login(username: username, password: password);
+        await userApiService.login(username: username, password: password, fcmToken: fcmToken,);
 
     // Handle response
     if (response != null) {
@@ -71,6 +98,14 @@ class _LoginPageState extends NyPage<LoginPage> {
       await Auth.authenticate(data: {"token": response['token']});
       await Keys.bearerToken.save(response['token']);
       // Navigate to navigation hub
+
+      // Test subscribe to daily topic
+      //    so the cron job can reach this device
+      if (fcmToken != null) {
+        await FirebaseMessaging.instance.subscribeToTopic('daily_baby_journal');
+      }
+
+
       routeTo(ChooseBabyPage.path, navigationType: NavigationType.pushAndForgetAll);
     } else {
       // Show error message
