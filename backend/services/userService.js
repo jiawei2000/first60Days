@@ -66,16 +66,23 @@ class UserService {
         const usersRef = db.collection('users');
         const snapshot = await usersRef.where('username', '==', username).get();
 
+        // Check if user exists
         if (snapshot.empty) {
-            throw new Error('Invalid credentials');
+            throw new Error('No user with that username');
         }
 
         const userDoc = snapshot.docs[0];
         const user = User.fromFirestore(userDoc);
 
+        // Check if user is deleted
+        if (user.deletedAt) {
+            throw new Error('User account is deleted');
+        }
+
+        // Validate password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            throw new Error('Invalid credentials');
+            throw new Error('Invalid password');
         }
 
         // Update lastLoginAt
@@ -95,9 +102,9 @@ class UserService {
 
         // Issue JWT
         const token = jwt.sign(
-            { id: user.id, email: user.email },
+            { id: user.id, username: user.username, role:'user' },
             JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '15m' }
         );
 
         return { token, user, permission };
@@ -213,6 +220,10 @@ class UserService {
 
         const user = User.fromFirestore(userDoc);
 
+        if (user.deletedAt) {
+            throw new Error('User already deleted');
+        }
+        
         await db.collection('users').doc(userId).update({
             deletedAt: Timestamp.now()
         });
@@ -290,9 +301,6 @@ class UserService {
         await db.collection('users').doc(userId).update({
             username: newUsername
         });
-
-        // Update the user instance (optional)
-        user.newUsername = newUsername;
 
         return {
             message: 'Username updated successfully',
