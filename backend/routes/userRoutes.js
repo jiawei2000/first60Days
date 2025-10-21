@@ -10,7 +10,7 @@ router.post('/login', userController.login);
 
 // Protected routes
 //get all user accounts (main & subs)
-router.get("/",  userController.getAllUsers);
+router.get("/", authenticateToken, userController.getAllUsers);
 //to get all sub users created by main
 router.get('/subAccounts', authenticateToken, userController.getSubAccounts)
 //create new sub accounts 
