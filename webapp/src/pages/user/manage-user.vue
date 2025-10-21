@@ -1,12 +1,22 @@
 <template>
-    <div>
-        <VCard title="Manage Users">
-            <VCardText>
-                <VDataTable :headers="headers" :items="data" :items-per-page="10">
-                </VDataTable>
-            </VCardText>
-        </VCard>
-    </div>
+    <VCard title="Manage Users">
+        <VCardText>
+            <VRow>
+                <VCol cols="8">
+                    <AppTextField v-model="search" placeholder="Search for users ..." append-inner-icon="bx-search"
+                        single-line hide-details dense outlined />
+                </VCol>
+                <VCol cols="4" class="d-flex align-center">
+                    <VBtn color="secondary" class="mr-2" @click="">Search</VBtn>
+                    <VBtn color="primary" @click="$router.push('/user/create-user')">Create New User</VBtn>
+                </VCol>
+            </VRow>
+            <VSpacer class="my-6" />
+
+            <VDataTable :headers="headers" :items="data" :items-per-page="10">
+            </VDataTable>
+        </VCardText>
+    </VCard>
 </template>
 
 <script setup>
@@ -14,7 +24,7 @@ import { ref } from "vue"
 
 
 const headers = [
-    { title: "UserName", key: "username" },
+    { title: "Username", key: "username" },
     { title: "Email", key: "email" },
     { title: "Phone No", key: "phone" },
     { title: "Last Login", key: "lastLogin" },
