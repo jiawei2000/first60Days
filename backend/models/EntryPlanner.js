@@ -1,28 +1,26 @@
-const { Timestamp } = require('firebase-admin/firestore');
+const { Timestamp } = require("firebase-admin/firestore");
+const dayjs = require("dayjs");
 
 class EntryPlanner {
     constructor(id, {
         totalFeeds = 0,
-        firstFeedTime = null, //Only time is needed, not date. 
-        lastFeedTime = null, //Only time is needed, not date. 
+        firstFeedTime = null, // e.g., "03:00"
+        lastFeedTime = null,  // e.g., "00:00"
         MONInterval = null,
-        feedTimings = [], //Only time is needed, not date. 
+        feedTimings = [], // e.g., ["03:00", "06:00", ...]
         weekNo = 1,
-        // createdAt = EntryPlanner.toTimestamp(createdAt)
         createdAt = new Date()
     }) {
-        this.id = id; // Firestore document ID
+        this.id = id;
         this.totalFeeds = totalFeeds;
-        // this.firstFeedTime = firstFeedTime ? new Date(firstFeedTime) : null;
-        this.firstFeedTime = firstFeedTime ? EntryPlanner.toTimestamp(firstFeedTime): null;
-        this.lastFeedTime = lastFeedTime ?EntryPlanner.toTimestamp(lastFeedTime): null;
-        this.MONInterval = MONInterval; // display value in hours
+        this.firstFeedTime = firstFeedTime; // store as string "HH:mm"
+        this.lastFeedTime = lastFeedTime;   // store as string "HH:mm"
+        this.MONInterval = MONInterval;
         this.feedTimings = feedTimings;
         this.weekNo = weekNo;
         this.createdAt = EntryPlanner.toTimestamp(createdAt);
     }
 
-    // Generates feed timings of the day 
     //each interval should be 2.5hr - 3hr apart. 
     //e.g. if 1st feed 3am, last feed 12am, 
     //feed interval would be [3, 6, 9, 12 15 18 21 24]
@@ -33,51 +31,50 @@ class EntryPlanner {
             throw new Error("firstFeedTime and lastFeedTime are required to generate feed timings.");
         }
 
-        // Step 1: set totalFeeds if not provided (kinda useless IF block)
+        // Step 1: set totalFeeds if not provided
         if (!this.totalFeeds) {
             if (this.weekNo >= 1 && this.weekNo <= 5) this.totalFeeds = 8;
             else if (this.weekNo >= 6 && this.weekNo <= 10) this.totalFeeds = 7;
             else this.totalFeeds = 7;
         }
 
-        //converts timestamp to date obj
-        const first = this.firstFeedTime.toDate ? this.firstFeedTime.toDate() : new Date(this.firstFeedTime); //date obj
-        const last = this.lastFeedTime.toDate ? this.lastFeedTime.toDate() : new Date(this.lastFeedTime); //date obj
-        // Step 2: calculate MONInterval (display only)
+        // Convert time strings → Date objects
+        const first = EntryPlanner.toDateFromTimeStr(this.firstFeedTime);
+        const last = EntryPlanner.toDateFromTimeStr(this.lastFeedTime);
+
+        // Handle wrap-around (e.g., 03:00 → 00:00 next day)
+        let endMs = last.getTime();
         const startMs = first.getTime();
-        const endMs = last.getTime();
-        this.MONInterval = 24 - ((endMs - startMs) / (1000 * 60 * 60)); // in hours
+        if (endMs <= startMs) {
+            endMs += 24 * 60 * 60 * 1000; // add 24 hours
+        }
 
+        // Total duration in hours
+        const totalDuration = (endMs - startMs) / (1000 * 60 * 60);
         let intervalsNeeded = this.totalFeeds - 1;
-        const allowed = [2.5, 2.75, 3]; //can include 3.25 and 2.25
-        const totalDuration = ((endMs - startMs) / (1000 * 60 * 60));
 
+        // Calculate mean interval
         let spacehours = totalDuration / intervalsNeeded;
-
-        //keeping interval between 2.5-3hrs. tbc
         let feedChange = 0;
+
+        // Adjust feed count if spacing is off
         while (spacehours < 2.5 || spacehours > 3) {
             if (spacehours > 3) {
-                console.log(`${spacehours} hr interval, more feed needed. Incrementing total Feed by 1`)
                 this.totalFeeds += 1;
                 intervalsNeeded += 1;
-                feedChange += 1 
-                spacehours = totalDuration / intervalsNeeded;
-            }
-            else if (spacehours < 2.5) {
-                console.log(`${spacehours} hr interval, less feed needed. Reducing total Feed by 1`)
+                feedChange += 1;
+            } else if (spacehours < 2.5) {
                 this.totalFeeds -= 1;
                 intervalsNeeded -= 1;
                 feedChange -= 1;
-                spacehours = totalDuration / intervalsNeeded;
             }
+            spacehours = totalDuration / intervalsNeeded;
         }
 
-        //calibrate spacehours/interval 
-        //if spacing hours > 3: totalFeeds too little 
-        function findBestIntervals(totalDuration, intervalsNeeded) {
-            let best = null;
-            let bestDiff = Infinity;
+        // Find optimal combination of intervals (2.5–3.0 hr)
+        const allowed = [2.5, 2.75, 3];
+        const findBestIntervals = (totalDuration, intervalsNeeded) => {
+            let best = null, bestDiff = Infinity;
 
             function backtrack(current, depth, sum) {
                 if (depth === intervalsNeeded) {
@@ -97,53 +94,47 @@ class EntryPlanner {
 
             backtrack([], 0, 0);
             return best;
-        }
-
+        };
 
         const bestIntervals = findBestIntervals(totalDuration, intervalsNeeded);
-        let current = this.firstFeedTime.toDate(); //this.firstFeedTime is firestore timestamp 
-        this.feedTimings.push(new Date(current).toLocaleString("en-SG", {
-            timeZone: "Asia/Singapore",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true
-        })); // first feed
+
+        // Generate feed timings (time-only strings)
+        const timings = [];
+        let current = first;
+
+        //for the timings added can i have it am/pm instead of 24hr
+        timings.push(EntryPlanner.toTimeStr(current)); // first feed
 
         for (let h of bestIntervals.slice(0, -1)) {
             current = new Date(current.getTime() + h * 60 * 60 * 1000);
-            this.feedTimings.push(new Date(current).toLocaleString("en-SG", {
-                timeZone: "Asia/Singapore",
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true
-            }));
+            timings.push(EntryPlanner.toTimeStr(current));
         }
 
-        // Step 5: force last feed to be exactly lastFeedTime
-        this.feedTimings.push(this.lastFeedTime.toDate().toLocaleString("en-SG", {
-            timeZone: "Asia/Singapore",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true
-        }));
+        // Final feed is exact last feed time
+        timings.push(EntryPlanner.toTimeStr(last));
 
-        let message = ""
-        //total feed increased by {} to achieve idead interval 
-        if (feedChange > 0){
-            message = ` Total Feed increased by ${feedChange}`
-        }
-        else if (feedChange < 0){
-            message = ` Total Feed decreased by ${Math.abs(feedChange)}`
-        }
+        this.feedTimings = timings;
+
+        // Compute MONInterval
+        const remainingHours = 24 - totalDuration;
+
+        // Convert remainingHours → HH:mm (e.g., 2.5 → "02:30")
+        const hours = Math.floor(remainingHours);
+        const minutes = Math.round((remainingHours - hours) * 60);
+        this.MONInterval = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+
+        // Message for total feed adjustments
+        let message = "";
+        if (feedChange > 0) message = `Total Feed increased by ${feedChange}`;
+        else if (feedChange < 0) message = `Total Feed decreased by ${Math.abs(feedChange)}`;
+
         return message;
     }
 
-
-
-
-    // Convert instance to Firestore-friendly format
+    //Convert instance to Firestore object
     toFirestore() {
         return {
+            id: this.id,
             totalFeeds: this.totalFeeds,
             firstFeedTime: this.firstFeedTime,
             lastFeedTime: this.lastFeedTime,
@@ -152,6 +143,22 @@ class EntryPlanner {
             weekNo: this.weekNo,
             createdAt: this.createdAt
         };
+    }
+
+    //Reconstruct EntryPlanner from Firestore snapshot  
+    static fromFirestore(docSnap) {
+        const data = docSnap.data();
+        return new EntryPlanner(docSnap.id, data);
+    }
+
+    static toDateFromTimeStr(timeStr) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        return new Date(1970, 0, 1, hours, minutes);
+    }
+
+    static toTimeStr(dateObj) {
+        // return dayjs(dateObj).format("HH:mm");
+        return dayjs(dateObj).format("h:mm A"); // e.g., "3:00 AM"
     }
 
     static toTimestamp(value) {

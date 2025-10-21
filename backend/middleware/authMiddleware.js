@@ -19,9 +19,33 @@ function authenticateToken(req, res, next) {
             return res.status(403).json({ error: 'Invalid token' });
         }
         req.user = user;
+        console.log("Authenticated user:", user);
         next();
     });
 }
 
-module.exports = { authenticateToken, JWT_SECRET };
+// Call after authenticateToken to check roles
+function authorizeRoles(...allowed) {
+  return (req, res, next) => {
+    if (process.env.SKIP_AUTH === 'true') {
+      // Skip role checks in testing if auth is skipped
+      return next();
+    }
 
+    // Support single role string or array of roles in the JWT payload
+    const userRole = req.user.role;
+    console.log(userRole);
+    const permitted = allowed.includes(userRole);
+    if (!permitted) {
+      return res.status(403).json({
+        error: 'Insufficient role',
+        required: allowed,
+        actual: userRole,
+      });
+    }
+
+    next();
+  };
+}
+
+module.exports = { authenticateToken, authorizeRoles, JWT_SECRET };

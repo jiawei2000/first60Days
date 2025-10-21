@@ -3,9 +3,8 @@ const EntryPlanner = require("../models/EntryPlanner");
 const db = require('../config/database');
 
 class EntryPlannerService {
+
     static async createPlanner(babyId, plannerData) {
-        //check if there is already an Existing weekNo from plannerData 
-        //if there is an existing weekNo, overide/update that document with the new data instead
         if (!babyId) throw new Error("babyId is required");
         if (!plannerData || !plannerData.weekNo) throw new Error("weekNo is required in plannerData");
 
@@ -14,6 +13,7 @@ class EntryPlannerService {
             .doc(babyId)
             .collection("entryPlanner");
 
+        // Step 1: Check if there's already a planner with the same weekNo
         const existingQuery = await plannerCollection
             .where("weekNo", "==", plannerData.weekNo)
             .limit(1)
@@ -22,33 +22,32 @@ class EntryPlannerService {
         let plannerRef;
 
         if (!existingQuery.empty) {
-            // Step 2A: Override existing document
+            // Override existing doc
             const existingDoc = existingQuery.docs[0];
             plannerRef = plannerCollection.doc(existingDoc.id);
             console.log(`Updating existing planner for week ${plannerData.weekNo}...`);
         } else {
-            // Step 2B: Create a new planner document
+            // Create a new planner
             plannerRef = plannerCollection.doc(); // auto-generated ID
             console.log(`Creating new planner for week ${plannerData.weekNo}...`);
         }
-        // Step 1: Firestore doc reference (auto-generated ID)
-        // const plannerRef = db
-        //     .collection("babies")
-        //     .doc(babyId)
-        //     .collection("entryPlanner")
-        //     .doc(); // generates doc ID
 
-        // Step 2: Initialize EntryPlanner with the generated ID
+        // Step 2: Validate that firstFeedTime and lastFeedTime are valid HH:mm strings
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        if (!timeRegex.test(plannerData.firstFeedTime) || !timeRegex.test(plannerData.lastFeedTime)) {
+            throw new Error("Invalid time format. Expected 'HH:mm'");
+        }
+
+        // Step 3: Initialize planner object
         const planner = new EntryPlanner(plannerRef.id, plannerData);
 
-        // Step 3: Generate feed timings & MONInterval
-        let message = planner.generateFeedTimings();
-        //message 
+        // Step 4: Generate feed timings
+        const message = planner.generateFeedTimings();
 
-        // Step 4: Save to Firestore using toFirestore()
+        // Step 5: Save to Firestore (stores strings, not timestamps)
         await plannerRef.set(planner.toFirestore(), { merge: false });
 
-        // Step 5: Return the planner instance with ID and generated fields
+        // Step 6: Return planner and message
         return { planner, message };
     }
 
@@ -66,7 +65,6 @@ class EntryPlannerService {
     }
 
 
-    //updatePlanner 
 
     //if users change their firstFeedTime and lastFeedTime, give them updated generated timings
     static async updatePlanner(babyId, plannerId, updateData) {
