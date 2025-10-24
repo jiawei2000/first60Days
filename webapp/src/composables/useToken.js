@@ -1,26 +1,23 @@
 import { useStorage } from '@vueuse/core'
 
 export function useToken() {
-  const local = useStorage('accessToken', '', localStorage)
-  const session = useStorage('accessToken', '', sessionStorage)
-
   function setToken(value, remember = false) {
     if (remember) {
-      local.value = value
-      session.value = ''
+      localStorage.setItem('accessToken', value)
+      sessionStorage.removeItem('accessToken')
     } else {
-      session.value = value
-      local.value = ''
+      sessionStorage.setItem('accessToken', value)
+      localStorage.removeItem('accessToken')
     }
   }
 
   function getToken() {
-    return local.value || session.value
+    return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
   }
 
   function clearToken() {
-    local.value = ''
-    session.value = ''
+    localStorage.removeItem('accessToken')
+    sessionStorage.removeItem('accessToken')
   }
 
   return {
@@ -29,3 +26,4 @@ export function useToken() {
     clearToken,
   }
 }
+

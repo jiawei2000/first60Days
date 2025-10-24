@@ -1,5 +1,21 @@
 <script setup>
 import avatar1 from '@images/avatars/avatar-1.png'
+import { useRouter } from 'vue-router'
+import { useToken } from '@/composables/useToken'
+
+// Simulated user profile (replace this with a real source like Pinia store or API)
+const userProfile = {
+  name: 'John Doe',
+  role: 'Admin',
+}
+
+const router = useRouter()
+const { clearToken } = useToken()
+
+function handleLogout() {
+  clearToken()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -48,9 +64,9 @@ import avatar1 from '@images/avatars/avatar-1.png'
             </template>
 
             <VListItemTitle class="font-weight-semibold">
-              John Doe
+              {{ userProfile.name }}
             </VListItemTitle>
-            <VListItemSubtitle>Admin</VListItemSubtitle>
+            <VListItemSubtitle>{{ userProfile.role }}</VListItemSubtitle>
           </VListItem>
 
           <VDivider class="my-2" />
@@ -58,68 +74,42 @@ import avatar1 from '@images/avatars/avatar-1.png'
           <!-- 👉 Profile -->
           <VListItem link>
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-user"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-user" size="22" />
             </template>
-
             <VListItemTitle>Profile</VListItemTitle>
           </VListItem>
 
           <!-- 👉 Settings -->
           <VListItem link>
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-cog"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-cog" size="22" />
             </template>
-
             <VListItemTitle>Settings</VListItemTitle>
           </VListItem>
 
           <!-- 👉 Pricing -->
           <VListItem link>
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-dollar"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-dollar" size="22" />
             </template>
-
             <VListItemTitle>Pricing</VListItemTitle>
           </VListItem>
 
           <!-- 👉 FAQ -->
           <VListItem link>
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-help-circle"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-help-circle" size="22" />
             </template>
-
             <VListItemTitle>FAQ</VListItemTitle>
           </VListItem>
 
-          <!-- Divider -->
           <VDivider class="my-2" />
 
           <!-- 👉 Logout -->
-          <VListItem to="/login">
+          <VListItem @click="handleLogout">
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-log-out"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-log-out" size="22" />
             </template>
-
             <VListItemTitle>Logout</VListItemTitle>
           </VListItem>
         </VList>
