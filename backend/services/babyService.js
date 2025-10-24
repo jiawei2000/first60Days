@@ -6,7 +6,7 @@ const { Timestamp } = require('firebase-admin/firestore');
 const admin = require("firebase-admin");
 
 class BabyService {
-    static async newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions }) {
+    static async newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions, gender, height }) {
         // Required fields check
         switch (true) {
             case !name:
@@ -23,11 +23,8 @@ class BabyService {
                 throw new Error("Health Conditions are required");
         }
 
-        // Use Baby.validateData to normalize fields
-        const formattedData = Baby.validateData({ name, dob, expectedDueDate, term, weight, healthConditions });
-
         // Transaction to create baby and update permissions
-        const result = await db.runTransaction(async (t) => {
+        return await db.runTransaction(async (t) => {
             // Get user document
             const userRef = db.collection("users").doc(userId);
             const userSnap = await t.get(userRef);
@@ -39,10 +36,16 @@ class BabyService {
             // Create new Baby instance
             const babyRef = db.collection("babies").doc();
             const baby = new Baby(babyRef.id, {
-                ...formattedData,
+                name,
+                dob,
+                expectedDueDate,
                 createdAt: Timestamp.now(),
                 deletedAt: null,
-                // feedSchedule: null,
+                term,
+                weight,
+                healthConditions,
+                gender,
+                height,
             });
 
             // Save baby in Firestore
@@ -53,10 +56,8 @@ class BabyService {
                 babyIDArr: admin.firestore.FieldValue.arrayUnion(babyRef),
             });
 
-            return baby;
+            return { babyId: babyRef.id, baby: baby.toFirestore() };
         });
-
-        return result;
     }
 
     static async editProfile(babyId, updateFields) {
@@ -65,28 +66,53 @@ class BabyService {
         }
 
         const babyRef = db.collection("babies").doc(babyId);
+        const babySnap = await babyRef.get();
 
-        // Validate and format allowed fields using Baby.validateData
-        const allowedFields = ['name', 'dob'];
-        const filteredFields = {};
-        for (const key of allowedFields) {
-            if (updateFields[key] !== undefined) filteredFields[key] = updateFields[key];
+        if (!babySnap.exists) {
+            throw new Error("Baby not found");
         }
 
-        if (Object.keys(filteredFields).length === 0) {
+        const validFields = [
+            "name",
+            "dob",
+            "expectedDueDate",
+            "term",
+            "weight",
+            "healthConditions",
+            "height",
+            "gender",
+        ];
+
+        const updateData = {};
+
+        // Only include valid fields that are provided
+        for (const key of validFields) {
+            if (updateFields[key] !== undefined && updateFields[key] !== null) {
+                // Convert date strings to Firestore Timestamp
+                if (key === "dob" || key === "expectedDueDate") {
+                    updateData[key] = Timestamp.fromDate(new Date(updateFields[key]));
+                } else {
+                    updateData[key] = updateFields[key];
+                }
+            }
+        }
+
+        if (Object.keys(updateData).length === 0) {
             throw new Error("No valid fields provided for update");
         }
 
-        // Use Baby.validateData for type normalization
-        const formattedData = Baby.validateData(filteredFields, { partial: true });
+        await babyRef.update({
+            ...updateData
+        });
 
-        // Update Firestore
-        await babyRef.update(formattedData);
-
-        // Return updated Baby instance
-        const updatedDoc = await babyRef.get();
-        return new Baby(updatedDoc.id, updatedDoc.data());
+        // const updatedSnap = await babyRef.get();
+        return {
+            babyId: babyId,
+            message: "Baby profile updated successfully",
+            updatedFields: updateData,
+        };
     }
+
 
     static async deleteProfile(userId, babyId) {
         if (!babyId) {
