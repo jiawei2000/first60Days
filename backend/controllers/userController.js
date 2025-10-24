@@ -19,7 +19,7 @@ const userController = {
         // ... sub-account registration logic
         try {
             const currentUserId = req.user.id; // from JWT
-            const { username, password, phoneNo, relation, babyIDArr } = req.body;
+            const { username, password, phoneNo, relation, babyIDArr, name } = req.body;
 
             const result = await UserService.registerSub({
                 currentUserId,
@@ -27,7 +27,8 @@ const userController = {
                 password,
                 phoneNo,
                 relation,
-                babyIDArr
+                babyIDArr,
+                name
             });
 
             res.status(201).json(result);
