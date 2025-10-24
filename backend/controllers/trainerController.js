@@ -1,6 +1,5 @@
 const TrainerService = require('../services/trainerService');
 
-
 const trainerController = {
     async registerNew(req, res) {
         // ... your register new user logic here
