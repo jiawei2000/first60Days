@@ -12,7 +12,7 @@ const Permission = require('../models/Permission');
 const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 class adminService {
-    static async registerNew({ username, email, password, name, address }) {
+    static async registerNew({ username, email, password, name }) {
         const adminsRef = db.collection('admins');
 
         // Check if email exists
@@ -31,15 +31,14 @@ class adminService {
 
         const adminRef = adminsRef.doc();
         const admin = new Admin(adminRef.id, {
-                email,
-                password: hashedPassword,
-                username,
-                name,
-                address,
-                createdAt: Timestamp.now(),
-                deletedAt: null,
-                lastLoginAt: null,
-                });
+            email,
+            password: hashedPassword,
+            username,
+            name,
+            createdAt: Timestamp.now(),
+            deletedAt: null,
+            lastLoginAt: null,
+        });
 
         await adminRef.set(admin.toFirestore());
         return { admin };
@@ -74,7 +73,7 @@ class adminService {
 
         // Issue JWT
         const token = jwt.sign(
-            { id: admin.id, username: admin.username, role:'admin' },
+            { id: admin.id, username: admin.username, role: 'admin' },
             JWT_SECRET,
             { expiresIn: '15m' }
         );
@@ -82,9 +81,9 @@ class adminService {
         return { token, admin };
     }
 
-    static async registerTrainer(adminId, { username, email, password, name, address }) {
+    static async registerTrainer(adminId, { username, email, password, name }) {
         const trainersRef = db.collection('trainers');
-
+        const adminRef = db.collection('admins').doc(adminId);
         // Check if email exists
         const emailSnapshot = await trainersRef.where('email', '==', email).get();
         if (!emailSnapshot.empty) {
@@ -101,23 +100,23 @@ class adminService {
 
         const trainerRef = trainersRef.doc();
         const trainer = new Trainer(trainerRef.id, {
-                email,
-                password: hashedPassword,
-                username,
-                name,
-                address,
-                createdAt: Timestamp.now(),
-                deletedAt: null,
-                lastLoginAt: null,
-                createdByAdminID: adminId,
-                });
+            email,
+            password: hashedPassword,
+            username,
+            name,
+            createdAt: Timestamp.now(),
+            deletedAt: null,
+            lastLoginAt: null,
+            createdByAdminID: adminRef,
+        });
         await trainerRef.set(trainer.toFirestore());
         return { trainer };
     }
 
     static async registerUser(adminId, { trainerId, username, email, password, name, phoneNo, relation }) {
         const usersRef = db.collection('users');
-
+        const adminRef = db.collection('admins').doc(adminId);
+        const trainerRef = db.collection('trainers').doc(trainerId);
         // Check if email exists
         const emailSnapshot = await usersRef.where('email', '==', email).get();
         if (!emailSnapshot.empty) {
@@ -128,6 +127,12 @@ class adminService {
         const usernameSnapshot = await usersRef.where('username', '==', username).get();
         if (!usernameSnapshot.empty) {
             throw new Error('Username already exists');
+        }
+
+        //check if trainer exists
+        const trainerDoc = await trainerRef.get();
+        if (!trainerDoc.exists) {
+            throw new Error('Trainer does not exist');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -150,8 +155,8 @@ class adminService {
                 relation: relation || "Parent",
                 fcmTokens: [],
                 name,
-                trainerId: null || trainerId,
-                createdByAdminID: adminId
+                trainerID: trainerRef,
+                createdByAdminID: adminRef
             });
 
             // create permission model
@@ -170,6 +175,35 @@ class adminService {
             return { user, permission };
         });
     }
+
+    static async getAllTrainers() {
+        const trainersRef = db.collection('trainers');
+        const snapshot = await trainersRef.where('deletedAt', '==', null).get();
+        return snapshot.docs.map(doc => Trainer.fromFirestore(doc));
+    }
+
+    //get all users (main)
+    static async getAllUsers() {
+        const usersRef = db.collection('users');
+        const snapshot = await usersRef.where('deletedAt', '==', null).get();
+        //only users (main) created by admins will have createdByAdminID set
+        const filtered = snapshot.docs
+            .map(doc => User.fromFirestore(doc))
+            .filter(user => user.createdByAdminID != null);
+        return filtered;
+    }
+
+    //to be continued...
+    static async assignTrainerToUser(userId, trainerId) {
+        const usersRef = db.collection('users');
+        await usersRef.doc(userId).update({ trainerId });
+    }
+
+    // static async getBabyJournalStats() {
+    //     const statsRef = db.collection('babyJournalStats');
+    //     const snapshot = await statsRef.get();
+    //     return snapshot.docs.map(doc => doc.data());
+    // }
 }
 
 module.exports = adminService;

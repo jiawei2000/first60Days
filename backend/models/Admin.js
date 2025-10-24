@@ -1,11 +1,11 @@
 class Admin {
-    constructor(id, { username, email, password, name, address, createdAt, deletedAt = null, lastLoginAt = null }) {
+    constructor(id, { username, email, password, name, createdAt, deletedAt = null, lastLoginAt = null }) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.name = name;
-        this.address = address;
+        // this.address = address;
         this.createdAt = createdAt;
         this.deletedAt = deletedAt;
         this.lastLoginAt = lastLoginAt;
@@ -24,7 +24,7 @@ class Admin {
             email: this.email,
             password: this.password,
             name: this.name,
-            address: this.address,
+            // address: this.address,
             createdAt: this.createdAt,
             deletedAt: this.deletedAt,
             lastLoginAt: this.lastLoginAt,

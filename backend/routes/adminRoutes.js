@@ -8,8 +8,24 @@ router.post('/', adminController.registerNew);
 router.post('/login', adminController.login);
 
 // Protected routes
-//create new sub accounts 
+//create new trainer accounts 
 router.post('/registerTrainer', authenticateToken, adminController.registerTrainer);
+//create new user accounts
 router.post('/registerUser', authenticateToken, adminController.registerUser);
+
+//get all trainers
+router.get('/trainers', authenticateToken, adminController.getAllTrainers);
+
+//get all users (main)
+router.get('/users', authenticateToken, adminController.getAllUsers);
+
+//assign trainer to user
+router.post('/assignTrainer', authenticateToken, adminController.assignTrainerToUser);
+
+//view all baby journal statistics
+router.get('/babyJournalStats', authenticateToken, adminController.getBabyJournalStats);
+
+//update trainer ID for a user
+// router.put('/updateUserTrainer/:userId', authenticateToken, adminController.updateUserTrainer);
 
 module.exports = router;

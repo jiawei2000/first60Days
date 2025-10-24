@@ -1,11 +1,11 @@
 class Trainer {
-    constructor(id, { username, email, password, name, address, createdAt, deletedAt, lastLoginAt, createdByAdminID }) {
+    constructor(id, { username, email, password, name, createdAt, deletedAt, lastLoginAt, createdByAdminID }) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.name = name;
-        this.address = address;
+        // this.address = address;
         this.createdAt = createdAt;
         this.deletedAt = deletedAt;
         this.lastLoginAt = lastLoginAt;
@@ -25,7 +25,6 @@ class Trainer {
             email: this.email,
             password: this.password,
             name: this.name,
-            address: this.address,
             createdAt: this.createdAt,
             deletedAt: this.deletedAt,
             lastLoginAt: this.lastLoginAt,
