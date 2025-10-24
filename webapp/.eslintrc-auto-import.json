@@ -360,6 +360,7 @@
     "watchTriggerable": true,
     "watchWithFilter": true,
     "whenever": true,
-    "formatSecondsToDateString": true
+    "formatSecondsToDateString": true,
+    "useToken": true
   }
 }

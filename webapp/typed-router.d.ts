@@ -22,5 +22,8 @@ declare module 'vue-router/auto-routes' {
     '$error': RouteRecordInfo<'$error', '/:error(.*)', { error: ParamValue<true> }, { error: ParamValue<false> }>,
     'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,
     'second-page': RouteRecordInfo<'second-page', '/second-page', Record<never, never>, Record<never, never>>,
+    'user-create-user': RouteRecordInfo<'user-create-user', '/user/create-user', Record<never, never>, Record<never, never>>,
+    'user-edit-user-id': RouteRecordInfo<'user-edit-user-id', '/user/edit-user/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    'user-manage-user': RouteRecordInfo<'user-manage-user', '/user/manage-user', Record<never, never>, Record<never, never>>,
   }
 }
