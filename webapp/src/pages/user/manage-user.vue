@@ -53,14 +53,14 @@ onMounted(() => {
 
 async function getUsers() {
     try {
-        const res = await $api('users', {
+        const res = await $api('admins/users', {
             method: 'GET',
             onResponseError({ response }) {
                 errors.value = response._data.errors
             }
         })
 
-        data.value = res.map(user => ({
+        data.value = res.users.map(user => ({
             id: user.id,
             username: user.username,
             name: user.name,

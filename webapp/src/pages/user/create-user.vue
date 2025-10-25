@@ -9,14 +9,18 @@
                     <VCol cols="12" md="6">
                         <VTextField label="Name" v-model="form.name" />
                     </VCol>
-                    <VCol cols="12" md="12">
+                    <VCol cols="12" md="6">
                         <VTextField label="Email" v-model="form.email" type="email" />
+                    </VCol>
+                    <VCol cols="12" md="6">
+                        <VTextField label="Phone" v-model="form.phoneNo" type="number" />
                     </VCol>
                     <VCol cols="12" md="6">
                         <VTextField label="Password" v-model="form.password" type="password" />
                     </VCol>
                     <VCol cols="12" md="6">
-                        <VTextField label="Phone" v-model="form.phoneNo" type="number" />
+                        <VSelect label="Trainer" v-model="form.trainerId" :items="trainerList" item-title="name"
+                            item-value="id" />
                     </VCol>
                 </VRow>
                 <VRow class="mt-4">
@@ -43,24 +47,30 @@
 </template>
 
 <script setup>
-import { ref } from "vue"
+import { onMounted, ref } from "vue"
 
 const isSnackBarVisible = ref(false)
 const snackBarMessage = ref("")
 
-// User form state
 const form = ref({
     username: "",
     name: "",
     email: "",
     password: "",
     phoneNo: "",
+    trainerId: ""
+})
+
+const trainerList = ref([])
+
+onMounted(async () => {
+    await getTrainerList()
 })
 
 // create user
 async function createUser() {
     try {
-        const res = await $api('users', {
+        const res = await $api('admins/registerUser', {
             method: 'POST',
             body: {
                 username: form.value.username,
@@ -68,6 +78,8 @@ async function createUser() {
                 email: form.value.email,
                 password: form.value.password,
                 phoneNo: form.value.phoneNo,
+                trainerId: form.value.trainerId,
+                relation: "Main"
             },
             onResponseError({ response }) {
                 throw new Error(response._data.error)
@@ -84,6 +96,26 @@ async function createUser() {
         }
         isSnackBarVisible.value = true
         snackBarMessage.value = "User created successfully!"
+    } catch (error) {
+        snackBarMessage.value = error
+        isSnackBarVisible.value = true
+    }
+}
+
+async function getTrainerList() {
+    try {
+        const res = await $api('admins/trainers', {
+            method: 'GET',
+            onResponseError({ response }) {
+                throw new Error(response._data.error)
+            }
+        })
+        trainerList.value = res.trainers.map(trainer => ({
+            id: trainer.id,
+            name: trainer.name,
+        }))
+
+        form.value.trainerId = trainerList.value[0]?.id || "No trainers available"
     } catch (error) {
         snackBarMessage.value = error
         isSnackBarVisible.value = true
