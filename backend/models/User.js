@@ -1,5 +1,19 @@
 class User {
-    constructor(id, { email, password, phoneNo, username, createdAt, lastLoginAt, deletedAt, permissionID, relation = null, fcmTokens }) {
+    constructor(id, {
+        email,
+        password,
+        phoneNo,
+        username,
+        createdAt,
+        lastLoginAt,
+        deletedAt,
+        permissionID,
+        relation = null,
+        fcmTokens,
+        name,
+        trainerID = null,
+        createdByAdminID = null
+    }) {
         this.id = id;
         this.email = email || null; // null for sub accounts
         this.password = password;
@@ -10,8 +24,10 @@ class User {
         this.deletedAt = deletedAt;
         this.permissionID = permissionID;
         this.relation = relation; // relation to baby (e.g., parent, guardian)
-
         this.fcmTokens = fcmTokens; // Array, multiple tokens for multiple devices
+        this.name = name;
+        this.trainerID = trainerID
+        this.createdByAdminID = createdByAdminID
     }
 
     // convenience method to map Firestore doc -> User instance
@@ -33,6 +49,9 @@ class User {
             permissionID: this.permissionID,
             relation: this.relation,
             fcmTokens: this.fcmTokens,
+            name: this.name,
+            trainerID: this.trainerID,
+            createdByAdminID: this.createdByAdminID
         };
     }
 }

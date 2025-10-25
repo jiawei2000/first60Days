@@ -4,13 +4,13 @@ const BabyController = {
     async newProfile(req, res) {
         const userId = req.user.id; //from JWT
         try {
-            const { name, dob, expectedDueDate, term, weight, healthConditions } = req.body;
+            // const { name, dob, expectedDueDate, term, weight, healthConditions } = req.body;
 
-            const baby = await BabyService.newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions });
-
+            const { babyId, baby } = await BabyService.newProfile(userId, req.body);
+    
             res.status(201).json({
                 message: "Baby created and added to permissions",
-                babyId: baby.id,
+                babyId,
                 baby,
             });
 
@@ -28,13 +28,13 @@ const BabyController = {
 
     async editProfile(req, res) {
         try {
-            const { name, dob, expectedDueDate, term, weight, healthConditions } = req.body;
             const { babyId } = req.params;
-            const updatedBaby = await BabyService.editProfile(babyId, { name, dob, expectedDueDate, term, weight, healthConditions });
+            const  result = await BabyService.editProfile(babyId, req.body);
 
             res.status(200).json({
-                message: "Baby profile updated successfully",
-                baby: updatedBaby,
+                message: result.message,
+                babyId: result.babyId,
+                updatedFields: result.updatedFields,
             });
         } catch (error) {
             console.error("Error in updateBaby:", error.message);
@@ -63,7 +63,7 @@ const BabyController = {
 
     async getProfiles(req, res) {
         try {
-            const userId = req.user.id;
+            const userId = req.user.id; // from JWT
             const babyProfiles = await BabyService.getProfiles(userId);
             res.status(200).json({ babyProfiles });
         } catch (error) {

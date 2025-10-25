@@ -1,8 +1,11 @@
 const { Timestamp } = require('firebase-admin/firestore');
 
 class Baby {
-    constructor(id, { name, dob, createdAt, deletedAt, expectedDueDate, term, weight, healthConditions }) {
+    constructor(id, { name, dob, createdAt, deletedAt, expectedDueDate, term, weight, healthConditions, gender, height }) {
         this.id = id;
+        // optional fields
+        this.gender = gender ? String(gender) : null;
+        this.height = height ? Number(height) : null;
 
         // Required string
         this.name = name ? String(name) : null;
@@ -18,8 +21,7 @@ class Baby {
 
         // System fields
         this.createdAt = Baby.toTimestamp(createdAt) || Timestamp.now();
-        this.deletedAt = Baby.toTimestamp(deletedAt); // null if not deleted
-        // this.feedSchedule = feedSchedule || null; // allow null for now
+        this.deletedAt = Baby.toTimestamp(deletedAt); // null if not delet
     }
 
     toFirestore() {
@@ -28,12 +30,18 @@ class Baby {
             dob: this.dob,
             createdAt: this.createdAt,
             deletedAt: this.deletedAt,
-            // feedSchedule: this.feedSchedule
             expectedDueDate: this.expectedDueDate,
             term: this.term,
             weight: this.weight,
-            healthConditions: this.healthConditions
+            healthConditions: this.healthConditions,
+            height: this.height,
+            gender: this.gender,
         };
+    }
+
+    static fromFirestore(doc) {
+        const data = doc.data();
+        return new Baby(doc.id, data);
     }
 
     static toTimestamp(value) {

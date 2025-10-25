@@ -4,11 +4,13 @@ const cors = require('cors')
 const dotenv = require('dotenv')
 const morgan = require('morgan')
 
+const adminRoutes = require('./routes/adminRoutes');
+const trainerRoutes = require('./routes/trainerRoutes');
 const userRoutes = require('./routes/userRoutes');
+
 const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
 const entryPlannerRouters = require('./routes/entryPlannerRoutes');
-const trainerRoutes = require('./routes/trainerRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 // require('./jobs/batchJobs');
 // require('./jobs/topicNotifications');
@@ -27,11 +29,13 @@ app.get('/', (req, res) => {
 })
 
 //routes 
+app.use('/api/admins', adminRoutes);
+app.use('/api/trainers', trainerRoutes);
 app.use('/api/users', userRoutes);
+
 app.use('/api/babies', babyRoutes);
 app.use('/api/journalEntries', journalEntryRoutes);
 app.use('/api/entryPlanner', entryPlannerRouters);
-app.use('/api/trainers', trainerRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Error handling middleware
