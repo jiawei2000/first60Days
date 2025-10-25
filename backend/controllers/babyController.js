@@ -63,7 +63,7 @@ const BabyController = {
 
     async getProfiles(req, res) {
         try {
-            const userId = req.user.id;
+            const userId = req.user.id; // from JWT
             const babyProfiles = await BabyService.getProfiles(userId);
             res.status(200).json({ babyProfiles });
         } catch (error) {

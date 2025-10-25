@@ -5,7 +5,6 @@ class Trainer {
         this.email = email;
         this.password = password;
         this.name = name;
-        // this.address = address;
         this.createdAt = createdAt;
         this.deletedAt = deletedAt;
         this.lastLoginAt = lastLoginAt;

@@ -39,6 +39,11 @@ class Baby {
         };
     }
 
+    static fromFirestore(doc) {
+        const data = doc.data();
+        return new Baby(doc.id, data);
+    }
+
     static toTimestamp(value) {
         if (!value) return null;
 

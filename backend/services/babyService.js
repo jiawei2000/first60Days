@@ -196,7 +196,7 @@ class BabyService {
             const babySnap = await babyRef.get();
             if (babySnap.exists) {
                 babyProfiles.push(
-                    new Baby(babySnap.id, babySnap.data())
+                    Baby.fromFirestore(babySnap)
                 );
             }
         }
