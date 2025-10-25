@@ -194,16 +194,30 @@ class adminService {
     }
 
     //to be continued...
-    static async assignTrainerToUser(userId, trainerId) {
-        const usersRef = db.collection('users');
-        await usersRef.doc(userId).update({ trainerId });
-    }
+    static async updateUserTrainer(userId, trainerId) {
+        const userRef = db.collection('users').doc(userId);
+        //check if user exists
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            throw new Error('User does not exist');
+        }
 
-    // static async getBabyJournalStats() {
-    //     const statsRef = db.collection('babyJournalStats');
-    //     const snapshot = await statsRef.get();
-    //     return snapshot.docs.map(doc => doc.data());
-    // }
+        const trainerRef = db.collection('trainers').doc(trainerId);
+        //check if trainer exists
+        const trainerDoc = await trainerRef.get();
+        if (!trainerDoc.exists) {
+            throw new Error('Trainer does not exist');
+        }
+
+        //update trainerID field with trainer reference
+        const result = await userRef.update({ trainerID: trainerRef });
+        if (result.writeTime == null) {
+            throw new Error('Failed to update user trainer');
+        }
+
+        return { success: true , message: 'User trainer updated successfully', updatedFields: { trainerID: trainerId } };
+    }
 }
+
 
 module.exports = adminService;

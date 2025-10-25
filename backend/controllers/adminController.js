@@ -12,7 +12,7 @@ const adminController = {
             res.status(400).json({ error: error.message });
         }
     },
-    
+
     async login(req, res) {
         try {
             const { token, admin } = await AdminService.login(req.body);
@@ -60,20 +60,12 @@ const adminController = {
         }
     },
 
-    async assignTrainerToUser(req, res) {
+    async updateUserTrainer(req, res) {
         try {
-            const { userId, trainerId } = req.body;
-            await AdminService.assignTrainerToUser(userId, trainerId);
-            res.status(204).send();
-        } catch (error) {
-            res.status(400).json({ error: error.message });
-        }
-    },
-
-    async getBabyJournalStats(req, res) {
-        try {
-            const stats = await AdminService.getBabyJournalStats();
-            res.json({ stats });
+            const { userId } = req.params;
+            const { trainerId } = req.body;
+            const result = await AdminService.updateUserTrainer(userId, trainerId);
+            res.json({ success: result.success, message: result.message, updatedFields: result.updatedFields });
         } catch (error) {
             res.status(400).json({ error: error.message });
         }

@@ -19,13 +19,7 @@ router.get('/trainers', authenticateToken, adminController.getAllTrainers);
 //get all users (main)
 router.get('/users', authenticateToken, adminController.getAllUsers);
 
-//assign trainer to user
-router.post('/assignTrainer', authenticateToken, adminController.assignTrainerToUser);
-
-//view all baby journal statistics
-router.get('/babyJournalStats', authenticateToken, adminController.getBabyJournalStats);
-
 //update trainer ID for a user
-// router.put('/updateUserTrainer/:userId', authenticateToken, adminController.updateUserTrainer);
+router.put('/updateUserTrainer/:userId', authenticateToken, adminController.updateUserTrainer);
 
 module.exports = router;
