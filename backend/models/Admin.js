@@ -1,20 +1,20 @@
-class Trainer {
-    constructor(id, { username, email, password, name, createdAt, deletedAt, lastLoginAt, createdByAdminID }) {
+class Admin {
+    constructor(id, { username, email, password, name, createdAt, deletedAt = null, lastLoginAt = null }) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.name = name;
+        // this.address = address;
         this.createdAt = createdAt;
         this.deletedAt = deletedAt;
         this.lastLoginAt = lastLoginAt;
-        this.createdByAdminID = createdByAdminID;
     }
 
     // convenience method to map Firestore doc -> User instance
     static fromFirestore(doc) {
         const data = doc.data();
-        return new Trainer(doc.id, data);
+        return new Admin(doc.id, data);
     }
 
     // convert to plain object (for saving)
@@ -24,11 +24,11 @@ class Trainer {
             email: this.email,
             password: this.password,
             name: this.name,
+            // address: this.address,
             createdAt: this.createdAt,
             deletedAt: this.deletedAt,
             lastLoginAt: this.lastLoginAt,
-            createdByAdminID: this.createdByAdminID,
         };
     }
 }
-module.exports = Trainer;
+module.exports = Admin;

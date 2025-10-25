@@ -9,7 +9,8 @@ const Permission = require('../models/Permission');
 const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 class UserService {
-    static async registerNew({ email, password, phoneNo, username }) {
+    //this register new user method will only be used by dev. needs to be removed afterwatds 
+    static async registerNew({ email, password, phoneNo, username, name }) {
         const usersRef = db.collection('users');
 
         // Check if email exists
@@ -42,7 +43,8 @@ class UserService {
                 deletedAt: null,
                 permissionID: permissionRef,
                 relation: "Parent", // default relation for main account
-                fcmTokens: []
+                fcmTokens: [],
+                name,
             });
 
             // create permission model
@@ -110,7 +112,7 @@ class UserService {
         return { token, user, permission };
     }
 
-    static async registerSub({ currentUserId, username, password, phoneNo, relation, babyIDArr }) {
+    static async registerSub({ currentUserId, username, password, phoneNo, relation, babyIDArr, name }) {
         const usersRef = db.collection('users');
 
         // Get current main user’s permission
@@ -139,7 +141,7 @@ class UserService {
         const babyRefs = (babyIDArr || []).map(id => db.collection('babies').doc(id));
 
         // Transaction for atomic writes
-        const result = await db.runTransaction(async (t) => {
+        return await db.runTransaction(async (t) => {
             const subUserRef = usersRef.doc();
 
             // Create sub permission
@@ -164,7 +166,8 @@ class UserService {
                 deletedAt: null,
                 permissionID: subPermissionRef,
                 relation: relation,
-                fcmTokens: []
+                fcmTokens: [], 
+                name
             });
             t.set(subUserRef, subUser.toFirestore());
 
@@ -175,15 +178,7 @@ class UserService {
 
             return { subUser, subPermission };
         });
-
-        return {
-            id: result.subUser.id,
-            email: result.subUser.email,
-            phoneNo: result.subUser.phoneNo,
-            username: result.subUser.username,
-            relation: result.subUser.relation,
-            permission: result.subPermission
-        };
+        // return { subUser, subPermission };
     }
 
     static async updatePassword(userId, newPassword) {
@@ -211,6 +206,8 @@ class UserService {
     }
 
     //needs to be updated. 
+    //Deleting main account should delete all sub accounts too.
+    //Deleteing sub account should remove reference from main account permission doc too.
     static async deleteUser(userId) {
         const userDoc = await db.collection('users').doc(userId).get();
 
