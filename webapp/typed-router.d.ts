@@ -20,10 +20,15 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     'root': RouteRecordInfo<'root', '/', Record<never, never>, Record<never, never>>,
     '$error': RouteRecordInfo<'$error', '/:error(.*)', { error: ParamValue<true> }, { error: ParamValue<false> }>,
-    'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,
+    'admin': RouteRecordInfo<'admin', '/admin', Record<never, never>, Record<never, never>>,
+    'admin-login': RouteRecordInfo<'admin-login', '/admin/login', Record<never, never>, Record<never, never>>,
+    'admin-user-create-user': RouteRecordInfo<'admin-user-create-user', '/admin/user/create-user', Record<never, never>, Record<never, never>>,
+    'admin-user-edit-user-id': RouteRecordInfo<'admin-user-edit-user-id', '/admin/user/edit-user/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    'admin-user-manage-user': RouteRecordInfo<'admin-user-manage-user', '/admin/user/manage-user', Record<never, never>, Record<never, never>>,
     'second-page': RouteRecordInfo<'second-page', '/second-page', Record<never, never>, Record<never, never>>,
-    'user-create-user': RouteRecordInfo<'user-create-user', '/user/create-user', Record<never, never>, Record<never, never>>,
-    'user-edit-user-id': RouteRecordInfo<'user-edit-user-id', '/user/edit-user/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
-    'user-manage-user': RouteRecordInfo<'user-manage-user', '/user/manage-user', Record<never, never>, Record<never, never>>,
+    'trainer': RouteRecordInfo<'trainer', '/trainer', Record<never, never>, Record<never, never>>,
+    'trainer-create-trainer': RouteRecordInfo<'trainer-create-trainer', '/trainer/create-trainer', Record<never, never>, Record<never, never>>,
+    'trainer-login': RouteRecordInfo<'trainer-login', '/trainer/login', Record<never, never>, Record<never, never>>,
+    'trainer-manage-trainer': RouteRecordInfo<'trainer-manage-trainer', '/trainer/manage-trainer', Record<never, never>, Record<never, never>>,
   }
 }
