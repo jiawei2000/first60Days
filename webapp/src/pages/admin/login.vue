@@ -36,6 +36,10 @@ async function loginAdmin() {
         snackBarMessage.value = "Login successful!"
 
         useCookie('accessToken').value = res.token
+        useCookie('userData').value = {
+            name: res.admin.name,
+            role: 'Admin',
+        }
         router.push({ name: 'admin' })
 
     } catch (error) {
