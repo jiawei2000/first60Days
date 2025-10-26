@@ -1,10 +1,9 @@
 <template>
-    <VCard title="Manage Users">
+    <VCard title="Viewing User">
         <VCardText>
             <VRow>
                 <VCol>
-                    <VTextField v-model="search" placeholder="Try ... Users created in 2024"
-                        append-inner-icon="bx-search" />
+                    <VTextField v-model="search" placeholder="Try ... Babies above 5kg" append-inner-icon="bx-search" />
                 </VCol>
                 <VCol>
                     <VBtn color="secondary" class="mr-2" @click="">Search</VBtn>
@@ -25,6 +24,7 @@
             </VDataTable>
         </VCardText>
     </VCard>
+
     <VSnackbar v-model="isSnackBarVisible" timeout="5000">
         {{ snackBarMessage }}
         <template #actions>
@@ -34,9 +34,10 @@
         </template>
     </VSnackbar>
 </template>
+
 <script setup>
 import { onMounted, ref } from "vue"
-import { useRouter } from "vue-router"
+import { useRoute } from "vue-router"
 
 definePage({
     meta: {
@@ -44,56 +45,49 @@ definePage({
     },
 })
 
-const isSnackBarVisible = ref(false)
-const snackBarMessage = ref('')
+const route = useRoute()
 
-const router = useRouter()
+const isSnackBarVisible = ref(false)
+const snackBarMessage = ref("")
 
 const search = ref("")
 const data = ref([])
 
 const headers = [
-    { title: "Username", key: "username" },
     { title: "Name", key: "name" },
-    { title: "Email", key: "email" },
-    { title: "Phone No", key: "phoneNo" },
-    { title: "Created At", key: "createdAt" },
-    { title: "Last Login", key: "lastLoginAt" },
-    { title: "Actions", value: "actions", sortable: false },
+    { title: "Gender", key: "gender" },
+    { title: "Height(cm)", key: "height" },
+    { title: "Weight(kg)", key: "weight" },
+    { title: "Term", key: "term" },
+    { title: "Health Conditions", key: "healthConditions" },
 ]
 
-onMounted(() => {
-    getUsers()
+onMounted(async () => {
+    await getBabyListByUserId(route.params.id)
 })
 
-async function getUsers() {
+async function getBabyListByUserId(userId) {
     try {
-        const res = await $api('trainers/users', {
+        const res = await $api('trainers/users/' + userId + '/babies', {
             method: 'GET',
             onResponseError({ response }) {
                 throw new Error(response._data)
             }
         })
 
-        data.value = res.users.map(user => ({
-            id: user.id,
-            username: user.username,
-            name: user.name,
-            email: user.email,
-            phoneNo: user.phoneNo,
-            relation: user.relation,
-            lastLoginAt: user.lastLoginAt ? formatSecondsToDateString(user.lastLoginAt._seconds) : "NA",
-            createdAt: user.createdAt ? formatSecondsToDateString(user.createdAt._seconds) : "NA",
+        data.value = res.babies.map(baby => ({
+            id: baby.id,
+            name: baby.name,
+            gender: baby.gender,
+            height: baby.height,
+            weight: baby.weight,
+            term: baby.term,
+            healthConditions: baby.healthConditions,
         }))
-
     } catch (error) {
         snackBarMessage.value = error
         isSnackBarVisible.value = true
     }
 }
 
-function editUser(item) {
-    snackBarMessage.value = `Editing user: ${item.name}`
-    isSnackBarVisible.value = true
-}
 </script>

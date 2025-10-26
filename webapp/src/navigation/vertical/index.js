@@ -17,7 +17,7 @@ export default [
 
     {
         title: 'Manage User',
-        to: { name: 'trainer-user-manage-user' },
+        to: { name: 'trainer-user-manage-users' },
         icon: { icon: 'bx-user' },
     }
 ]
