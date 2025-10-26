@@ -6,9 +6,8 @@
                     <VTextField v-model="search" placeholder="Try ... Users created in 2024"
                         append-inner-icon="bx-search" />
                 </VCol>
-                <VCol class="d-flex justify-end">
+                <VCol>
                     <VBtn color="secondary" class="mr-2" @click="">Search</VBtn>
-                    <VBtn color="primary" @click="$router.push('/admin/user/create-user')">Create New User</VBtn>
                 </VCol>
             </VRow>
 
@@ -35,24 +34,23 @@
         </template>
     </VSnackbar>
 </template>
-
 <script setup>
 import { onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 
 definePage({
     meta: {
-        adminOnly: true,
+        trainerOnly: true,
     },
 })
+
+const isSnackBarVisible = ref(false)
+const snackBarMessage = ref('')
 
 const router = useRouter()
 
 const search = ref("")
 const data = ref([])
-
-const isSnackBarVisible = ref(false)
-const snackBarMessage = ref('')
 
 const headers = [
     { title: "Username", key: "username" },
@@ -70,7 +68,7 @@ onMounted(() => {
 
 async function getUsers() {
     try {
-        const res = await $api('admins/users', {
+        const res = await $api('trainers/users', {
             method: 'GET',
             onResponseError({ response }) {
                 throw new Error(response._data)
@@ -94,8 +92,8 @@ async function getUsers() {
     }
 }
 
-function editUser(user) {
-    router.push(`/admin/user/edit-user/${user.id}`)
+function editUser(item) {
+    snackBarMessage.value = `Editing user: ${item.name}`
+    isSnackBarVisible.value = true
 }
-
 </script>
