@@ -12,6 +12,8 @@ const babyRoutes = require('./routes/babyRoutes');
 const journalEntryRoutes = require('./routes/journalRoutes');
 const entryPlannerRouters = require('./routes/entryPlannerRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const statisticsRoutes = require('./routes/statisticsRoutes');
+
 // require('./jobs/batchJobs');
 // require('./jobs/topicNotifications');
 // require('./jobs/personalNotifications');
@@ -37,6 +39,7 @@ app.use('/api/babies', babyRoutes);
 app.use('/api/journalEntries', journalEntryRoutes);
 app.use('/api/entryPlanner', entryPlannerRouters);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/statistics', statisticsRoutes);
 
 // Error handling middleware
 app.use((req, res, next) => {

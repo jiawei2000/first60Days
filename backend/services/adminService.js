@@ -217,7 +217,24 @@ class adminService {
 
         return { success: true , message: 'User trainer updated successfully', updatedFields: { trainerID: trainerId } };
     }
-}
 
+    static async getUserById(userId) {
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            throw new Error('User does not exist');
+        }
+        return User.fromFirestore(userDoc);
+    }
+
+    static async getTrainerById(trainerId) {
+        const trainerRef = db.collection('trainers').doc(trainerId);
+        const trainerDoc = await trainerRef.get();
+        if (!trainerDoc.exists) {
+            throw new Error('Trainer does not exist');
+        }
+        return Trainer.fromFirestore(trainerDoc);
+    }
+}
 
 module.exports = adminService;

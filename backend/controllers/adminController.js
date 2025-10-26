@@ -69,6 +69,26 @@ const adminController = {
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
+    },
+
+    async getUserById(req, res) {
+        try {
+            const { userId } = req.params;
+            const user = await AdminService.getUserById(userId);
+            res.json({ user });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async getTrainerById(req, res) {
+        try {
+            const { trainerId } = req.params;
+            const trainer = await AdminService.getTrainerById(trainerId);
+            res.json({ trainer });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
     }
 }
 
