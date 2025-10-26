@@ -14,9 +14,13 @@ const roleLabel = computed(() => {
 })
 
 function handleLogout() {
+    let tempRole = userData.value?.role
     useCookie('accessToken').value = null
     useCookie('userData').value = null
-    router.push('/admin/login')
+    if (tempRole === 'trainer')
+        router.push('/trainer/login')
+    else
+        router.push('/admin/login')
 }
 </script>
 
