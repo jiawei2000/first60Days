@@ -1,7 +1,9 @@
 <script setup>
 import { ref } from 'vue'
 import { themeConfig } from '@themeConfig'
-import { router } from '@/plugins/1.router'
+import { useRouter } from "vue-router"
+
+const router = useRouter()
 
 definePage({
     meta: {
@@ -104,7 +106,8 @@ async function loginAdmin() {
                             <!-- create account -->
                             <VCol cols="12" class="text-body-1 text-center">
                                 <span class="d-inline-block"> Are you a Trainer? </span>
-                                <RouterLink class="text-primary ms-1 d-inline-block text-body-1" :to="{ name: '' }">
+                                <RouterLink class="text-primary ms-1 d-inline-block text-body-1"
+                                    :to="{ name: 'trainer-login' }">
                                     Trainer Login
                                 </RouterLink>
                             </VCol>

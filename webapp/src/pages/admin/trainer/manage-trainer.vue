@@ -34,6 +34,12 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
+definePage({
+    meta: {
+        adminOnly: true,
+    },
+})
+
 // Format Firestore timestamp to readable string
 function formatSecondsToDateString(seconds) {
     const date = new Date(seconds * 1000)

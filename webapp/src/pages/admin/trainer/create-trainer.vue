@@ -41,6 +41,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+definePage({
+    meta: {
+        adminOnly: true,
+    },
+})
+
 const router = useRouter()
 
 const isSnackBarVisible = ref(false)

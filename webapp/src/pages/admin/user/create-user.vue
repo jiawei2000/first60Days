@@ -48,6 +48,12 @@
 <script setup>
 import { onMounted, ref } from "vue"
 
+definePage({
+    meta: {
+        adminOnly: true,
+    },
+})
+
 const isSnackBarVisible = ref(false)
 const snackBarMessage = ref("")
 
