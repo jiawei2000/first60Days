@@ -23,6 +23,9 @@ class StatisticsService {
             .get();
 
         const entries = snapshot.docs.map(doc => doc.data()); //array of journal entries
+        if (entries.length === 0) {
+            return { message: 'No journal entries found for the specified date.' };
+        }
         // Calculate and return statistics based on the journal entries
         let results = this.calculateDailyStatistics(entries);
         
@@ -47,7 +50,7 @@ class StatisticsService {
             monInterval: 0,
 
             //averaged fields
-            averageMilkIntake: 0, // in ml
+            averageMilkIntake: 0, // in ml average milk intake per bottle feed
             averagePlayDuration: 0, // in hh:mm
             averageLapseDuration: 0, // in hh:mm
         };
@@ -124,6 +127,7 @@ class StatisticsService {
         return statistics;
     }
 
+    //helper method to convert float hours to hh:mm format
     toHHMM(hoursFloat) {
         const hours = Math.floor(hoursFloat);
         const minutes = Math.round((hoursFloat - hours) * 60);
