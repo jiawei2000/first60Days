@@ -19,6 +19,12 @@ router.get('/trainers', authenticateToken, adminController.getAllTrainers);
 //get all users (main)
 router.get('/users', authenticateToken, adminController.getAllUsers);
 
+//get user (main) by ID
+router.get('/user/:userId', authenticateToken, adminController.getUserById);
+
+//get trainer by ID
+router.get('/trainer/:trainerId', authenticateToken, adminController.getTrainerById);
+
 //update trainer ID for a user
 router.put('/updateUserTrainer/:userId', authenticateToken, adminController.updateUserTrainer);
 
