@@ -35,7 +35,7 @@ const snackBarMessage = ref('')
 const handleLogin = async () => {
   isLoading.value = true
   try {
-    const response = await axios.post('/users/login', {
+      const response = await axios.post('/admin/login', {
       username: form.value.email,
       password: form.value.password,
     })

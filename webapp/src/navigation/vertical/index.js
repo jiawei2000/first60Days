@@ -6,7 +6,7 @@ export default [
   },
   {
       title: 'Manage User',
-      to: { name: 'user-manage-user' },
+      to: { name: 'admin-user-manage-user' },
       icon: { icon: 'bx-user' },
   },
 ]

@@ -28,7 +28,7 @@
                         <VBtn color="primary" @click="createUser">Create</VBtn>
                     </VCol>
                     <VCol cols=" auto">
-                        <VBtn color="secondary" @click="$router.push('/user/manage-user')">Cancel</VBtn>
+                        <VBtn color="secondary" @click="$router.push('/admin/user/manage-user')">Cancel</VBtn>
                     </VCol>
                 </VRow>
             </VCardText>

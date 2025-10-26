@@ -8,7 +8,7 @@
                 </VCol>
                 <VCol class="d-flex justify-end">
                     <VBtn color="secondary" class="mr-2" @click="">Search</VBtn>
-                    <VBtn color="primary" @click="$router.push('/user/create-user')">Create New User</VBtn>
+                    <VBtn color="primary" @click="$router.push('/admin/user/create-user')">Create New User</VBtn>
                 </VCol>
             </VRow>
 
@@ -77,7 +77,7 @@ async function getUsers() {
 }
 
 function editUser(user) {
-    router.push(`/user/edit-user/${user.id}`)
+    router.push(`/admin/user/edit-user/${user.id}`)
 }
 
 </script>
