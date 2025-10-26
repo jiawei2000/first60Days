@@ -1,8 +1,17 @@
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userData = useCookie('userData')
+
+const roleLabel = computed(() => {
+    const role = userData.value?.role
+    if (!role)
+        return 'Role Error'
+    // Capitalize first letter of role
+    return `${role.charAt(0).toUpperCase()}${role.slice(1)}`
+})
 
 function handleLogout() {
     useCookie('accessToken').value = null
@@ -29,7 +38,7 @@ function handleLogout() {
                     <VListItemTitle class="font-weight-semibold">
                         {{ userData?.name || 'User Error' }}
                     </VListItemTitle>
-                    <VListItemSubtitle>{{ userData?.role || 'Role Error' }}</VListItemSubtitle>
+                    <VListItemSubtitle>{{ roleLabel }}</VListItemSubtitle>
                 </VListItem>
 
                 <VDivider class="my-2" />
