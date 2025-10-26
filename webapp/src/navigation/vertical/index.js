@@ -11,7 +11,7 @@ export default [
   },
   {
       title: 'Manage Trainers',
-      to: { name: 'trainer-manage-trainer' },
+      to: { name: 'admin-trainer-manage-trainer' },
       icon: { icon: 'bx-user' },
   },
 ]

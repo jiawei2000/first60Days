@@ -6,7 +6,7 @@ import { router } from '@/plugins/1.router'
 definePage({
     meta: {
         layout: 'blank',
-        public: true,
+        unauthenticatedOnly: true,
     },
 })
 
@@ -38,7 +38,7 @@ async function loginAdmin() {
         useCookie('accessToken').value = res.token
         useCookie('userData').value = {
             name: res.admin.name,
-            role: 'Admin',
+            role: 'admin',
         }
         router.push({ name: 'admin' })
 
