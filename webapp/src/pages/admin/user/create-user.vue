@@ -37,7 +37,6 @@
 
     <VSnackbar v-model="isSnackBarVisible" timeout="5000">
         {{ snackBarMessage }}
-
         <template #actions>
             <VBtn color="error" @click="isSnackBarVisible = false">
                 Close
