@@ -3,8 +3,9 @@ const StatisticsService = require('../services/statisticsService');
 class StatisticsController {
     async getDailyStatistics(req, res) {
         const { babyId } = req.params;
+        const { date } = req.body
         try {
-            const statistics = await StatisticsService.getDailyStatistics(babyId);
+            const statistics = await StatisticsService.getDailyStatistics(babyId, date);
             res.json(statistics);
         } catch (error) {
             console.error('Error fetching daily statistics:', error);
