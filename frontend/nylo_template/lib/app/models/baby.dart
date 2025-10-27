@@ -7,6 +7,10 @@ class Baby extends Model {
   DateTime? expectedDueDate;
   int? term;
   double? weight;
+  // New optional fields
+  String? gender; // e.g. Male/Female/Other
+  double? height; // height in cm (optional)
+  String? trainerName; // assigned trainer's display name if provided by API
   String? healthConditions;
   DateTime? createdAt;
   DateTime? deletedAt;
@@ -20,6 +24,9 @@ class Baby extends Model {
     this.expectedDueDate,
     this.term,
     this.weight,
+    this.gender,
+    this.height,
+    this.trainerName,
     this.healthConditions,
     this.createdAt,
     this.deletedAt,
@@ -34,6 +41,9 @@ class Baby extends Model {
     deletedAt = parseFlexibleDateTime(data['deletedAt']);
     term = _toInt(data['term']);
     weight = _toDouble(data['weight']);
+    gender = data['gender']?.toString();
+    height = _toDouble(data['height']);
+    trainerName = data['trainerName']?.toString() ?? data['trainer']?.toString();
     healthConditions = data['healthConditions']?.toString();
   }
 
@@ -47,6 +57,9 @@ class Baby extends Model {
       'expectedDueDate': _dateToIsoDate(expectedDueDate),
       'term': term,
       'weight': weight,
+      if (gender != null) 'gender': gender,
+      if (height != null) 'height': height,
+      if (trainerName != null) 'trainerName': trainerName,
       'healthConditions': healthConditions,
       // Keep full ISO for timestamps where appropriate
       'createdAt': createdAt?.toIso8601String(),

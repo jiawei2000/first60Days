@@ -15,13 +15,15 @@ class ChooseBabyController {
   }
 
   Future<Baby?> createBaby({
-  required String name,
-  required DateTime dob,
-  required DateTime expectedDueDate,
-  required int term,
-  required double weight,
-  required String healthConditions,
-}) async {
+    required String name,
+    required DateTime dob,
+    required DateTime expectedDueDate,
+    required int term,
+    required double weight,
+    String? gender,
+    double? height,
+    required String healthConditions,
+  }) async {
   try {
     final response = await _babyService.createBaby(
       name: name,
@@ -29,6 +31,8 @@ class ChooseBabyController {
       expectedDueDate: expectedDueDate,
       term: term,
       weight: weight,
+      gender: gender,
+      height: height,
       healthConditions: healthConditions,
     );
 
