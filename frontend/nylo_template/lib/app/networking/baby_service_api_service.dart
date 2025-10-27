@@ -54,8 +54,6 @@ class BabyServiceApiService extends NyApiService {
     required DateTime expectedDueDate,
     required int term,
     required double weight,
-    String? gender,
-    double? height,
     required String healthConditions,
   }) async {
     final token = await Keys.bearerToken.read() ?? '';
@@ -66,8 +64,6 @@ class BabyServiceApiService extends NyApiService {
         'expectedDueDate': expectedDueDate.toIso8601String(),
         'term': term,
         'weight': weight,
-        if (gender != null) 'gender': gender,
-        if (height != null) 'height': height,
         'healthConditions': healthConditions,
       }),
       headers: {
@@ -87,8 +83,6 @@ class BabyServiceApiService extends NyApiService {
     DateTime? expectedDueDate,
     int? term,
     double? weight,
-    String? gender,
-    double? height,
     String? healthConditions,
   }) async {
     final token = await Keys.bearerToken.read() ?? '';
@@ -98,8 +92,6 @@ class BabyServiceApiService extends NyApiService {
       if (expectedDueDate != null) 'expectedDueDate': expectedDueDate.toIso8601String(),
       if (term != null) 'term': term,
       if (weight != null) 'weight': weight,
-      if (gender != null) 'gender': gender,
-      if (height != null) 'height': height,
       if (healthConditions != null) 'healthConditions': healthConditions,
     };
     final response = await network<dynamic>(

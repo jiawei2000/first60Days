@@ -14,16 +14,13 @@ class BabyController extends Controller {
     try {
       final babies = await _svc.getAllBabies();
       if (babies == null) return <dynamic>[];
-          return babies
+      return babies
           .map((b) => {
                 "id": b.id,
                 "name": b.name,
                 "dob": b.dob?.toIso8601String(),
                 "term": b.term,
                 "weight": b.weight,
-                "gender": b.gender,
-                "height": b.height,
-                "trainerName": b.trainerName,
                 "healthConditions": b.healthConditions,
               })
           .toList();
@@ -38,8 +35,6 @@ class BabyController extends Controller {
     required String expectedDueDate,
     required int term,
     required double weight,
-    String? gender,
-    double? height,
     required String healthConditions,
   }) async {
     try {
@@ -49,8 +44,6 @@ class BabyController extends Controller {
         expectedDueDate: DateTime.parse(expectedDueDate),
         term: term,
         weight: weight,
-        gender: gender,
-        height: height,
         healthConditions: healthConditions,
       );
       return created != null;
@@ -63,16 +56,12 @@ class BabyController extends Controller {
     required String babyId,
     String? name,
     DateTime? dob,
-    String? gender,
-    double? height,
   }) async {
     try {
       final updated = await _svc.updateBaby(
         babyId: babyId,
         name: name,
         dob: dob,
-        gender: gender,
-        height: height,
       );
       return updated != null;
     } catch (_) {

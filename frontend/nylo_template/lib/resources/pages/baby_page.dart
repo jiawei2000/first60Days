@@ -23,9 +23,6 @@ class _BabyPageState extends NyPage<BabyPage> {
                 "DOB": _formatDate(b["dob"]),
                 "Term": (b["term"]?.toString() ?? ""),
                 "Weight": (b["weight"]?.toString() ?? ""),
-                "Gender": (b["gender"]?.toString() ?? ""),
-                "Height": (b["height"]?.toString() ?? ""),
-                "trainerName": (b["trainerName"]?.toString() ?? ""),
               }));
       });
     } catch (e) {
@@ -90,13 +87,14 @@ class _BabyPageState extends NyPage<BabyPage> {
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(b["Name"] ?? "", style: t.titleMedium),
-                    subtitle: Text([
-                      if ((b["trainerName"] ?? "").toString().isNotEmpty)
-                        "Trainer: ${b["trainerName"]}",
-                      if ((b["DOB"] ?? "").toString().isNotEmpty) "DOB: ${b["DOB"]}",
-                      if ((b["Term"] ?? "").toString().isNotEmpty) "Term: ${b["Term"]}",
-                      if ((b["Weight"] ?? "").toString().isNotEmpty) "Weight: ${b["Weight"]} kg",
-                    ].join(" • "), style: t.bodyMedium),
+                    subtitle: Text(
+                      [
+                        if ((b["DOB"] ?? "").toString().isNotEmpty) "DOB: ${b["DOB"]}",
+                        if ((b["Term"] ?? "").toString().isNotEmpty) "Term: ${b["Term"]}",
+                        if ((b["Weight"] ?? "").toString().isNotEmpty) "Weight: ${b["Weight"]} kg",
+                      ].join(" • "),
+                      style: t.bodyMedium,
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -135,8 +133,6 @@ class _BabyPageState extends NyPage<BabyPage> {
     final eddCtrl = TextEditingController();
     final termCtrl = TextEditingController();
     final weightCtrl = TextEditingController();
-    final heightCtrl = TextEditingController();
-    String? genderValue; // 'Male' | 'Female' | 'Other'
     final healthCtrl = TextEditingController();
 
     Future<void> pickDate(TextEditingController c, {DateTime? first, DateTime? last, DateTime? initial}) async {
@@ -156,7 +152,7 @@ class _BabyPageState extends NyPage<BabyPage> {
       barrierDismissible: false,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text("Add Baby"),
+          title: const Text("Create Baby Profile"),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -164,6 +160,16 @@ class _BabyPageState extends NyPage<BabyPage> {
                 TextField(
                   controller: nameCtrl,
                   decoration: const InputDecoration(labelText: "Name"),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: dobCtrl,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: "Date of Birth",
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  onTap: () => pickDate(dobCtrl, last: DateTime.now()),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -177,40 +183,6 @@ class _BabyPageState extends NyPage<BabyPage> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: dobCtrl,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: "Date of Birth",
-                    suffixIcon: Icon(Icons.calendar_today),
-                  ),
-                  onTap: () => pickDate(dobCtrl, last: DateTime.now()),
-                ),
-                const SizedBox(height: 12),
-                Theme(
-                  data: Theme.of(context).copyWith(
-                    highlightColor: Colors.transparent,
-                    hoverColor: Colors.transparent,
-                    focusColor: Colors.transparent,
-                    splashColor: Colors.transparent,
-                    canvasColor: Theme.of(context).colorScheme.surface,
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    value: genderValue,
-                    isExpanded: true,
-                    menuMaxHeight: 280,
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    dropdownColor: Theme.of(context).colorScheme.surface,
-                    items: const [
-                      DropdownMenuItem(value: 'Male', child: Text('Male')),
-                      DropdownMenuItem(value: 'Female', child: Text('Female')),
-                      DropdownMenuItem(value: 'Other', child: Text('Other / Prefer not to say')),
-                    ],
-                    onChanged: (v) => genderValue = v,
-                    decoration: const InputDecoration(labelText: 'Gender'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
                   controller: termCtrl,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: "Term (weeks)"),
@@ -220,12 +192,6 @@ class _BabyPageState extends NyPage<BabyPage> {
                   controller: weightCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(labelText: "Weight (kg)"),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: heightCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: "Height (cm) - optional"),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -245,16 +211,13 @@ class _BabyPageState extends NyPage<BabyPage> {
                   final eDD = eddCtrl.text.trim();
                   final termS = termCtrl.text.trim();
                   final wtS = weightCtrl.text.trim();
-                  final htS = heightCtrl.text.trim();
                   final health = healthCtrl.text.trim();
 
                   if (name.isEmpty) { showToastSorry(description: "Please enter a name"); return; }
-                  if (eDD.isEmpty) { showToastSorry(description: "Please pick Expected Due Date"); return; }
                   if (dob.isEmpty) { showToastSorry(description: "Please pick Date of Birth"); return; }
+                  if (eDD.isEmpty) { showToastSorry(description: "Please pick Expected Due Date"); return; }
                   final term = int.tryParse(termS); if (term == null) { showToastSorry(description: "Term must be a whole number"); return; }
                   final weight = double.tryParse(wtS); if (weight == null) { showToastSorry(description: "Weight must be a number"); return; }
-                  final height = htS.isEmpty ? null : double.tryParse(htS);
-                  if (htS.isNotEmpty && height == null) { showToastSorry(description: "Height must be a number"); return; }
 
                   final ok = await _controller.createBaby(
                     name: name,
@@ -262,8 +225,6 @@ class _BabyPageState extends NyPage<BabyPage> {
                     expectedDueDate: eDD,
                     term: term,
                     weight: weight,
-                    gender: genderValue,
-                    height: height,
                     healthConditions: health,
                   );
                   if (!ok) {
@@ -278,7 +239,7 @@ class _BabyPageState extends NyPage<BabyPage> {
                   showToastSorry(description: e.toString());
                 }
               },
-              child: const Text("Add"),
+              child: const Text("Create"),
             ),
           ],
         );
@@ -309,89 +270,89 @@ class _BabyPageState extends NyPage<BabyPage> {
     }
   }
 
-  // String _toIsoDate(dynamic v) {
-  //   if (v == null) return "";
-  //   if (v is DateTime) return v.toIso8601String().substring(0, 10);
+  String _toIsoDate(dynamic v) {
+    if (v == null) return "";
+    if (v is DateTime) return v.toIso8601String().substring(0, 10);
 
-  //   final s = v.toString().trim();
-  //   if (s.isEmpty) return "";
+    final s = v.toString().trim();
+    if (s.isEmpty) return "";
 
-  //   // Already yyyy-MM-dd
-  //   final iso10 = RegExp(r'^\d{4}-\d{2}-\d{2}$');
-  //   if (iso10.hasMatch(s)) return s;
+    // Already yyyy-MM-dd
+    final iso10 = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+    if (iso10.hasMatch(s)) return s;
 
-  //   // yyyy/MM/dd
-  //   final ymdSlash = RegExp(r'^(\d{4})\/(\d{2})\/(\d{2})$');
-  //   final m1 = ymdSlash.firstMatch(s);
-  //   if (m1 != null) {
-  //     final yr = int.parse(m1.group(1)!);
-  //     final mo = int.parse(m1.group(2)!);
-  //     final dy = int.parse(m1.group(3)!);
-  //     return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
-  //   }
+    // yyyy/MM/dd
+    final ymdSlash = RegExp(r'^(\d{4})\/(\d{2})\/(\d{2})$');
+    final m1 = ymdSlash.firstMatch(s);
+    if (m1 != null) {
+      final yr = int.parse(m1.group(1)!);
+      final mo = int.parse(m1.group(2)!);
+      final dy = int.parse(m1.group(3)!);
+      return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
+    }
 
-  //   // dd/MM/yyyy
-  //   final dmySlash = RegExp(r'^(\d{1,2})\/(\d{1,2})\/(\d{4})$');
-  //   final m2 = dmySlash.firstMatch(s);
-  //   if (m2 != null) {
-  //     final dy = int.parse(m2.group(1)!);
-  //     final mo = int.parse(m2.group(2)!);
-  //     final yr = int.parse(m2.group(3)!);
-  //     return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
-  //   }
+    // dd/MM/yyyy
+    final dmySlash = RegExp(r'^(\d{1,2})\/(\d{1,2})\/(\d{4})$');
+    final m2 = dmySlash.firstMatch(s);
+    if (m2 != null) {
+      final dy = int.parse(m2.group(1)!);
+      final mo = int.parse(m2.group(2)!);
+      final yr = int.parse(m2.group(3)!);
+      return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
+    }
 
-  //   // dd-MM-yyyy
-  //   final dmyDash = RegExp(r'^(\d{1,2})-(\d{1,2})-(\d{4})$');
-  //   final m3 = dmyDash.firstMatch(s);
-  //   if (m3 != null) {
-  //     final dy = int.parse(m3.group(1)!);
-  //     final mo = int.parse(m3.group(2)!);
-  //     final yr = int.parse(m3.group(3)!);
-  //     return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
-  //   }
+    // dd-MM-yyyy
+    final dmyDash = RegExp(r'^(\d{1,2})-(\d{1,2})-(\d{4})$');
+    final m3 = dmyDash.firstMatch(s);
+    if (m3 != null) {
+      final dy = int.parse(m3.group(1)!);
+      final mo = int.parse(m3.group(2)!);
+      final yr = int.parse(m3.group(3)!);
+      return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
+    }
 
-  //   // dd/MM/yyyy, HH:mm -> take date part
-  //   if (s.contains(", ")) {
-  //     final head = s.split(", ").first;
-  //     final mm = dmySlash.firstMatch(head);
-  //     if (mm != null) {
-  //       final dy = int.parse(mm.group(1)!);
-  //       final mo = int.parse(mm.group(2)!);
-  //       final yr = int.parse(mm.group(3)!);
-  //       return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
-  //     }
-  //   }
+    // dd/MM/yyyy, HH:mm -> take date part
+    if (s.contains(", ")) {
+      final head = s.split(", ").first;
+      final mm = dmySlash.firstMatch(head);
+      if (mm != null) {
+        final dy = int.parse(mm.group(1)!);
+        final mo = int.parse(mm.group(2)!);
+        final yr = int.parse(mm.group(3)!);
+        return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
+      }
+    }
 
-  //   // 19 Oct 2025 or 19 October 2025
-  //   final monthMap = <String, int>{
-  //     'jan': 1, 'january': 1,
-  //     'feb': 2, 'february': 2,
-  //     'mar': 3, 'march': 3,
-  //     'apr': 4, 'april': 4,
-  //     'may': 5,
-  //     'jun': 6, 'june': 6,
-  //     'jul': 7, 'july': 7,
-  //     'aug': 8, 'august': 8,
-  //     'sep': 9, 'sept': 9, 'september': 9,
-  //     'oct': 10, 'october': 10,
-  //     'nov': 11, 'november': 11,
-  //     'dec': 12, 'december': 12,
-  //   };
-  //   final words = RegExp(r'^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$').firstMatch(s);
-  //   if (words != null) {
-  //     final dy = int.parse(words.group(1)!);
-  //     final monName = words.group(2)!.toLowerCase();
-  //     final yr = int.parse(words.group(3)!);
-  //     final mo = monthMap[monName];
-  //     if (mo != null) {
-  //       return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
-  //     }
-  //   }
+    // 19 Oct 2025 or 19 October 2025
+    final monthMap = <String, int>{
+      'jan': 1, 'january': 1,
+      'feb': 2, 'february': 2,
+      'mar': 3, 'march': 3,
+      'apr': 4, 'april': 4,
+      'may': 5,
+      'jun': 6, 'june': 6,
+      'jul': 7, 'july': 7,
+      'aug': 8, 'august': 8,
+      'sep': 9, 'sept': 9, 'september': 9,
+      'oct': 10, 'october': 10,
+      'nov': 11, 'november': 11,
+      'dec': 12, 'december': 12,
+    };
+    final words = RegExp(r'^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$').firstMatch(s);
+    if (words != null) {
+      final dy = int.parse(words.group(1)!);
+      final monName = words.group(2)!.toLowerCase();
+      final yr = int.parse(words.group(3)!);
+      final mo = monthMap[monName];
+      if (mo != null) {
+        return DateTime(yr, mo, dy).toIso8601String().substring(0, 10);
+      }
+    }
 
-  //   // Last resort: DateTime.parse (handles full ISO strings)
-  //   final dt = DateTime.tryParse(s);
-  //   return dt == null ? "" : dt.toIso8601String().substring(0, 10);
-  // }
+    // Last resort: DateTime.parse (handles full ISO strings)
+    final dt = DateTime.tryParse(s);
+    return dt == null ? "" : dt.toIso8601String().substring(0, 10);
+  }
 
   Future<void> _openEditBabyDialogWithPicker({required Map<String, dynamic> initial}) async {
     final nameCtrl = TextEditingController(text: (initial["Name"] ?? "").toString());
@@ -414,7 +375,7 @@ class _BabyPageState extends NyPage<BabyPage> {
       barrierDismissible: false,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text("Edit Baby"),
+          title: const Text("Edit Baby Profile"),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
