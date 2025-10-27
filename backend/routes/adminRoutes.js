@@ -3,6 +3,7 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const { authenticateToken, authorizeRoles } = require('../middleware/authMiddleware');
 
+
 // Public routes
 router.post('/', adminController.registerNew);
 router.post('/login', adminController.login);
@@ -24,6 +25,9 @@ router.get('/user/:userId', authenticateToken, adminController.getUserById);
 
 //get trainer by ID
 router.get('/trainer/:trainerId', authenticateToken, adminController.getTrainerById);
+
+//edit user (main) by ID
+router.put('/editUser/:userId', authenticateToken, adminController.editUserById);
 
 //update trainer ID for a user
 router.put('/updateUserTrainer/:userId', authenticateToken, adminController.updateUserTrainer);
