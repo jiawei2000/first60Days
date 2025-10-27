@@ -40,12 +40,6 @@ definePage({
     },
 })
 
-// Format Firestore timestamp to readable string
-function formatSecondsToDateString(seconds) {
-    const date = new Date(seconds * 1000)
-    return date.toLocaleString()
-}
-
 const router = useRouter()
 const search = ref('')
 const data = ref([])
