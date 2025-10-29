@@ -22,13 +22,15 @@ declare module 'vue-router/auto-routes' {
     '$error': RouteRecordInfo<'$error', '/:error(.*)', { error: ParamValue<true> }, { error: ParamValue<false> }>,
     'admin': RouteRecordInfo<'admin', '/admin', Record<never, never>, Record<never, never>>,
     'admin-login': RouteRecordInfo<'admin-login', '/admin/login', Record<never, never>, Record<never, never>>,
+    'admin-trainer-create-trainer': RouteRecordInfo<'admin-trainer-create-trainer', '/admin/trainer/create-trainer', Record<never, never>, Record<never, never>>,
+    'admin-trainer-manage-trainer': RouteRecordInfo<'admin-trainer-manage-trainer', '/admin/trainer/manage-trainer', Record<never, never>, Record<never, never>>,
     'admin-user-create-user': RouteRecordInfo<'admin-user-create-user', '/admin/user/create-user', Record<never, never>, Record<never, never>>,
     'admin-user-edit-user-id': RouteRecordInfo<'admin-user-edit-user-id', '/admin/user/edit-user/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'admin-user-manage-user': RouteRecordInfo<'admin-user-manage-user', '/admin/user/manage-user', Record<never, never>, Record<never, never>>,
     'second-page': RouteRecordInfo<'second-page', '/second-page', Record<never, never>, Record<never, never>>,
     'trainer': RouteRecordInfo<'trainer', '/trainer', Record<never, never>, Record<never, never>>,
-    'trainer-create-trainer': RouteRecordInfo<'trainer-create-trainer', '/trainer/create-trainer', Record<never, never>, Record<never, never>>,
     'trainer-login': RouteRecordInfo<'trainer-login', '/trainer/login', Record<never, never>, Record<never, never>>,
-    'trainer-manage-trainer': RouteRecordInfo<'trainer-manage-trainer', '/trainer/manage-trainer', Record<never, never>, Record<never, never>>,
+    'trainer-user-manage-users': RouteRecordInfo<'trainer-user-manage-users', '/trainer/user/manage-users', Record<never, never>, Record<never, never>>,
+    'trainer-user-view-user-id': RouteRecordInfo<'trainer-user-view-user-id', '/trainer/user/view-user/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
   }
 }

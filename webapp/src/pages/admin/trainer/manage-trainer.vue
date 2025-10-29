@@ -16,20 +16,10 @@
 
             <VSpacer class="my-6" />
 
-            <VDataTable :headers="headers" :items="data" :items-per-page="10">
-                <!-- Actions -->
-                <template #item.actions="{ item }">
-                    <div class="d-flex gap-1">
-                        <IconBtn @click="editTrainer(item)">
-                            <VIcon icon="bx-edit" />
-                        </IconBtn>
-                    </div>
-                </template>
-            </VDataTable>
+            <VDataTable :headers="headers" :items="data" :items-per-page="10" />
         </VCardText>
     </VCard>
 </template>
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -50,7 +40,6 @@ const headers = [
     { title: 'Email', key: 'email' },
     { title: 'Created At', key: 'createdAt' },
     { title: 'Last Login', key: 'lastLoginAt' },
-    { title: 'Actions', value: 'actions', sortable: false },
 ]
 
 onMounted(() => {
