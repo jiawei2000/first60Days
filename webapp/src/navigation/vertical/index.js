@@ -30,5 +30,11 @@ export default [
         to: { name: 'trainer-user-manage-users' },
         icon: { icon: 'bx-user' },
         viewBy: 'trainer'
+    },
+        {
+        title: 'Journal Entries',
+        to: { name: 'trainer-journal-entries-journal-entries' },
+        icon: { icon: 'bx-user' },
+        viewBy: 'trainer'
     }
 ]
