@@ -5,10 +5,9 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 
 // protected
 
-//daily baby journal statistics of individual baby  
-router.get('/daily/:babyId', statisticsController.getDailyStatistics);
+//get all daily baby journal statistics of individual baby
+router.get('/daily/baby/:babyId', authenticateToken, statisticsController.getDailyStatistics);
 
-//weekly baby journal statistics of indiividual baby 
-
-
+// get daily statistics by Id
+router.get('/daily/:statisticId', authenticateToken, statisticsController.getDailyStatisticsById);
 module.exports = router
