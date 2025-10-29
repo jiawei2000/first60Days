@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/app/controllers/home_controller.dart';
+import 'package:flutter_app/app/controllers/feeding_schedule_controller.dart';
 import 'package:flutter_app/app/models/feed_type.dart';
 import 'package:flutter_app/app/models/journal_entry.dart';
+import 'package:flutter_app/app/models/entry_planner.dart';
 import 'package:flutter_app/resources/widgets/buttons/partials/primary_button_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:nylo_framework/nylo_framework.dart';
@@ -25,8 +28,14 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage> {
   final CalendarController _controller = CalendarController();
+  final HomeController _homeController = HomeController();
+  final FeedingScheduleController _feedingScheduleController =
+      FeedingScheduleController();
+
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
+  DateTime _babyDOB = DateTime.now();
+  List<EntryPlanner> _feedingPlanners = [];
   Map<DateTime, List<Map<String, dynamic>>> _eventData = {};
   bool _showBanner = false;
   bool _loading = true;
@@ -35,6 +44,8 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
     _loadEvents();
+    _loadBabyDOB();
+    _loadFeedingPlanners();
   }
 
   void _loadEvents() async {
@@ -44,6 +55,48 @@ class _CalendarPageState extends State<CalendarPage> {
       _eventData = events ?? {};
       _loading = false;
     });
+  }
+
+  void _loadBabyDOB() async {
+    final babyId = await Keys.selectedBabyId.read();
+    final baby = await _homeController.fetchBabyById(babyId);
+    if (!mounted || baby?.dob == null) return;
+    setState(() {
+      _babyDOB = baby!.dob!;
+    });
+  }
+
+  void _loadFeedingPlanners() async {
+    final babyId = await Keys.selectedBabyId.read();
+    final response =
+        await _feedingScheduleController.fetchPlannerByBabyId(babyId);
+    final plannersData = response?['planner'] as List?;
+    setState(() {
+      _feedingPlanners = plannersData
+              ?.whereType<Map<String, dynamic>>()
+              .map(EntryPlanner.fromJson)
+              .toList() ??
+          [];
+    });
+  }
+
+  void _displayPlannersForWeekNo(int weekNo) {
+    final matchingPlans =
+        _feedingPlanners.where((planner) => planner.weekNo == weekNo);
+    if (matchingPlans.isEmpty) {
+      debugPrint("No feeding plan found for Week $weekNo");
+      return;
+    }
+
+    EntryPlanner currentPlan = matchingPlans.first;
+    debugPrint(
+        "Current Feeding Plan for Week $weekNo: ${currentPlan.feedTimings}");
+  }
+
+  int _calculateBabyWeek() {
+    final difference = _selectedDay.difference(_babyDOB);
+    final weekNo = (difference.inDays / 7).floor() + 1;
+    return weekNo;
   }
 
   List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
@@ -93,6 +146,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             setState(() {
                               _selectedDay = selectedDay;
                               _focusedDay = focusedDay;
+                              _displayPlannersForWeekNo(_calculateBabyWeek());
                             });
                           },
                           calendarFormat: CalendarFormat.month,
