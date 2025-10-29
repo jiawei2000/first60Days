@@ -27,13 +27,13 @@ class FeedingScheduleController extends Controller {
       // {required String babyId, required Map<String, dynamic> data}) async {
       {required String babyId,
       required int weekNo,
-      required DateTime firstFeedTime,
-      required DateTime lastFeedTime,
+      required String firstFeedTime,
+      required String lastFeedTime,
       required int totalFeeds}) async {
     Map<String, dynamic> data = {
       'weekNo': weekNo,
-      'firstFeedTime': firstFeedTime.toIso8601String(),
-      'lastFeedTime': lastFeedTime.toIso8601String(),
+      'firstFeedTime': firstFeedTime,
+      'lastFeedTime': lastFeedTime,
       'totalFeeds': totalFeeds,
     };
     return await _feedingScheduleApiService.createPlanner(

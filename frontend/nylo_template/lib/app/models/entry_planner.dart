@@ -3,9 +3,9 @@ import 'package:nylo_framework/nylo_framework.dart';
 class EntryPlanner {
   String? id;
   int? totalFeeds;
-  DateTime? firstFeedTime;
-  DateTime? lastFeedTime;
-  double? mONInterval;
+  String? firstFeedTime;
+  String? lastFeedTime;
+  String? mONInterval;
   List<String>? feedTimings;
   int? weekNo;
   DateTime? createdAt;
@@ -26,9 +26,9 @@ class EntryPlanner {
   EntryPlanner.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
     totalFeeds = json['totalFeeds'];
-    firstFeedTime = parseTimestamp(json['firstFeedTime']);
-    lastFeedTime = parseTimestamp(json['lastFeedTime']);
-    mONInterval = json['MONInterval'].toDouble();
+    firstFeedTime = json['firstFeedTime'];
+    lastFeedTime = json['lastFeedTime'];
+    mONInterval = json['MONInterval'];
     if (json['feedTimings'] != null) {
       feedTimings = (json['feedTimings'] as List)
           .map<String>((e) => e.toString())
@@ -42,8 +42,8 @@ class EntryPlanner {
     return {
       'id': id,
       'totalFeeds': totalFeeds,
-      'firstFeedTime': firstFeedTime?.toIso8601String(),
-      'lastFeedTime': lastFeedTime?.toIso8601String(),
+      'firstFeedTime': firstFeedTime,
+      'lastFeedTime': lastFeedTime,
       'MONInterval': mONInterval,
       'feedTimings': feedTimings,
       'weekNo': weekNo,
