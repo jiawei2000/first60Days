@@ -1,14 +1,35 @@
 <template>
   <VCard title="All Journal Entries">
     <VCardText>
-      <VDataTable
-        :headers="headers"
-        :items="journalEntries"
-        :items-per-page="10"
-        :loading="loading"
-        loading-text="Loading journal entries..."
-      />
-    </VCardText>
+<VDataTable
+  :headers="headers"
+  :items="journalEntries"
+  :items-per-page="10"
+  :loading="loading"
+  loading-text="Loading journal entries..."
+>
+  <template #item.feedType="{ item }">
+    <VMenu location="bottom">
+      <template #activator="{ props }">
+        <VBtn size="small" variant="text" v-bind="props">
+          View
+        </VBtn>
+      </template>
+      <VList>
+        <VListItem
+          v-for="(feed, index) in item.feedType"
+          :key="index"
+        >
+          <VListItemTitle>
+            <strong>{{ feed.label }}</strong>: {{ feed.value }}
+          </VListItemTitle>
+        </VListItem>
+      </VList>
+    </VMenu>
+  </template>
+</VDataTable>
+
+        </VCardText>
   </VCard>
 
   <VSnackbar v-model="isSnackBarVisible" timeout="5000">
@@ -120,7 +141,15 @@ for (const baby of babies) {
 }
 
 function formatFeedType(feedType) {
-  if (!Array.isArray(feedType) || feedType.length === 0) return 'NA'
-  return feedType.map(f => `${f.type}: ${f.value}${f.unit}`).join(', ')
+  if (!Array.isArray(feedType) || feedType.length === 0) return []
+
+  return feedType.map(f => ({
+    label: capitalize(f.type),
+    value: `${f.value} ${f.unit}`
+  }))
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 </script>
