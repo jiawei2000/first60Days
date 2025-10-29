@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import '/resources/widgets/buttons/buttons.dart';
 import 'caregiver_page.dart'; // <-- add this import
+import 'baby_page.dart'; // <-- add this import
 // If you want a Babies page later, create it similarly and import here.
 
 class ProfilePage extends NyStatefulWidget {
@@ -78,9 +79,7 @@ class _ProfilePageState extends NyPage<ProfilePage> {
 
             // Manage Babies (expandable -> will navigate to list page later)
             FilledButton.tonalIcon(
-              onPressed: () {
-                // TODO: routeTo(BabyPage.path.name);
-              },
+              onPressed: () => routeTo(BabyPage.path),
               icon: const Icon(Icons.child_care_outlined),
               label: const Text("Manage Babies"),
               style: FilledButton.styleFrom(
