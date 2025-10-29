@@ -1,22 +1,11 @@
 <template>
-    <VCard title="Viewing User">
+    <VCard title="Babies for User ...">
         <VCardText>
-            <VRow>
-                <VCol>
-                    <VTextField v-model="search" placeholder="Try ... Babies above 5kg" append-inner-icon="bx-search" />
-                </VCol>
-                <VCol>
-                    <VBtn color="secondary" class="mr-2" @click="">Search</VBtn>
-                </VCol>
-            </VRow>
-
-            <VSpacer class="my-6" />
-
             <VDataTable :headers="headers" :items="data" :items-per-page="10">
                 <!-- Actions -->
                 <template #item.actions="{ item }">
                     <div class="d-flex gap-1">
-                        <IconBtn @click="editUser(item)">
+                        <IconBtn @click="viewBaby(item)">
                             <VIcon icon="bx-edit" />
                         </IconBtn>
                     </div>
@@ -37,7 +26,7 @@
 
 <script setup>
 import { onMounted, ref } from "vue"
-import { useRoute } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 
 definePage({
     meta: {
@@ -46,11 +35,11 @@ definePage({
 })
 
 const route = useRoute()
+const router = useRouter()
 
 const isSnackBarVisible = ref(false)
 const snackBarMessage = ref("")
 
-const search = ref("")
 const data = ref([])
 
 const headers = [
@@ -60,6 +49,7 @@ const headers = [
     { title: "Weight(kg)", key: "weight" },
     { title: "Term", key: "term" },
     { title: "Health Conditions", key: "healthConditions" },
+    { title: "Actions", value: "actions", sortable: false },
 ]
 
 onMounted(async () => {
@@ -88,6 +78,10 @@ async function getBabyListByUserId(userId) {
         snackBarMessage.value = error
         isSnackBarVisible.value = true
     }
+}
+
+function viewBaby(item) {
+    router.push('/trainer/user/view-baby/' + item.id)
 }
 
 </script>
