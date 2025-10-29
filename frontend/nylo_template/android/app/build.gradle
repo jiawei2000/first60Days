@@ -24,7 +24,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.nylo.android"
-    compileSdk 36
+    compileSdk 35
     ndkVersion = "25.1.8937393"
 
     packagingOptions {
