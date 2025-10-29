@@ -309,6 +309,24 @@ class adminService {
         };
     }
 
+
+    static async editUserById(userId, updatedData) {
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            throw new Error('User does not exist');
+        }
+
+        //Allow updating only specific fields
+        const allowedFields = ['email', 'phoneNo', 'name'];
+        updatedData = Object.fromEntries(
+            Object.entries(updatedData).filter(([key]) => allowedFields.includes(key)) //filter only allowed fields
+        );
+        
+        await userRef.update(updatedData);
+        const updatedUserDoc = await userRef.get();
+        return User.fromFirestore(updatedUserDoc);
+    }
 }
 
 module.exports = adminService;

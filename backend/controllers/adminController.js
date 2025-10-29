@@ -89,6 +89,17 @@ const adminController = {
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
+    },
+
+    async editUserById(req, res) {
+        try {
+            const { userId } = req.params;
+            const updatedData = req.body;
+            const user = await AdminService.editUserById(userId, updatedData);
+            res.json({ user });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
     }
 }
 

@@ -1,37 +1,94 @@
 const db = require('../config/database')
 const { Timestamp } = require('firebase-admin/firestore');
+const DailyStatistics = require('../models/dailyStatistics');
+
 class StatisticsService {
-    async getDailyStatistics(babyId, date) {
-        // Implement logic to fetch daily statistics for the given babyId and date
-        const journalRef = db
-            .collection("babies")
-            .doc(babyId)
-            .collection("journalEntries");
-
-        //convert string date to date object
-        const targetDate = new Date(date);
-        const startOfDay = new Date(targetDate);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(targetDate);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        // Query journal entries for the specific date
-        const snapshot = await journalRef
-            .where("awakeTime", ">=", startOfDay)
-            .where("awakeTime", "<=", endOfDay)
-            .orderBy("awakeTime", "asc")  // "asc" for earliest first, "desc" for latest first
+    async getDailyStatistics(babyId) {
+        const babyRef = db.collection("babies").doc(babyId);
+        const statsSnap = await db.collection("dailyStatistics")
+            .where("babyIDRef", "==", babyRef)
             .get();
 
-        const entries = snapshot.docs.map(doc => doc.data()); //array of journal entries
-        // Calculate and return statistics based on the journal entries
-        let results = this.calculateDailyStatistics(entries);
-        
-        //add date
-        results.date = targetDate.toISOString().split('T')[0]; //format YYYY-MM-DD
-        //add created AT timestamp (now)
-        results.createdAt = Timestamp.now();
+        const statistics = statsSnap.docs.map(doc => doc.data());
+        //sort by date ascending
+        statistics.sort((a, b) => (a.date > b.date) ? 1 : -1);
+        return statistics;
+    }
 
-        return results;
+    async getDailyStatisticsById(statisticId) {
+        const statDoc = await db.collection("dailyStatistics").doc(statisticId).get();
+        if (!statDoc.exists) {
+            throw new Error('Statistic not found');
+        }
+        return statDoc.data();
+    }
+
+    async processDailyStatistics() {
+        console.log("Processing daily statistics for all babies...");
+
+        //retrieve all active babies
+        const babiesSnap = await db.collection("babies").where("deletedAt", "==", null).get();
+        if (babiesSnap.empty) {
+            console.log("No active babies found.");
+            return;
+        }
+
+        //filter entries for yesterday
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const startOfDay = new Date(yesterday);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(yesterday);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        // Process all babies sequentially
+        for (const babyDoc of babiesSnap.docs) {
+            const babyId = babyDoc.id;
+            const babyRef = db.collection("babies").doc(babyId);
+
+
+            // Query journal entries for that baby from yesterday
+            const entriesSnap = await babyRef.collection("journalEntries")
+                .where("awakeTime", ">=", startOfDay)
+                .where("awakeTime", "<=", endOfDay)
+                .orderBy("awakeTime", "asc")
+                .get();
+
+            const entries = entriesSnap.docs.map(doc => doc.data()); //array of journal entries
+            if (entries.length === 0) {
+                console.log(`No journal entries found for baby ${babyId} on ${yesterday.toISOString().split('T')[0]}.`);
+                continue;
+            }
+
+            // Calculate statistics
+            let result = this.calculateDailyStatistics(entries);
+            //add date
+            result.date = yesterday.toISOString().split('T')[0];
+            //add created AT timestamp (now)
+            result.createdAt = Timestamp.now();
+            result.babyIDRef = babyRef;
+            //add day
+            const dailyStatsSnap = await db.collection("dailyStatistics").where("babyIDRef", "==", babyRef).get();
+            
+            result.day = dailyStatsSnap.size + 1; //increment day count
+            
+            //if result.day % 7 === 0 then create weekly stats
+            // if (result.day % 7 === 0) {
+                // const weeklyStats = this.calculateWeeklyStatistics(entries);
+                // weeklyStats.date = yesterday.toISOString().split('T')[0];
+                // weeklyStats.createdAt = Timestamp.now();
+                // weeklyStats.babyIDRef = babyRef;
+                // await babyRef.collection("weeklyStatistics").add(weeklyStats);
+                // console.log(`Weekly statistics saved for baby ${babyId} on ${weeklyStats.date}.`);
+            // }
+
+            // Save to Firestore
+            await db.collection("dailyStatistics").add(result);
+            console.log(`Daily statistics saved for baby ${babyId} on ${result.date}.`);
+        }
+
     }
 
     // Helper method to calculate daily statistics
@@ -47,7 +104,7 @@ class StatisticsService {
             monInterval: 0,
 
             //averaged fields
-            averageMilkIntake: 0, // in ml
+            averageMilkIntake: 0, // in ml average milk intake per bottle feed
             averagePlayDuration: 0, // in hh:mm
             averageLapseDuration: 0, // in hh:mm
         };
@@ -96,7 +153,7 @@ class StatisticsService {
             statistics.totalSleepDuration += entry.sleepDuration || 0;
             //convert play duration from ms to minutes
             // statistics.totalPlayDuration += (entry.startSleepTime - entry.startPlayTime) / 60000 || 0;
-            if (entry.startPlayTime !== null ){
+            if (entry.startPlayTime !== null) {
                 statistics.totalPlayDuration += (entry.startSleepTime.toDate() - entry.startPlayTime.toDate()) / MS_PER_HOUR || 0;
             }
 
@@ -124,16 +181,13 @@ class StatisticsService {
         return statistics;
     }
 
+    //helper method to convert float hours to hh:mm format
     toHHMM(hoursFloat) {
         const hours = Math.floor(hoursFloat);
         const minutes = Math.round((hoursFloat - hours) * 60);
         // pad with zeros (e.g. "03:05")
         return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
     }
-
-    // async getWeeklyStatistics(babyId, startDate, endDate) {
-    //     // Implement logic to fetch weekly statistics for the given babyId and date range   
-    // }
 }
 
 module.exports = new StatisticsService();
