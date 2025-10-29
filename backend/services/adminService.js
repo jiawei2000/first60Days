@@ -9,6 +9,8 @@ const Trainer = require('../models/Trainer');
 const User = require('../models/User');
 const Permission = require('../models/Permission');
 
+const UserService = require('./userService');
+
 const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 class adminService {
@@ -235,6 +237,78 @@ class adminService {
         }
         return Trainer.fromFirestore(trainerDoc);
     }
+
+    static async deleteUser(userId) {
+        const userDoc = await db.collection('users').doc(userId).get();
+
+        if (!userDoc.exists) {
+            throw new Error('User not found');
+        }
+
+        const user = User.fromFirestore(userDoc);
+
+        if (user.deletedAt) {
+            throw new Error('User already deleted');
+        }
+
+        const permissionDoc = await user.permissionID.get();
+
+        if (!permissionDoc.exists) {
+            throw new Error('Permission not found');
+        }
+
+        const permission = Permission.fromFirestore(permissionDoc);
+        const isSub = permission.permissionType === 'sub';
+        const currentTime = Timestamp.now();
+
+        if (isSub) {
+            await db.runTransaction(async (t) => {
+                t.update(db.collection('users').doc(user.id), {
+                    deletedAt: currentTime
+                });
+
+                t.update(permissionDoc.ref, {
+                    deletedAt: currentTime
+                });
+            });
+            return {
+                message: 'User and associated details deleted successfully',
+                userId: user.id
+            };
+        }
+
+        const subAccountsArr = await UserService.getAllSubUsers(userId);
+
+        const accountsArr = [...subAccountsArr, user]; //include main account
+
+        const babiesArr = permission.babyIDArr;
+
+        await db.runTransaction(async (t) => {
+            
+            for (const account of accountsArr) {
+                t.update(db.collection('users').doc(account.id), {
+                    deletedAt: currentTime
+                });
+            }
+
+            for (const baby of babiesArr) {
+                t.update(db.collection('babies').doc(baby.id), {
+                    deletedAt: currentTime
+                });
+            }
+
+            t.update(permissionDoc.ref, {
+                deletedAt: currentTime
+            });
+        });
+
+        return {
+            message: 'User and associated details deleted successfully',
+            userId: user.id,
+            deletedSubUserIds: subAccountsArr.map(acc => acc.id)
+        };
+    }
+
 }
 
 module.exports = adminService;

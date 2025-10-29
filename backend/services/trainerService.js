@@ -7,33 +7,6 @@ const Baby = require('../models/Baby');
 const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 class TrainerService {
-    // static async registerNew({ email, password, username }) {
-    //     const trainersRef = db.collection('trainers');
-
-    //     // Check if email exists
-    //     const emailSnapshot = await trainersRef.where('email', '==', email).get();
-    //     if (!emailSnapshot.empty) {
-    //         throw new Error('Email already exists');
-    //     }
-
-    //     // Check if username exists
-    //     const usernameSnapshot = await trainersRef.where('username', '==', username).get();
-    //     if (!usernameSnapshot.empty) {
-    //         throw new Error('Username already exists');
-    //     }
-
-    //     const hashedPassword = await bcrypt.hash(password, 10);
-
-    //     const trainerRef = trainersRef.doc();
-    //     const trainer = new Trainer(trainerRef.id, {
-    //             email,
-    //             password: hashedPassword,
-    //             username,
-    //             });
-    //     await trainerRef.set(trainer.toFirestore());
-    //     return { trainer };
-    // }
-
     static async login({ username, password }) {
         const trainersRef = db.collection('trainers');
         const snapshot = await trainersRef.where('username', '==', username).get();
@@ -85,6 +58,7 @@ class TrainerService {
             trainerId: trainer.id
         };
     }
+
     static async getManagedUsers(trainerId) {
         const usersRef = db.collection('users');
         const trainerRef = db.collection('trainers').doc(trainerId);
@@ -138,6 +112,7 @@ class TrainerService {
         }
         return babies;
     }
+
 }
 
 module.exports = TrainerService;

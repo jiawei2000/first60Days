@@ -111,6 +111,17 @@ const userController = {
         }
     },
 
+    async getMainAccount(req, res) {
+        try {
+            const userId = req.user.id; // from JWT
+            const result = await UserService.getMainUser(userId);
+            //return array of sub accounts 
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
     async updateUsername(req, res) {
         // ... update password logic
         try {
