@@ -14,7 +14,6 @@ router.get('/daily/:statisticId', authenticateToken, statisticsController.getDai
 //get all weekly baby journal statistics of individual baby
 router.get('/weekly/baby/:babyId', statisticsController.getWeeklyStatistics);
 
-
 //get weekly statistics by Id
 router.get('/weekly/:statisticId', statisticsController.getWeeklyStatisticsById);
 
