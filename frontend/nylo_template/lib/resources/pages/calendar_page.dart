@@ -51,6 +51,7 @@ class _CalendarPageState extends State<CalendarPage> {
   void _loadEvents() async {
     setState(() => _loading = true);
     final events = await _controller.getCalendarData();
+    debugPrint("Loaded events: $events");
     setState(() {
       _eventData = events ?? {};
       _loading = false;
@@ -80,17 +81,16 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
-  void _displayPlannersForWeekNo(int weekNo) {
+  List<String> _displayPlannersForWeekNo(int weekNo) {
     final matchingPlans =
         _feedingPlanners.where((planner) => planner.weekNo == weekNo);
     if (matchingPlans.isEmpty) {
       debugPrint("No feeding plan found for Week $weekNo");
-      return;
+      return [];
     }
 
     EntryPlanner currentPlan = matchingPlans.first;
-    debugPrint(
-        "Current Feeding Plan for Week $weekNo: ${currentPlan.feedTimings}");
+    return currentPlan.feedTimings!;
   }
 
   int _calculateBabyWeek() {
@@ -101,7 +101,27 @@ class _CalendarPageState extends State<CalendarPage> {
 
   List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
     final localDay = DateTime(day.year, day.month, day.day);
-    return _eventData[localDay] ?? [];
+    final selectedDay =
+        DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
+
+    if (localDay != selectedDay) {
+      return [];
+    }
+
+    final dayEvents =
+        (_eventData[localDay] ?? []).whereType<Map<String, dynamic>>().toList();
+
+    final plannedTimings = _displayPlannersForWeekNo(_calculateBabyWeek());
+    for (var index = 0; index < plannedTimings.length; index++) {
+      dayEvents.add({
+        'title': "Feed ${index + 1}",
+        'time': plannedTimings[index],
+        'entryId': null,
+        'status': "Planned",
+      });
+    }
+
+    return dayEvents;
   }
 
   @override
@@ -146,7 +166,6 @@ class _CalendarPageState extends State<CalendarPage> {
                             setState(() {
                               _selectedDay = selectedDay;
                               _focusedDay = focusedDay;
-                              _displayPlannersForWeekNo(_calculateBabyWeek());
                             });
                           },
                           calendarFormat: CalendarFormat.month,

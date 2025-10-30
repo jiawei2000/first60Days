@@ -18,8 +18,21 @@ class EventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     // Choose badge color based on status
     final bool isComplete = status.toLowerCase() == "complete";
-    final badgeColor = isComplete ? Colors.green[100] : Colors.red[100];
-    final badgeTextColor = isComplete ? Colors.green[800] : Colors.red[800];
+    final bool isPlanned = status.toLowerCase() == "planned";
+
+    final Color? badgeColor;
+    final Color? badgeTextColor;
+
+    if (isComplete) {
+      badgeColor = Colors.green[100];
+      badgeTextColor = Colors.green[800];
+    } else if (isPlanned) {
+      badgeColor = Colors.grey[200];
+      badgeTextColor = Colors.grey[800];
+    } else {
+      badgeColor = Colors.red[100];
+      badgeTextColor = Colors.red[800];
+    }
 
     return ListTile(
       dense: true,
