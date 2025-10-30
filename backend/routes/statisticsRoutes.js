@@ -10,4 +10,12 @@ router.get('/daily/baby/:babyId', authenticateToken, statisticsController.getDai
 
 // get daily statistics by Id
 router.get('/daily/:statisticId', authenticateToken, statisticsController.getDailyStatisticsById);
+
+//get all weekly baby journal statistics of individual baby
+router.get('/weekly/baby/:babyId', statisticsController.getWeeklyStatistics);
+
+
+//get weekly statistics by Id
+router.get('/weekly/:statisticId', statisticsController.getWeeklyStatisticsById);
+
 module.exports = router

@@ -4,7 +4,7 @@ const journalController = require('../controllers/journalController')
 const { authenticateToken } = require('../middleware/authMiddleware');
 
 //protected
-router.post('/:babyId', authenticateToken, journalController.createEntry);
+router.post('/:babyId', journalController.createEntry);
 router.put('/:babyId/:entryId', authenticateToken, journalController.editEntry);
 router.get('/:babyId', authenticateToken, journalController.getEntries);
 router.get('/:babyId/:entryId', authenticateToken, journalController.getEntryById);

@@ -3,6 +3,25 @@ const { Timestamp } = require('firebase-admin/firestore');
 const DailyStatistics = require('../models/dailyStatistics');
 
 class StatisticsService {
+    async getWeeklyStatistics(babyId) {
+        const babyRef = db.collection("babies").doc(babyId);
+        const statsSnap = await db.collection("weeklyStatistics")
+            .where("babyIDRef", "==", babyRef)
+            .get();
+        const statistics = statsSnap.docs.map(doc => doc.data());
+        //sort by startDate ascending
+        statistics.sort((a, b) => (a.startDate > b.startDate) ? 1 : -1);
+        return statistics;
+    }
+
+    async getWeeklyStatisticsById(statisticId) {
+        const statDoc = await db.collection("weeklyStatistics").doc(statisticId).get();
+        if (!statDoc.exists) {
+            throw new Error('Statistic not found');
+        }
+        return statDoc.data();
+    }
+    
     async getDailyStatistics(babyId) {
         const babyRef = db.collection("babies").doc(babyId);
         const statsSnap = await db.collection("dailyStatistics")
@@ -69,27 +88,90 @@ class StatisticsService {
             //add created AT timestamp (now)
             result.createdAt = Timestamp.now();
             result.babyIDRef = babyRef;
-            //add day
+            //unsorted count of existing daily statistics for that baby
             const dailyStatsSnap = await db.collection("dailyStatistics").where("babyIDRef", "==", babyRef).get();
-            
+            //add day
             result.day = dailyStatsSnap.size + 1; //increment day count
-            
-            //if result.day % 7 === 0 then create weekly stats
-            // if (result.day % 7 === 0) {
-                // const weeklyStats = this.calculateWeeklyStatistics(entries);
-                // weeklyStats.date = yesterday.toISOString().split('T')[0];
-                // weeklyStats.createdAt = Timestamp.now();
-                // weeklyStats.babyIDRef = babyRef;
-                // await babyRef.collection("weeklyStatistics").add(weeklyStats);
-                // console.log(`Weekly statistics saved for baby ${babyId} on ${weeklyStats.date}.`);
-            // }
 
             // Save to Firestore
+
+            //if day is multiple of 7, calculate and save weekly statistics
+            if (result.day % 7 === 0) {
+                console.log(`Calculating weekly statistics for baby ${babyId} for week ${result.day / 7}.`);
+                const dailyStatsEntries = dailyStatsSnap.docs.map(doc => doc.data());
+
+                //sort daily stats by day ascending. From day 1 to day n
+                dailyStatsEntries.sort((a, b) => (a.day > b.day) ? 1 : -1);
+
+                //retrieve last 6 days + current day (7 days)
+                let last7DaysStats = dailyStatsEntries.slice(-6);
+                last7DaysStats.push(result); //add current day stats
+                console.log(`Last 7 days statistics for baby ${babyId}:`, last7DaysStats);
+                // break;
+                const weeklyStats = this.calculateWeeklyStatistics(last7DaysStats);
+
+                //misc 
+                weeklyStats.week = result.day / 7;
+                weeklyStats.createdAt = Timestamp.now();
+                weeklyStats.babyIDRef = babyRef;
+
+                await db.collection("weeklyStatistics").add(weeklyStats);
+                console.log(`Weekly statistics saved for baby ${babyId} on ${(weeklyStats.createdAt).toDate()}.`);
+            }
+            // break;
             await db.collection("dailyStatistics").add(result);
             console.log(`Daily statistics saved for baby ${babyId} on ${result.date}.`);
         }
 
     }
+    calculateWeeklyStatistics(last7DaysStats) {
+        const statistics = {
+            //summed fields 
+            totalFeeds: 0,
+            totalUrineCount: 0,
+            totalStoolCount: 0,
+            totalSleepDuration: 0, // in hh:mm 
+            totalPlayDuration: 0, // in hh:mm
+            totalCyclesBeyond3Hrs: 0,
+
+            //averaged fields
+            averageMonInterval: 0, // in hh:mm | monInterval per day  //sum every day and divide by 7
+            averageMilkIntake: 0, // in ml | Milk amound per bottle per day 
+            averagePlayDuration: 0, // in hh:mm | play duration per entry per day 
+            averageLapseDuration: 0, // in hh:mm | Lapse duration per entry per day 
+
+            //startDate, endDates
+            startDate: last7DaysStats[0].date,
+            endDate: last7DaysStats[last7DaysStats.length - 1].date,
+        }
+        //loop through each stats in the last 7 days
+        // Loop through each day's statistics
+        last7DaysStats.forEach(dayStat => {
+            statistics.totalFeeds += dayStat.totalFeeds;
+            statistics.totalUrineCount += dayStat.totalUrineCount;
+            statistics.totalStoolCount += dayStat.totalStoolCount;
+            statistics.totalCyclesBeyond3Hrs += dayStat.totalCyclesBeyond3Hrs;
+            statistics.totalPlayDuration += this.toFloatHours(dayStat.totalPlayDuration);
+            statistics.totalSleepDuration += this.toFloatHours(dayStat.totalSleepDuration);
+
+            statistics.averageMonInterval += this.toFloatHours(dayStat.monInterval);
+            statistics.averageMilkIntake += dayStat.averageMilkIntake;
+            statistics.averagePlayDuration += this.toFloatHours(dayStat.averagePlayDuration);
+            statistics.averageLapseDuration += this.toFloatHours(dayStat.averageLapseDuration);
+        });
+        // Calculate averages over 7 days
+        statistics.averageMonInterval = this.toHHMM(statistics.averageMonInterval / 7);
+        statistics.averageMilkIntake = statistics.averageMilkIntake / 7;
+        statistics.averagePlayDuration = this.toHHMM(statistics.averagePlayDuration / 7);
+        statistics.averageLapseDuration = this.toHHMM(statistics.averageLapseDuration / 7);
+
+        // Convert total durations back to hh:mm format
+        statistics.totalPlayDuration = this.toHHMM(statistics.totalPlayDuration);
+        statistics.totalSleepDuration = this.toHHMM(statistics.totalSleepDuration);
+
+        return statistics;
+    }
+
 
     // Helper method to calculate daily statistics
     calculateDailyStatistics(entries) {
@@ -98,15 +180,15 @@ class StatisticsService {
             totalFeeds: entries.length,
             totalUrineCount: 0,
             totalStoolCount: 0,
+            totalCyclesBeyond3Hrs: 0,
             totalSleepDuration: 0, // in hh:mm 
             totalPlayDuration: 0, // in hh:mm
-            totalCyclesBeyond3Hrs: 0,
-            monInterval: 0,
+            monInterval: 0, // in hh:mm
 
             //averaged fields
-            averageMilkIntake: 0, // in ml average milk intake per bottle feed
-            averagePlayDuration: 0, // in hh:mm
-            averageLapseDuration: 0, // in hh:mm
+            averagePlayDuration: 0, // in hh:mm average play duration per entry
+            averageLapseDuration: 0, // in hh:mm average lapse duration per entry
+            averageMilkIntake: 0, // in ml average milk amount per bottle feed
         };
         //------------------------------------------------------------------------------------------
         // Interval calculation and monInterval
@@ -138,7 +220,7 @@ class StatisticsService {
         //------------------------------------------------------------------------------------------
         // Iterate through entries to compute totals and averages
         // For average calculations
-        let totalMilkIntakeCount = 0;
+        let totalMilkFeed = 0;
         let totalMilkAmount = 0;
         let totalLapseDuration = 0; //in minutes
 
@@ -168,7 +250,7 @@ class StatisticsService {
             });
             if (entryMilkAmount > 0) {
                 totalMilkAmount += entryMilkAmount;
-                totalMilkIntakeCount += 1;
+                totalMilkFeed += 1;
             }
         });
 
@@ -176,7 +258,7 @@ class StatisticsService {
         statistics.totalPlayDuration = this.toHHMM(statistics.totalPlayDuration);
         statistics.averageLapseDuration = this.toHHMM(totalLapseDuration / entries.length || 0);
         statistics.totalSleepDuration = this.toHHMM(statistics.totalSleepDuration);
-        statistics.averageMilkIntake = totalMilkAmount / totalMilkIntakeCount || 0;
+        statistics.averageMilkIntake = totalMilkAmount / totalMilkFeed || 0;
 
         return statistics;
     }
@@ -187,6 +269,12 @@ class StatisticsService {
         const minutes = Math.round((hoursFloat - hours) * 60);
         // pad with zeros (e.g. "03:05")
         return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    //helper method to convert hh:mm format to float hours
+    toFloatHours(hhmm) {
+        const [hours, minutes] = hhmm.split(':').map(Number);
+        return hours + (minutes / 60);
     }
 }
 
