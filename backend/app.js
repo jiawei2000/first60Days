@@ -19,6 +19,7 @@ const excelRoutes = require('./routes/excelRoutes');
 // require('./jobs/batchJobs');
 // require('./jobs/topicNotifications');
 // require('./jobs/personalNotifications');
+// require('./jobs/processStatistics');
 
 // Load env variables
 dotenv.config()

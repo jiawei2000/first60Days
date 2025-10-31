@@ -5,6 +5,9 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 
 // protected
 
+//get ageGroupStatistics record by Id
+router.get('/ageGroup/:statisticId', authenticateToken,statisticsController.getAgeGroupStatisticsById);
+
 //get all daily baby journal statistics of individual baby
 router.get('/daily/baby/:babyId', authenticateToken, statisticsController.getDailyStatistics);
 
@@ -12,9 +15,19 @@ router.get('/daily/baby/:babyId', authenticateToken, statisticsController.getDai
 router.get('/daily/:statisticId', authenticateToken, statisticsController.getDailyStatisticsById);
 
 //get all weekly baby journal statistics of individual baby
-router.get('/weekly/baby/:babyId', statisticsController.getWeeklyStatistics);
+router.get('/weekly/baby/:babyId', authenticateToken, statisticsController.getWeeklyStatistics);
 
 //get weekly statistics by Id
-router.get('/weekly/:statisticId', statisticsController.getWeeklyStatisticsById);
+router.get('/weekly/:statisticId', authenticateToken, statisticsController.getWeeklyStatisticsById);
+
+//get StatisticsbyGender record by Id 
+router.get('/gender/:statisticId', authenticateToken, statisticsController.getStatisticsByGenderById);
+
+// get all ageGroupStatistics records
+router.get('/ageGroup', authenticateToken, statisticsController.getAllAgeGroupStatistics);
+
+// get all StatisticsbyGender records
+router.get('/gender', authenticateToken, statisticsController.getAllGenderStatistics);
+
 
 module.exports = router

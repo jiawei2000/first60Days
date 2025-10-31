@@ -76,6 +76,80 @@ class StatisticsController {
             });
         }
     }
+
+    async getAllGenderStatistics(req, res) {
+        try {
+            const statistics = await StatisticsService.getAllGenderStatistics();
+            res.json({
+                success: true,
+                message: 'Gender statistics retrieved successfully',
+                data: { statistics: statistics }
+            });
+        } catch (error) {
+            console.error('Error fetching gender statistics:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to retrieve gender statistics',
+                error: error.message
+            });
+        }
+    }
+
+    async getStatisticsByGenderById(req, res) {
+        const { statisticId } = req.params;
+        try {
+            const statistic = await StatisticsService.getStatisticsByGenderById(statisticId);
+            res.json({
+                success: true,
+                message: 'Gender statistics retrieved successfully',
+                data: { statistic: statistic }
+            });
+        } catch (error) {
+            console.error('Error fetching gender statistics by ID:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to retrieve gender statistic by ID',
+                error: error.message
+            });
+        }
+    }
+    async getAllAgeGroupStatistics(req, res) {
+        try {
+            const statistics = await StatisticsService.getAllAgeGroupStatistics();
+            res.json({
+                success: true,
+                message: 'Age group statistics retrieved successfully',
+                data: { statistics: statistics }
+            });
+        } catch (error) {
+            console.error('Error fetching age group statistics:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to retrieve age group statistics',
+                error: error.message
+            });
+        }
+    }
+
+    async getAgeGroupStatisticsById(req, res) {
+        const { statisticId } = req.params;
+        try {
+            const statistic = await StatisticsService.getAgeGroupStatisticsById(statisticId);
+            res.json({
+                success: true,
+                message: 'Age group statistics retrieved successfully',
+                data: { statistic: statistic }
+            });
+        } catch (error) {
+            console.error('Error fetching age group statistics by ID:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to retrieve age group statistic by ID',
+                error: error.message
+            });
+        }
+    }
+
 }
 
 module.exports = new StatisticsController();

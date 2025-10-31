@@ -64,6 +64,45 @@ class StatisticsService {
         const result = computeStatisticsbyGender(date, maleBabyRefs, femaleBabyRefs);
         return result;
     }
+
+    async getAllGenderStatistics() {
+        const statsSnap = await db.collection("statisticsByGender").get();
+        if (statsSnap.empty) {
+            throw new Error('No gender statistics found');
+        }
+        const statistics = statsSnap.docs.map(doc => doc.data());
+        //sort by date ascending
+        statistics.sort((a, b) => (a.date > b.date) ? 1 : -1);
+        return statistics;
+    }
+
+    async getStatisticsByGenderById(statisticId) {
+        const statDoc = await db.collection("statisticsByGender").doc(statisticId).get();
+        if (!statDoc.exists) {
+            throw new Error('Statistic not found');
+        }
+        return statDoc.data();
+    }
+
+    async getAllAgeGroupStatistics() {
+        const statsSnap = await db.collection("ageGroupStatistics").get();
+        if (statsSnap.empty) {
+            throw new Error('No age group statistics found');
+        }
+        const statistics = statsSnap.docs.map(doc => doc.data());
+        //sort by ageGroup ascending
+        statistics.sort((a, b) => (a.ageGroup > b.ageGroup) ? 1 : -1);
+        return statistics;
+    }
+
+    async getAgeGroupStatisticsById(statisticId) {
+        const statDoc = await db.collection("ageGroupStatistics").doc(statisticId).get();
+        if (!statDoc.exists) {
+            throw new Error('Statistic not found');
+        }
+        return statDoc.data();
+    }
+
 }
 
 module.exports = new StatisticsService();

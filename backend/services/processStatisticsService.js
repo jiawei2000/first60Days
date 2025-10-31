@@ -102,22 +102,27 @@ class ProcessStatisticsService {
             console.log(`No daily statistics found for date ${dateStr}.`);
             return;
         }
+
         //filter by gender
         const dailyStatsEntries = statsSnap.docs.map(doc => doc.data());
         let maleBabyStats = [];
         let femaleBabyStats = [];
+        // Promise.all() ensures all async .get() calls finish before moving on to the logs.
+        await Promise.all(
+            dailyStatsEntries.map(async (entry) => {
+                const babyRef = entry.babyIDRef;
+                const babyDoc = await babyRef.get();
+                const babyData = babyDoc.data();
 
-        dailyStatsEntries.forEach(async entry => {
-            const babyRef = entry.babyIDRef;
-            const babyDoc = await babyRef.get();
-            const babyData = babyDoc.data();
-
-            if (babyData.gender === 'Male') {
-                maleBabyStats.push(entry);
-            } else {
-                femaleBabyStats.push(entry);
-            }
-        });
+                if (babyData.gender === 'Male') {
+                    maleBabyStats.push(entry);
+                } else {
+                    femaleBabyStats.push(entry);
+                }
+            })
+        );
+        console.log(`Male daily entries: ${maleBabyStats.length}`); //check if there is any male daily entries
+        console.log(`Female daily entries: ${femaleBabyStats.length}`); //check if there is any female daily entries
 
         const maleStatistics = this.calculateConsolidatedStatistics(maleBabyStats);
         const femaleStatistics = this.calculateConsolidatedStatistics(femaleBabyStats);
@@ -134,7 +139,58 @@ class ProcessStatisticsService {
 
     async processStatisticsByAgeGroup() {
         //need sort babies by week 1 - 10
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const dateStr = yesterday.toISOString().split('T')[0];
+
+        //get all dailyStatistics for that date
+        const statsSnap = await db.collection("dailyStatistics")
+            .where("date", "==", dateStr)
+            .get();
+
+        if (statsSnap.empty) {
+            console.log(`No daily statistics found for date ${dateStr}.`);
+            return;
+        }
+
+        const dailyStatsEntries = statsSnap.docs.map(doc => doc.data());
+
+        let ageGroupStats = {
+            1: [],
+            2: [],
+            3: [],
+            4: [],
+            5: [],
+            6: [],
+            7: [],
+            8: [],
+            9: [],
+            10: []
+        };
+
+        dailyStatsEntries.forEach(async entry => {
+            //assuming parents do entries daily, entry.day = baby age
+            const ageWeek = Math.ceil(entry.day / 7); //convert day to week
+            if (ageWeek >= 1 && ageWeek <= 10) {
+                ageGroupStats[ageWeek].push(entry);
+            }
+        })
+
+        //calculate consolidated statistics for each age group
+        let result = {
+            createdAt: Timestamp.now(),
+            date: dateStr,
+            ageGroupStatistics: {}
+        };
+        for (let week = 1; week <= 10; week++) {
+            const stats = this.calculateConsolidatedStatistics(ageGroupStats[week]);
+            result.ageGroupStatistics[`week${week}`] = stats;
+        }
+        await db.collection("ageGroupStatistics").add(result);
+        console.log(`Age group statistics saved for date ${dateStr}.`);
     }
+
+
 
 
     // ---------------------------------------------------------------------------
@@ -197,15 +253,23 @@ class ProcessStatisticsService {
             totalUrineCount: 0,
             totalStoolCount: 0,
             totalCyclesBeyond3Hrs: 0,
-            totalSleepDuration: 0,
-            totalPlayDuration: 0,
-            monInterval: 0,
+            totalSleepDuration: 0, // hh:mm
+            totalPlayDuration: 0, // hh:mm
+            monInterval: 0, // hh:mm
 
             // Averaged fields
-            averagePlayDuration: 0,
-            averageLapseDuration: 0,
+            averagePlayDuration: 0, // hh:mm
+            averageLapseDuration: 0,// hh:mm
             averageMilkIntake: 0,
         };
+        if (entries.length === 0) {
+            statistics.totalSleepDuration = '00:00';
+            statistics.totalPlayDuration = '00:00';
+            statistics.averagePlayDuration = '00:00';
+            statistics.averageLapseDuration = '00:00';
+            statistics.monInterval = '00:00';
+            return statistics;
+        }
 
         // Interval and MON interval computation
         const MS_PER_HOUR = 1000 * 60 * 60;
@@ -286,8 +350,14 @@ class ProcessStatisticsService {
             averagePlayDuration: 0, // hh:mm
             averageMonInterval: 0, // hh:mm
             averageMilkIntake: 0, // ml per bottle feed per baby
+            totalBabies: dailyStatsEntries.length
         };
-
+        if (dailyStatsEntries.length === 0) {
+            statistics.averageSleepDuration = '00:00';
+            statistics.averagePlayDuration = '00:00';
+            statistics.averageMonInterval = '00:00';
+            return statistics;
+        }
         // Aggregate totals and averages
         dailyStatsEntries.forEach(dayStat => {
             statistics.averageTotalFeed += dayStat.totalFeeds;
@@ -296,19 +366,19 @@ class ProcessStatisticsService {
             statistics.averageSleepDuration += this.toFloatHours(dayStat.totalSleepDuration);
             statistics.averagePlayDuration += this.toFloatHours(dayStat.totalPlayDuration);
             statistics.averageMonInterval += this.toFloatHours(dayStat.monInterval);
-            statistics.averageMilkIntake += parseFloat(dayStat.averageMilkIntake);   
-        });  
-        
+            statistics.averageMilkIntake += parseFloat(dayStat.averageMilkIntake);
+        });
+
         const count = dailyStatsEntries.length;
+
         // Compute averages
-        statistics.averageTotalFeed = (statistics.averageTotalFeed / count).toFixed(2);
-        statistics.averageTotalUrineCount = (statistics.averageTotalUrineCount / count).toFixed(2);
-        statistics.averageTotalStoolCount = (statistics.averageTotalStoolCount / count).toFixed(2);
+        statistics.averageTotalFeed = this.roundTo(statistics.averageTotalFeed / count)
+        statistics.averageTotalUrineCount = this.roundTo(statistics.averageTotalUrineCount / count);
+        statistics.averageTotalStoolCount = this.roundTo(statistics.averageTotalStoolCount / count);
         statistics.averageSleepDuration = this.toHHMM(statistics.averageSleepDuration / count);
         statistics.averagePlayDuration = this.toHHMM(statistics.averagePlayDuration / count);
         statistics.averageMonInterval = this.toHHMM(statistics.averageMonInterval / count);
-        statistics.averageMilkIntake = (statistics.averageMilkIntake / count).toFixed(2);
-
+        statistics.averageMilkIntake = this.roundTo(statistics.averageMilkIntake / count);
         return statistics;
     }
 
@@ -325,6 +395,11 @@ class ProcessStatisticsService {
         const [hours, minutes] = hhmm.split(':').map(Number);
         return hours + minutes / 60;
     }
+    roundTo(value, decimals = 2) {
+        const factor = Math.pow(10, decimals);
+        return Math.round(value * factor) / factor;
+    }
+
 }
 
 module.exports = new ProcessStatisticsService();
