@@ -2,24 +2,64 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+
 const router = useRouter()
 const userData = useCookie('userData')
+const accessToken = useCookie('accessToken')
 
-const role = computed(() => userData.value?.role || 'guest')
+function decodeJwt(token) {
+  try {
+    const base64 = token.split('.')[1]
+    return JSON.parse(atob(base64))
+  } catch {
+    return null
+  }
+}
+
+const jwt = computed(() => accessToken.value ? decodeJwt(accessToken.value) : null)
+const role = computed(() => userData.value?.role || jwt.value?.role || 'guest')
 const displayRole = computed(() => role.value.charAt(0).toUpperCase() + role.value.slice(1))
 
 const form = ref({
-  name: userData.value?.name || '',
-  email: userData.value?.email || '',
-  username: userData.value?.username || '',
+  name: userData.value?.name || userData.value?.admin?.name || '',
+  email: userData.value?.email || userData.value?.admin?.email || '',
+  username: jwt.value?.username || userData.value?.username || userData.value?.admin?.username || '',
   newPassword: '',
 })
 
-const isTrainer = computed(() => role.value === 'trainer')
+console.log('userData:', userData.value)
+console.log('jwt:', jwt.value)
+console.log('form:', form.value)
 
-function onSave() {
-  // TODO: wire backend calls (trainer: updatePassword; admin: add endpoint or skip)
-  alert('Profile save coming soon. This page is UI-ready.')
+const isTrainer = computed(() => role.value === 'trainer')
+const saving = ref(false)
+const snackbar = ref(false)
+const snackbarMsg = ref('')
+
+async function onSave() {
+  if (!isTrainer.value) return
+  if (!form.value.newPassword) {
+    snackbarMsg.value = 'Enter a new password first'
+    snackbar.value = true
+    return
+  }
+  saving.value = true
+  try {
+    await $api('trainers/password', {
+      method: 'PUT',
+      body: { newPassword: form.value.newPassword },
+      onResponseError({ response }) {
+        throw new Error(response._data?.error || 'Failed to update password')
+      },
+    })
+    snackbarMsg.value = 'Password updated successfully'
+    form.value.newPassword = ''
+  } catch (e) {
+    snackbarMsg.value = e.message || String(e)
+  } finally {
+    saving.value = false
+    snackbar.value = true
+  }
 }
 </script>
 
@@ -87,7 +127,7 @@ function onSave() {
 
                 <VCol cols="12" class="d-flex">
                 <VSpacer />
-                <VBtn color="primary" type="submit">Save</VBtn>
+                <VBtn color="primary" type="submit" :loading="saving">Save</VBtn>
                 </VCol>
             </VRow>
             </VForm>
@@ -108,6 +148,12 @@ function onSave() {
         </VCard>
     </VCol>
     </VRow>
+        <VSnackbar v-model="snackbar" timeout="3000">
+        {{ snackbarMsg }}
+        <template #actions>
+            <VBtn variant="text" color="primary" @click="snackbar=false">Close</VBtn>
+        </template>
+        </VSnackbar>
     </div>
 </template>
 <style scoped>.profile-page{min-height:calc(100vh - 120px);} 

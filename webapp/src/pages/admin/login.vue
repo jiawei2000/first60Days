@@ -34,6 +34,10 @@ async function loginAdmin() {
                 throw new Error(response._data.error)
             }
         })
+
+        console.log('Login response:', res)
+        console.log('Admin email:', res.admin.email)
+
         isSnackBarVisible.value = true
         snackBarMessage.value = "Login successful!"
 
@@ -41,7 +45,13 @@ async function loginAdmin() {
         useCookie('userData').value = {
             name: res.admin.name,
             role: 'admin',
+            email: res.admin.email,
+            username: res.admin.username,
+            id: res.admin.id
         }
+        
+        console.log('Saved userData:', useCookie('userData').value)
+
         router.push({ name: 'admin' })
 
     } catch (error) {
