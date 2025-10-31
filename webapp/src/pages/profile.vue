@@ -1,0 +1,115 @@
+<script setup>
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const userData = useCookie('userData')
+
+const role = computed(() => userData.value?.role || 'guest')
+const displayRole = computed(() => role.value.charAt(0).toUpperCase() + role.value.slice(1))
+
+const form = ref({
+  name: userData.value?.name || '',
+  email: userData.value?.email || '',
+  username: userData.value?.username || '',
+  newPassword: '',
+})
+
+const isTrainer = computed(() => role.value === 'trainer')
+
+function onSave() {
+  // TODO: wire backend calls (trainer: updatePassword; admin: add endpoint or skip)
+  alert('Profile save coming soon. This page is UI-ready.')
+}
+</script>
+
+<template>
+    <div class="py-4 profile-page">
+        <VRow>
+        <VCol cols="12" md="4">
+            <VCard class="h-100">
+            <VCardText class="text-center pt-8">
+                <VAvatar size="96" color="primary" variant="tonal">
+                <VIcon icon="bx-user" size="40" />
+                </VAvatar>
+                <div class="text-h6 mt-4">
+                {{ form.name || form.username || 'Unnamed' }}
+                </div>
+                <div class="text-medium-emphasis">
+                {{ displayRole }}
+                </div>
+            </VCardText>
+            <VDivider />
+
+        <VList density="comfortable">
+            <VListItem>
+            <template #prepend><VIcon icon="bx-user" class="me-3" /></template>
+            <VListItemTitle>{{ form.username || '—' }}</VListItemTitle>
+            <VListItemSubtitle>Username</VListItemSubtitle>
+            </VListItem>
+
+            <VListItem>
+            <template #prepend><VIcon icon="bx-envelope" class="me-3" /></template>
+            <VListItemTitle>{{ form.email || '—' }}</VListItemTitle>
+            <VListItemSubtitle>Email</VListItemSubtitle>
+            </VListItem>
+        </VList>
+        </VCard>
+    </VCol>
+
+    <VCol cols="12" md="8">
+        <VCard class="h-100">
+        <VCardTitle class="px-6 pt-6">Profile</VCardTitle>
+        <VCardText>
+            <VForm @submit.prevent="onSave">
+            <VRow>
+                <VCol cols="12" md="6">
+                <VTextField v-model="form.name" label="Name" placeholder="Your name" />
+                </VCol>
+                <VCol cols="12" md="6">
+                <VTextField v-model="form.email" label="Email" placeholder="you@email.com" readonly />
+                </VCol>
+                <VCol cols="12" md="6">
+                <VTextField v-model="form.username" label="Username" readonly />
+                </VCol>
+                <VCol cols="12" md="6">
+                <VTextField :model-value="displayRole" label="Role" readonly />
+                </VCol>
+
+                <VCol v-if="isTrainer" cols="12" md="6">
+                <VTextField
+                    v-model="form.newPassword"
+                    type="password"
+                    label="New Password (Trainer)"
+                    placeholder="Change password"
+                />
+                </VCol>
+
+                <VCol cols="12" class="d-flex">
+                <VSpacer />
+                <VBtn color="primary" type="submit">Save</VBtn>
+                </VCol>
+            </VRow>
+            </VForm>
+        </VCardText>
+        </VCard>
+    </VCol>
+    </VRow>
+
+    <VRow v-if="isTrainer" class="mt-4">
+    <VCol cols="12">
+        <VCard>
+        <VCardTitle class="px-6 pt-6">Assigned Babies</VCardTitle>
+        <VCardText>
+            <div class="text-medium-emphasis">
+            This section will list assigned babies. Integration pending.
+            </div>
+        </VCardText>
+        </VCard>
+    </VCol>
+    </VRow>
+    </div>
+</template>
+<style scoped>.profile-page{min-height:calc(100vh - 120px);} 
+</style>
+

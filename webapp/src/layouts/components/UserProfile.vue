@@ -13,6 +13,8 @@ const roleLabel = computed(() => {
     return `${role.charAt(0).toUpperCase()}${role.slice(1)}`
 })
 
+const profilePath = computed(() => '/profile')
+
 function handleLogout() {
     let tempRole = userData.value?.role
     useCookie('accessToken').value = null
@@ -22,6 +24,11 @@ function handleLogout() {
     else
         router.push('/admin/login')
 }
+
+// Add this function to navigate to profile
+function goToProfile() {
+    router.push(profilePath.value)
+}
 </script>
 
 <template>
@@ -30,7 +37,8 @@ function handleLogout() {
 
         <VMenu activator="parent" width="230" location="bottom end" offset="14px">
             <VList>
-                <VListItem>
+                <!-- Make this entire section clickable to go to profile -->
+                <VListItem @click="goToProfile" class="cursor-pointer">
                     <template #prepend>
                         <VListItemAction start>
                             <VAvatar color="primary" variant="tonal">
@@ -47,7 +55,7 @@ function handleLogout() {
 
                 <VDivider class="my-2" />
 
-                <!-- 👉 Logout -->
+                <!-- Logout option -->
                 <VListItem @click="handleLogout">
                     <template #prepend>
                         <VIcon class="me-2" icon="bx-log-out" size="22" />
