@@ -81,16 +81,16 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
-  List<String> _displayPlannersForWeekNo(int weekNo) {
+  EntryPlanner _getEntryPlannerForWeekNo(int weekNo) {
     final matchingPlans =
         _feedingPlanners.where((planner) => planner.weekNo == weekNo);
     if (matchingPlans.isEmpty) {
       debugPrint("No feeding plan found for Week $weekNo");
-      return [];
+      return new EntryPlanner();
     }
 
     EntryPlanner currentPlan = matchingPlans.first;
-    return currentPlan.feedTimings!;
+    return currentPlan;
   }
 
   int _calculateBabyWeek() {
@@ -111,11 +111,45 @@ class _CalendarPageState extends State<CalendarPage> {
     final dayEvents =
         (_eventData[localDay] ?? []).whereType<Map<String, dynamic>>().toList();
 
-    final plannedTimings = _displayPlannersForWeekNo(_calculateBabyWeek());
-    for (var index = 0; index < plannedTimings.length; index++) {
+    EntryPlanner entryPlanner = _getEntryPlannerForWeekNo(_calculateBabyWeek());
+    debugPrint("Entry Planner: " + entryPlanner.toJson().toString());
+    for (var index =
+            dayEvents.length; // skip existing events from journal entries
+        index < entryPlanner.feedTimings!.length;
+        index++) {
+      String currentFeedTimeString = entryPlanner.feedTimings![index];
+      DateTime currentFeedTime =
+          _parseStringtoDateTime(currentFeedTimeString) ?? DateTime.now();
+      String lastFeedTimeString = "00:00 AM";
+
+      if (index > 0 && dayEvents.length > index - 1) {
+        lastFeedTimeString = dayEvents[index - 1]['time'] ?? "00:00 AM";
+      } else if (index > 0 &&
+          entryPlanner.feedTimings!.length > index - 1 &&
+          entryPlanner.feedTimings![index - 1].isNotEmpty) {
+        lastFeedTimeString = entryPlanner.feedTimings![index - 1];
+      }
+      debugPrint("Current Feed Time: $currentFeedTimeString");
+      debugPrint("Last Feed Time: $lastFeedTimeString");
+
+      DateTime lastFeedDateTime =
+          _parseStringtoDateTime(lastFeedTimeString) ?? DateTime.now();
+      // if currentFeedTime is less than 2 hours from lastFeedTime, adjust to 2 hours after
+      if (currentFeedTime.difference(lastFeedDateTime).inMinutes < 120) {
+        currentFeedTime = lastFeedDateTime.add(const Duration(hours: 2));
+        currentFeedTimeString = _formatTimeOnly(currentFeedTime);
+        // if currentFeedTime is more than 3 hours from lastFeedTime, adjust to 3 hours after
+      } else if (currentFeedTime.difference(lastFeedDateTime).inMinutes > 180) {
+        currentFeedTime = lastFeedDateTime.add(const Duration(hours: 3));
+        currentFeedTimeString = _formatTimeOnly(currentFeedTime);
+      } else {
+        currentFeedTimeString = entryPlanner.feedTimings![index];
+      }
+      debugPrint("Final Feed Time: $currentFeedTimeString");
+
       dayEvents.add({
         'title': "Feed ${index + 1}",
-        'time': plannedTimings[index],
+        'time': currentFeedTimeString,
         'entryId': null,
         'status': "Planned",
       });
@@ -169,7 +203,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             });
                           },
                           calendarFormat: CalendarFormat.month,
-                          eventLoader: _getEventsForDay,
+                          //   eventLoader: _getEventsForDay,
                           calendarStyle: CalendarStyle(
                             todayDecoration: BoxDecoration(
                               color: Colors.purpleAccent,
@@ -456,6 +490,14 @@ class _CalendarPageState extends State<CalendarPage> {
     return "${dateTime.day}/${dateTime.month}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
   }
 
+  String _formatTimeOnly(DateTime dateTime) {
+    // Format the time as HH:mm AM/PM
+    String hour = dateTime.hour.toString().padLeft(2, '0');
+    String minute = dateTime.minute.toString().padLeft(2, '0');
+    String period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
+  }
+
   DateTime? parseDateTimeString(String dateTimeString) {
     // 10/12/2023, 14:30 --> DateTime
     final parts = dateTimeString.split(", ");
@@ -478,5 +520,46 @@ class _CalendarPageState extends State<CalendarPage> {
         minute == null) return null;
 
     return DateTime(year, month, day, hour, minute);
+  }
+
+  DateTime? _parseStringtoDateTime(String value) {
+    if (value.isEmpty) return null;
+    final lower = value.trim().toLowerCase();
+    final isPM = lower.contains('pm');
+    final isAM = lower.contains('am');
+
+    final clean = lower.replaceAll(RegExp(r'[^0-9:]'), '');
+    final segments = clean.split(':');
+    if (segments.length < 2) return null;
+
+    int? hour = int.tryParse(segments[0]);
+    final minute = int.tryParse(segments[1]);
+    if (hour == null || minute == null) return null;
+
+    if (isPM && hour < 12) {
+      hour += 12;
+    }
+    if (isAM && hour == 12) {
+      hour = 0;
+    }
+
+    final now = DateTime.now();
+    return DateTime(
+      now.year,
+      now.month,
+      now.day,
+      hour.clamp(0, 23),
+      minute.clamp(0, 59),
+    );
+  }
+
+  String convertTo24HourString(String timeString) {
+    DateTime? dateTime = _parseStringtoDateTime(timeString);
+    if (dateTime == null) {
+      return '';
+    }
+    String hour = dateTime.hour.toString().padLeft(2, '0');
+    String minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }
