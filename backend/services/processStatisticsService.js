@@ -19,13 +19,10 @@ class ProcessStatisticsService {
 
         // Get yesterday’s start and end timestamps
         const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
-        const startOfDay = new Date(yesterday);
-        startOfDay.setHours(0, 0, 0, 0);
-
-        const endOfDay = new Date(yesterday);
-        endOfDay.setHours(23, 59, 59, 999);
+        const startOfDay = new Date(Date.UTC(yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(), 0, 0, 0, 0));
+        const endOfDay = new Date(Date.UTC(yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(), 23, 59, 59, 999));
 
         // Process all babies sequentially
         for (const babyDoc of babiesSnap.docs) {
@@ -38,13 +35,13 @@ class ProcessStatisticsService {
                 .where("awakeTime", "<=", endOfDay)
                 .orderBy("awakeTime", "asc")
                 .get();
+            // console.log(`Query matched ${entriesSnap.size} documents.`);
 
             const entries = entriesSnap.docs.map(doc => doc.data());
             if (entries.length === 0) {
                 console.log(`No journal entries found for baby ${babyId} on ${yesterday.toISOString().split('T')[0]}.`);
-                continue;
             }
-
+            console.log(entries);
             // Calculate daily statistics
             const result = this.calculateDailyStatistics(entries);
             result.date = yesterday.toISOString().split('T')[0];
@@ -233,7 +230,7 @@ class ProcessStatisticsService {
 
         // Compute 7-day averages
         statistics.averageMonInterval = this.toHHMM(statistics.averageMonInterval / 7);
-        statistics.averageMilkIntake = (statistics.averageMilkIntake / 7).toFixed(2);
+        statistics.averageMilkIntake = this.roundTo(statistics.averageMilkIntake / 7);
         statistics.averagePlayDuration = this.toHHMM(statistics.averagePlayDuration / 7);
         statistics.averageLapseDuration = this.toHHMM(statistics.averageLapseDuration / 7);
 
@@ -262,6 +259,8 @@ class ProcessStatisticsService {
             averageLapseDuration: 0,// hh:mm
             averageMilkIntake: 0,
         };
+        console.log(entries);
+        // Handle case with no entries
         if (entries.length === 0) {
             statistics.totalSleepDuration = '00:00';
             statistics.totalPlayDuration = '00:00';
@@ -334,7 +333,7 @@ class ProcessStatisticsService {
         statistics.totalPlayDuration = this.toHHMM(statistics.totalPlayDuration);
         statistics.averageLapseDuration = this.toHHMM(totalLapseDuration / entries.length || 0);
         statistics.totalSleepDuration = this.toHHMM(statistics.totalSleepDuration);
-        statistics.averageMilkIntake = (totalMilkAmount / totalMilkFeed).toFixed(2) || 0;
+        statistics.averageMilkIntake = this.roundTo(totalMilkAmount / totalMilkFeed) || 0;
 
         return statistics;
     }

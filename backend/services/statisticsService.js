@@ -1,5 +1,6 @@
 const db = require('../config/database')
 const DailyStatistics = require('../models/dailyStatistics');
+const processStatisticsService = require('./processStatisticsService'); // Import the service to process statistics
 
 class StatisticsService {
     async getWeeklyStatistics(babyId) {
@@ -103,6 +104,42 @@ class StatisticsService {
         return statDoc.data();
     }
 
+    //recompute daily statistics for an empty/incompete daily statistics entry/ID - to be implemented
+    async recomputeDailyStatistics(statisticId) {
+        //to be implemented
+        const dailyStatisticsDoc = await db.collection("dailyStatistics").doc(statisticId).get();
+        if (!dailyStatisticsDoc.exists) {
+            throw new Error('Daily Statistics not found');
+        }
+
+        const babyIDRef = dailyStatisticsDoc.data().babyIDRef; //this is a DocumentReference
+        const date = dailyStatisticsDoc.data().date; // date string in 'YYYY-MM-DD' format
+
+        //convert date string to Date object for querying
+        const dailyStatisticsDate = new Date(date);
+        const startOfDay = new Date(Date.UTC(dailyStatisticsDate.getUTCFullYear(), dailyStatisticsDate.getUTCMonth(), dailyStatisticsDate.getUTCDate(), 0, 0, 0, 0));
+        const endOfDay = new Date(Date.UTC(dailyStatisticsDate.getUTCFullYear(), dailyStatisticsDate.getUTCMonth(), dailyStatisticsDate.getUTCDate(), 23, 59, 59, 999));
+
+
+
+        const journalEntriesSnap = await babyIDRef.collection("journalEntries")
+            .where("awakeTime", ">=", startOfDay)
+            .where("awakeTime", "<=", endOfDay)
+            .orderBy("awakeTime", "asc")
+            .get();
+
+        if (journalEntriesSnap.empty) {
+            console.log(`No journal entries found for baby ${babyIDRef.id} on ${date}.`);
+            return;
+        }
+
+        // Process journal entries to recompute daily statistics
+        const journalEntries = journalEntriesSnap.docs.map(doc => doc.data());
+        const newStatistics = processStatisticsService.calculateDailyStatistics(journalEntries);
+        //only need to update the existing document
+        await db.collection("dailyStatistics").doc(statisticId).set(newStatistics, { merge: true }); 
+        console.log(`Recomputed daily statistics for baby ${babyIDRef.id} on ${date}.`);
+        }
 }
 
 module.exports = new StatisticsService();

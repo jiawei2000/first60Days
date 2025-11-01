@@ -29,5 +29,7 @@ router.get('/ageGroup', authenticateToken, statisticsController.getAllAgeGroupSt
 // get all StatisticsbyGender records
 router.get('/gender', authenticateToken, statisticsController.getAllGenderStatistics);
 
+// recompute and store daily statistics by statisticId
+router.post('/recompute/daily/:statisticId', statisticsController.recomputeDailyStatisticsById);
 
 module.exports = router

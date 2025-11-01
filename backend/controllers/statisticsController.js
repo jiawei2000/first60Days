@@ -150,6 +150,24 @@ class StatisticsController {
         }
     }
 
+    async recomputeDailyStatisticsById(req, res) {
+        const { statisticId } = req.params;
+        try {
+            await StatisticsService.recomputeDailyStatistics(statisticId);
+            res.json({
+                success: true,
+                message: 'Daily statistics recomputed successfully'
+            });
+        } catch (error) {
+            console.error('Error recomputing daily statistics:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to recompute daily statistics',
+                error: error.message
+            });
+        }
+    }
+
 }
 
 module.exports = new StatisticsController();
