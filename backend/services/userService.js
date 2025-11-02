@@ -205,32 +205,6 @@ class UserService {
         };
     }
 
-    //needs to be updated. 
-    //Deleting main account should delete all sub accounts too.
-    //Deleteing sub account should remove reference from main account permission doc too.
-    static async deleteUser(userId) {
-        const userDoc = await db.collection('users').doc(userId).get();
-
-        if (!userDoc.exists) {
-            throw new Error('User not found');
-        }
-
-        const user = User.fromFirestore(userDoc);
-
-        if (user.deletedAt) {
-            throw new Error('User already deleted');
-        }
-        
-        await db.collection('users').doc(userId).update({
-            deletedAt: Timestamp.now()
-        });
-
-        return {
-            message: 'User deleted successfully',
-            userId: user.id
-        };
-    }
-
     static async getUserById(userId) {
         const userRef = db.collection('users').doc(userId)
         const userSnap = await userRef.get()
@@ -284,7 +258,58 @@ class UserService {
         return retSubAccArr
     }
 
-      static async updateUsername(userId, newUsername) {
+    static async getMainUser(subUserId){
+        const subUserDoc = await db.collection('users').doc(subUserId).get();
+
+        if (!subUserDoc.exists) {
+            throw new Error('Sub-user not found');
+        }
+
+        const subUser = User.fromFirestore(subUserDoc);
+
+        const permissionDoc = await subUser.permissionID.get();
+        if (!permissionDoc.exists) {
+            throw new Error('Permission document not found');
+        }
+        
+        const permission = Permission.fromFirestore(permissionDoc);
+
+        const babyRefs = permission.babyIDArr || [];
+        if (babyRefs.length === 0) {
+            throw new Error('No babies linked to this sub account. Cannot determine main user.');
+        }
+
+        let mainPermSnap = null;
+
+        for (const babyRef of babyRefs) {
+            const mainPermQuery = await db.collection('permissions')
+                .where('permissionType', '==', 'main')
+                .where('babyIDArr', 'array-contains', babyRef)
+                .get();
+
+            if (!mainPermQuery.empty) {
+                // take the first match
+                mainPermSnap = mainPermQuery.docs[0];
+                break;
+            }
+        }
+
+        if (!mainPermSnap) {
+            throw new Error('No matching main permission found for this sub-user');
+        }
+
+        const mainAccQuery = await db.collection('users').where('permissionID', '==', mainPermSnap.ref).get();
+
+        if (mainAccQuery.empty) {
+            throw new Error('Main user not found for main permission');
+        }
+
+        const mainUser = User.fromFirestore(mainAccQuery.docs[0]);
+
+        return mainUser;
+    }
+
+    static async updateUsername(userId, newUsername) {
         const userDoc = await db.collection('users').doc(userId).get();
 
         if (!userDoc.exists) {

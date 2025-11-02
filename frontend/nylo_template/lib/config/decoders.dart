@@ -63,6 +63,7 @@ final Map<Type, dynamic> apiDecoders = {
 
   CaregiverApiService: CaregiverApiService(),
 
+  // Baby-related API service
   BabyServiceApiService: BabyServiceApiService(),
 };
 

@@ -1,3 +1,4 @@
+import '/resources/pages/baby_page.dart';
 import '/resources/pages/choose_baby_page.dart';
 import '/resources/pages/caregiver_page.dart';
 import '/resources/pages/profile_page.dart';
@@ -52,4 +53,5 @@ appRouter() => nyRoutes((router) {
       router.add(ProfilePage.path);
       router.add(CaregiverPage.path);
       router.add(ChooseBabyPage.path);
+      router.add(BabyPage.path);
 });

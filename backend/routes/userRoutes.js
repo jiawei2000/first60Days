@@ -19,9 +19,12 @@ router.post('/registerSub', authenticateToken, userController.registerSub);
 router.put('/password', authenticateToken, userController.updatePassword);
 //Main update username of subs 
 router.put('/username/:userId', authenticateToken, userController.updateUsername)
+
+router.get('/getMainAccount', authenticateToken, userController.getMainAccount);
+
+
 //to be updated - should not need user ID in pararm
 router.delete('/:userId', authenticateToken, authorizeRoles('trainer'), auditMiddleware('DELETE_USER'), userController.deleteUser);
-
 //to get specific userID of sub account
 router.get('/:userId', authenticateToken, userController.getUserById)
 

@@ -1,5 +1,6 @@
 // batchJobs.js
 const cron = require('node-cron');
+const ProcessStatisticsService = require("../services/processStatisticsService");
 const CheckService = require("../services/checkService");
 
 //Daily journal entries check (run every midnight)
@@ -10,8 +11,10 @@ cron.schedule('* * * * *', async () => {
 
     try {
         await CheckService.processDailyChecks();
+        console.log("Daily checks processing job completed.");
+        
     } catch (error) {
-        console.error("Error in daily checks job:", error);
+        console.error("Error in batch job:", error);
     }
 });
 
