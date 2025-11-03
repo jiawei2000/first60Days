@@ -27,7 +27,7 @@ class TrainerService {
 
         // Issue JWT
         const token = jwt.sign(
-            { id: trainer.id, username: trainer.username, role:'trainer' },
+            { id: trainer.id, username: trainer.username, role: 'trainer' },
             JWT_SECRET,
             { expiresIn: '15m' }
         );
@@ -86,7 +86,7 @@ class TrainerService {
         if (userTrainerSnap.id !== trainerSnap.id) {
             throw new Error('Unauthorized access to user babies');
         }
-        
+
         //Obtain permission reference to get baby profiles
         const permissionRef = userDoc.data().permissionID;
         if (!permissionRef) {
@@ -113,6 +113,25 @@ class TrainerService {
         return babies;
     }
 
+    static async updateProfile(trainerId, profileData) {
+        const trainerDocRef = db.collection('trainers').doc(trainerId);
+        const trainerDoc = await trainerDocRef.get();
+        if (!trainerDoc.exists) {
+            throw new Error('Trainer not found');
+        }
+        // allowed fields to update
+        const allowedFields = ['name', 'email', 'username'];
+        // filter profileData to only include allowed fields
+        profileData = Object.fromEntries(
+            Object.entries(profileData).filter(([key]) => allowedFields.includes(key))
+        );
+
+        // update trainer document. Allow merge to avoid overwriting other fields
+        await trainerDocRef.update(profileData, { merge: true });
+        
+        const updatedTrainerDoc = await trainerDocRef.get();
+        return Trainer.fromFirestore(updatedTrainerDoc);
+    }
 }
 
 module.exports = TrainerService;

@@ -217,7 +217,7 @@ class adminService {
             throw new Error('Failed to update user trainer');
         }
 
-        return { success: true , message: 'User trainer updated successfully', updatedFields: { trainerID: trainerId } };
+        return { success: true, message: 'User trainer updated successfully', updatedFields: { trainerID: trainerId } };
     }
 
     static async getUserById(userId) {
@@ -284,7 +284,7 @@ class adminService {
         const babiesArr = permission.babyIDArr;
 
         await db.runTransaction(async (t) => {
-            
+
             for (const account of accountsArr) {
                 t.update(db.collection('users').doc(account.id), {
                     deletedAt: currentTime
@@ -322,10 +322,26 @@ class adminService {
         updatedData = Object.fromEntries(
             Object.entries(updatedData).filter(([key]) => allowedFields.includes(key)) //filter only allowed fields
         );
-        
+
         await userRef.update(updatedData);
         const updatedUserDoc = await userRef.get();
         return User.fromFirestore(updatedUserDoc);
+    }
+
+    static async editAdminProfile(adminId, updatedData) {
+        const adminRef = db.collection('admins').doc(adminId);
+        const adminDoc = await adminRef.get();
+        if (!adminDoc.exists) {
+            throw new Error('Admin does not exist');
+        }
+        //Allow updating only specific fields
+        const allowedFields = ['email', 'name', 'username'];
+        updatedData = Object.fromEntries(
+            Object.entries(updatedData).filter(([key]) => allowedFields.includes(key)) //filter only allowed fields
+        );
+        await adminRef.update(updatedData, { merge: true });
+        const updatedAdminDoc = await adminRef.get();
+        return Admin.fromFirestore(updatedAdminDoc);
     }
 }
 

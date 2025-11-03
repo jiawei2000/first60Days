@@ -100,7 +100,18 @@ const adminController = {
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
-    }
+    },
+
+    async editAdminProfile(req, res) {
+        try {
+            const adminId = req.user.id; // from JWT
+            const updatedData = req.body;
+            const admin = await AdminService.editAdminProfile(adminId, updatedData);
+            res.json({ admin });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
 }
 
 module.exports = adminController;

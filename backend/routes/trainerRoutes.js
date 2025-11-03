@@ -14,6 +14,9 @@ router.put('/password', authenticateToken, trainerController.updatePassword);
 //Get users managed by trainer
 router.get('/users', authenticateToken, trainerController.getManagedUsers);
 
+//edit trainer profile
+router.put('/profile', authenticateToken, trainerController.updateProfile);
+
 //get baby profiles for a managed user
 router.get('/users/:userId/babies', authenticateToken, trainerController.getManagedUserBabies);
 
