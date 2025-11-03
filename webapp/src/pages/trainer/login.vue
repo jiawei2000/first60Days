@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref } from 'vue'
 import { themeConfig } from '@themeConfig'
 import { useRouter } from "vue-router"
@@ -14,7 +14,7 @@ definePage({
 
 const form = ref({
     username: 'trainer1',
-    password: 'trainer2',
+    password: 'password123',
     remember: false,
 })
 
@@ -39,9 +39,23 @@ async function loginTrainer() {
 
         useCookie('accessToken').value = res.token
         useCookie('userData').value = {
-            name: res.trainer.name,
+            name: res.trainer?.name,
             role: 'trainer',
+            username: res.trainer?.username,
+            id: res.trainer?.id,
         }
+        // Frontend-only username override persistence for Trainer
+        try {
+          const id = res.trainer?.id
+          if (id) {
+            const key = `usernameOverride:trainer:${id}`
+            const override = localStorage.getItem(key)
+            if (override) {
+              const cookie = useCookie('userData')
+              cookie.value = { ...(cookie.value || {}), username: override }
+            }
+          }
+        } catch (_) {}
         router.push({ name: 'trainer' })
 
     } catch (error) {
@@ -82,7 +96,7 @@ async function loginTrainer() {
 
                             <!-- password -->
                             <VCol cols="12">
-                                <AppTextField v-model="form.password" label="Password" placeholder="············"
+                                <AppTextField v-model="form.password" label="Password" placeholder="Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·"
                                     :type="isPasswordVisible ? 'text' : 'password'" autocomplete="password"
                                     :append-inner-icon="isPasswordVisible ? 'bx-hide' : 'bx-show'"
                                     @click:append-inner="isPasswordVisible = !isPasswordVisible" />
@@ -130,3 +144,4 @@ async function loginTrainer() {
 <style lang="scss">
 @use "@core/scss/template/pages/page-auth";
 </style>
+
