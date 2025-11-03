@@ -115,6 +115,7 @@ const chartOptions = computed(() => ({
     id: 'baby-stats-chart',
     toolbar: { show: false },
     sparkline: { enabled: false },
+    foreColor: '#ccc', 
   },
   stroke: {
     curve: 'smooth',
@@ -122,41 +123,47 @@ const chartOptions = computed(() => ({
   },
   xaxis: {
     categories: stats.value.map(s => `Day ${s.day}`),
-    labels: { style: { colors: '#888', fontSize: '12px' } },
+    labels: {
+      style: {
+        colors: '#ccc',
+        fontSize: '12px',
+      },
+    },
     axisTicks: { show: true },
     axisBorder: { show: true },
   },
   yaxis: {
     labels: {
-      show: true,
-      style: { colors: '#888', fontSize: '12px' },
+      style: {
+        colors: '#ccc',
+        fontSize: '12px',
+      },
+      formatter: val => val,
     },
     min: 0,
     tickAmount: 4,
+  },
+  tooltip: {
+    theme: 'dark', 
+    style: {
+      fontSize: '13px',
+      fontFamily: 'Inter, sans-serif',
+      color: '#fff', 
+    },
+  },
+  legend: {
+    labels: {
+      colors: '#ccc',
+    },
   },
   colors: ['#7367F0'],
   fill: {
     type: 'gradient',
     gradient: {
-      shade: 'light',
+      shade: 'dark',
       type: 'vertical',
       gradientToColors: ['#9e95f5'],
       stops: [0, 100],
-    },
-  },
-  tooltip: {
-    y: {
-      formatter: val => {
-        const metric = selectedMetric.value
-        if (isDurationField(metric)) {
-          const h = Math.floor(val / 60)
-          const m = val % 60
-          return `${h}h ${m}m`
-        } else if (metric === 'averageMilkIntake') {
-          return `${val} ml`
-        }
-        return `${val}`
-      },
     },
   },
 }))
