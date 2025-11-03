@@ -1,15 +1,30 @@
-<script setup>
+﻿<script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userData = useCookie('userData')
+const accessToken = useCookie('accessToken')
+const displayName = computed(() => {
+  const data = userData.value
+  return (data?.name || data?.username || 'User')
+})
+
+function decodeJwt(token) {
+  try {
+    const base64 = token.split('.')[1]
+    return JSON.parse(atob(base64))
+  } catch {
+    return null
+  }
+}
 
 const roleLabel = computed(() => {
-    const role = userData.value?.role
+    const cookieRole = userData.value?.role
+    const jwtRole = accessToken.value ? decodeJwt(accessToken.value)?.role : null
+    const role = cookieRole || jwtRole
     if (!role)
         return 'Role Error'
-    // Capitalize first letter of role
     return `${role.charAt(0).toUpperCase()}${role.slice(1)}`
 })
 
@@ -48,7 +63,7 @@ function goToProfile() {
                     </template>
 
                     <VListItemTitle class="font-weight-semibold">
-                        {{ userData?.name || 'User Error' }}
+                        {{ displayName }}
                     </VListItemTitle>
                     <VListItemSubtitle>{{ roleLabel }}</VListItemSubtitle>
                 </VListItem>

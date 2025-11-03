@@ -39,10 +39,11 @@ async function loginTrainer() {
 
         useCookie('accessToken').value = res.token
         useCookie('userData').value = {
-            name: res.trainer?.name,
+            name: res.trainer.name,
             role: 'trainer',
-            username: res.trainer?.username,
-            id: res.trainer?.id,
+            email: res.trainer.email,
+            username: res.trainer.username,
+            id: res.trainer.id,
         }
         // Frontend-only username override persistence for Trainer
         try {
