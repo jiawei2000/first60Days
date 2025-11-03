@@ -1,18 +1,24 @@
-<template>
-    <VCard title="Babies for User ...">
+        <template>
+        <VCard title="Babies for User ...">
         <VCardText>
             <VDataTable :headers="headers" :items="data" :items-per-page="10">
-                <!-- Actions -->
-                <template #item.actions="{ item }">
-                    <div class="d-flex gap-1">
-                        <IconBtn @click="viewBaby(item)">
-                            <VIcon icon="bx-edit" />
-                        </IconBtn>
-                    </div>
-                </template>
+            <!-- Actions -->
+            <template #item.actions="{ item }">
+                <div class="d-flex gap-1">
+                <!-- Edit Baby -->
+                <IconBtn @click="viewBaby(item)">
+                    <VIcon icon="bx-edit" />
+                </IconBtn>
+
+                <!-- View Stats -->
+                <IconBtn @click="statsBaby(item)">
+                    <VIcon icon="bx-bar-chart" />
+                </IconBtn>
+                </div>
+            </template>
             </VDataTable>
         </VCardText>
-    </VCard>
+        </VCard>
 
     <VSnackbar v-model="isSnackBarVisible" timeout="5000">
         {{ snackBarMessage }}
@@ -84,4 +90,7 @@ function viewBaby(item) {
     router.push('/trainer/user/view-baby/' + item.id)
 }
 
+function statsBaby(item) {
+  router.push(`/trainer/user/view-stats/`+ item.id)
+}
 </script>
