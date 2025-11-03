@@ -14,6 +14,9 @@ router.post('/registerTrainer', authenticateToken, adminController.registerTrain
 //create new user accounts
 router.post('/registerUser', authenticateToken, adminController.registerUser);
 
+//edit admin profile
+router.put('/editAdminProfile', authenticateToken, adminController.editAdminProfile);
+
 //get all trainers
 router.get('/trainers', authenticateToken, adminController.getAllTrainers);
 
