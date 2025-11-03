@@ -18,8 +18,21 @@ class EventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     // Choose badge color based on status
     final bool isComplete = status.toLowerCase() == "complete";
-    final badgeColor = isComplete ? Colors.green[100] : Colors.red[100];
-    final badgeTextColor = isComplete ? Colors.green[800] : Colors.red[800];
+    final bool isPlanned = status.toLowerCase() == "planned";
+
+    final Color? badgeColor;
+    final Color? badgeTextColor;
+
+    if (isComplete) {
+      badgeColor = Colors.green[100];
+      badgeTextColor = Colors.green[800];
+    } else if (isPlanned) {
+      badgeColor = Colors.grey[200];
+      badgeTextColor = Colors.grey[800];
+    } else {
+      badgeColor = Colors.red[100];
+      badgeTextColor = Colors.red[800];
+    }
 
     return ListTile(
       dense: true,
@@ -27,9 +40,15 @@ class EventTile extends StatelessWidget {
       leading: Icon(Icons.circle, size: 12, color: color),
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          // fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
       ),
-      subtitle: Text(subtitle),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(fontSize: 16),
+      ),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -39,7 +58,7 @@ class EventTile extends StatelessWidget {
         child: Text(
           status,
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: badgeTextColor,
           ),

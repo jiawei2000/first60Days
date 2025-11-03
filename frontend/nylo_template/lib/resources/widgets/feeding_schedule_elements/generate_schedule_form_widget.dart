@@ -96,13 +96,8 @@ class _GenerateScheduleFormState extends NyState<GenerateScheduleForm> {
       return null; // or return null / throw depending on context
     }
 
-    DateTime now = DateTime.now();
-    DateTime firstFeedTime =
-        _parseStringtoDateTime(_firstFeedTimeController.text) ??
-            DateTime(now.year, now.month, now.day, 8, 0);
-    DateTime lastFeedTime =
-        _parseStringtoDateTime(_lastFeedTimeController.text) ??
-            DateTime(now.year, now.month, now.day, 22, 0);
+    String firstFeedTime = convertTo24HourString(_firstFeedTimeController.text);
+    String lastFeedTime = convertTo24HourString(_lastFeedTimeController.text);
     // Parse to int
     final totalFeeds = int.tryParse(_totalFeedsController.text) ?? 8;
 
@@ -149,18 +144,28 @@ class _GenerateScheduleFormState extends NyState<GenerateScheduleForm> {
     );
   }
 
+  String convertTo24HourString(String timeString) {
+    DateTime? dateTime = _parseStringtoDateTime(timeString);
+    if (dateTime == null) {
+      return '';
+    }
+    String hour = dateTime.hour.toString().padLeft(2, '0');
+    String minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
   String _getRecommendedFields(int weekNo, String field) {
     final recommendIntervalsByWeekNo = {
-      1: {'first_feed': '2:30 AM', 'last_feed': '11:30 PM', 'feed_no': 10},
-      2: {'first_feed': '2:30 AM', 'last_feed': '11:30 PM', 'feed_no': 10},
-      3: {'first_feed': '3:00 AM', 'last_feed': '11:30 PM', 'feed_no': 9},
-      4: {'first_feed': '3:30 AM', 'last_feed': '11:30 PM', 'feed_no': 8},
-      5: {'first_feed': '4:30 AM', 'last_feed': '11:30 PM', 'feed_no': 8},
-      6: {'first_feed': '5:00 AM', 'last_feed': '11:30 PM', 'feed_no': 8},
-      7: {'first_feed': '6:00 AM', 'last_feed': '11:30 PM', 'feed_no': 7},
-      8: {'first_feed': '6:30 AM', 'last_feed': '11:30 PM', 'feed_no': 7},
-      9: {'first_feed': '6:30 AM', 'last_feed': '11:00 PM', 'feed_no': 7},
-      10: {'first_feed': '7:00 AM', 'last_feed': '11:00 PM', 'feed_no': 7},
+      1: {'first_feed': '2:30', 'last_feed': '23:30', 'feed_no': 10},
+      2: {'first_feed': '2:30', 'last_feed': '23:30', 'feed_no': 10},
+      3: {'first_feed': '3:00', 'last_feed': '23:30', 'feed_no': 9},
+      4: {'first_feed': '3:30', 'last_feed': '23:30', 'feed_no': 8},
+      5: {'first_feed': '4:30', 'last_feed': '23:30', 'feed_no': 8},
+      6: {'first_feed': '5:00', 'last_feed': '23:30', 'feed_no': 8},
+      7: {'first_feed': '6:00', 'last_feed': '23:30', 'feed_no': 7},
+      8: {'first_feed': '6:30', 'last_feed': '23:30', 'feed_no': 7},
+      9: {'first_feed': '6:30', 'last_feed': '23:00', 'feed_no': 7},
+      10: {'first_feed': '7:00', 'last_feed': '23:00', 'feed_no': 7},
     };
     final value = recommendIntervalsByWeekNo[weekNo]?[field];
     if (value == null) {

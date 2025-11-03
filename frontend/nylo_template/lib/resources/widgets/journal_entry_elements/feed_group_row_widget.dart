@@ -18,13 +18,11 @@ class FeedGroupRow extends StatefulWidget {
 }
 
 class _FeedGroupRowState extends NyState<FeedGroupRow> {
-  List<DropdownMenuItem> typeItems = [
-    const DropdownMenuItem(value: "EBM", child: Text("EBM")),
-    const DropdownMenuItem(value: "Formula", child: Text("Formula")),
-    const DropdownMenuItem(
-        value: "Breast (Left)", child: Text("Breast (Left)")),
-    const DropdownMenuItem(
-        value: "Breast (Right)", child: Text("Breast (Right)")),
+  final List<DropdownMenuItem<String>> typeItems = const [
+    DropdownMenuItem(value: "EBM", child: Text("EBM")),
+    DropdownMenuItem(value: "Formula", child: Text("Formula")),
+    DropdownMenuItem(value: "Breast (Left)", child: Text("Breast (Left)")),
+    DropdownMenuItem(value: "Breast (Right)", child: Text("Breast (Right)")),
   ];
 
   Map<String, String> feedUnits = {
@@ -36,9 +34,16 @@ class _FeedGroupRowState extends NyState<FeedGroupRow> {
 
   @override
   get init => () {
-        widget.typeController.text = typeItems[0].value;
-        widget.unitController.text =
-            feedUnits[widget.typeController.text] ?? "-";
+        if (widget.typeController.text.isEmpty) {
+          widget.typeController.text = typeItems.first.value ?? "";
+        }
+
+        final mappedUnit = feedUnits[widget.typeController.text];
+        if (mappedUnit != null) {
+          widget.unitController.text = mappedUnit;
+        } else if (widget.unitController.text.isEmpty) {
+          widget.unitController.text = "-";
+        }
       };
 
   @override
@@ -56,11 +61,16 @@ class _FeedGroupRowState extends NyState<FeedGroupRow> {
                   color: Theme.of(context).colorScheme.surface,
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: DropdownButton(
+                child: DropdownButton<String>(
                   items: typeItems,
-                  value: widget.typeController.text,
+                  value: widget.typeController.text.isEmpty
+                      ? null
+                      : widget.typeController.text,
                   underline: const SizedBox(),
                   onChanged: (selectedValue) {
+                    if (selectedValue == null) {
+                      return;
+                    }
                     setState(() {
                       widget.typeController.text = selectedValue;
                       widget.unitController.text =

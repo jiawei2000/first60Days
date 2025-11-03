@@ -30,11 +30,11 @@ class CalendarController {
     }
 
     entries.sort((a, b) {
-      final aWake =
-          a.startWakeTime?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final bWake =
-          b.startWakeTime?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0);
-      return aWake.compareTo(bWake);
+      final aFeed =
+          a.startFeedTime?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bFeed =
+          b.startFeedTime?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return aFeed.compareTo(bFeed);
     });
 
     Map<DateTime, List<Map<String, dynamic>>> events = {};
@@ -42,9 +42,9 @@ class CalendarController {
     if (entries.isNotEmpty) {
       for (var i = 0; i < entries.length; i++) {
         final entry = entries[i];
-        final wakeTime = entry.startWakeTime?.toUtc() ?? DateTime.now();
-        final localDay = DateTime(wakeTime.year, wakeTime.month, wakeTime.day);
-        final eventTime = DateFormat('hh:mm a').format(wakeTime);
+        final feedTime = entry.startFeedTime?.toUtc() ?? DateTime.now();
+        final localDay = DateTime(feedTime.year, feedTime.month, feedTime.day);
+        final eventTime = DateFormat('hh:mm a').format(feedTime);
 
         events.putIfAbsent(localDay, () => []).add({
           "title": "Feed ${i + 1}",
