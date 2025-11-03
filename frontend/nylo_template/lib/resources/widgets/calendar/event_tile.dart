@@ -40,9 +40,15 @@ class EventTile extends StatelessWidget {
       leading: Icon(Icons.circle, size: 12, color: color),
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          // fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
       ),
-      subtitle: Text(subtitle),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(fontSize: 16),
+      ),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -52,7 +58,7 @@ class EventTile extends StatelessWidget {
         child: Text(
           status,
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: badgeTextColor,
           ),

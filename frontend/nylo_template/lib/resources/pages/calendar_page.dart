@@ -509,7 +509,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   child: EventTile(
                                     title: event['title'] ?? 'Feed',
                                     subtitle: event['time'] ?? '',
-                                    color: Colors.purple,
+                                    color: Colors.green,
                                     status: event['status'] ?? 'Incomplete',
                                   ),
                                 );
