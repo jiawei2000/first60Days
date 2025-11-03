@@ -18,6 +18,12 @@ export default [
         icon: { icon: 'bx-user' },
         viewBy: 'admin'
     },
+    {
+        title: 'Statistics',
+        to: { name: 'admin-statistics-view-statistics' },
+        icon: { icon: 'bx-user' },
+        viewBy: 'admin'
+    },
     // Trainer Pages
     {
         title: 'Home',
