@@ -18,14 +18,18 @@
         <div>
           <p class="text-body-1 mb-1">{{ currentLabel }}</p>
           <h2 class="text-h4 font-weight-bold">{{ totalDisplay }}</h2>
+
           <div
             v-if="percentChange !== null"
-            :class="percentChange >= 0 ? 'text-success' : 'text-error'"
+            :class="['d-flex align-center gap-1', percentChange >= 0 ? 'text-success' : 'text-error']"
           >
-            <VIcon size="small">
-              {{ percentChange >= 0 ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
-            </VIcon>
-            {{ Math.abs(percentChange) }}% from previous day
+            <!-- ✅ Iconify Icon -->
+            <img
+              :src="percentChange >= 0 ? upArrow : downArrow"
+              alt="arrow"
+              style="width: 20px; height: 20px"
+            />
+            <span>{{ Math.abs(percentChange) }}% from previous day</span>
           </div>
         </div>
 
@@ -58,6 +62,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import VueApexCharts from 'vue3-apexcharts'
+import upArrow from '@/assets/images/cards/up.png'
+import downArrow from '@/assets/images/cards/down.png'
 const ApexChart = VueApexCharts
 
 const route = useRoute()
