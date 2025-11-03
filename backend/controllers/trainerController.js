@@ -56,8 +56,18 @@ const trainerController = {
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
-    }
+    },
 
+    async updateProfile(req, res) {
+        try {
+            const trainerId = req.user.id; // from JWT
+            const profileData = req.body;
+            const updatedTrainer = await TrainerService.updateProfile(trainerId, profileData);
+            res.json({ trainer: updatedTrainer });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
 };
 
 module.exports = trainerController;

@@ -7,33 +7,6 @@ const Baby = require('../models/Baby');
 const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 class TrainerService {
-    // static async registerNew({ email, password, username }) {
-    //     const trainersRef = db.collection('trainers');
-
-    //     // Check if email exists
-    //     const emailSnapshot = await trainersRef.where('email', '==', email).get();
-    //     if (!emailSnapshot.empty) {
-    //         throw new Error('Email already exists');
-    //     }
-
-    //     // Check if username exists
-    //     const usernameSnapshot = await trainersRef.where('username', '==', username).get();
-    //     if (!usernameSnapshot.empty) {
-    //         throw new Error('Username already exists');
-    //     }
-
-    //     const hashedPassword = await bcrypt.hash(password, 10);
-
-    //     const trainerRef = trainersRef.doc();
-    //     const trainer = new Trainer(trainerRef.id, {
-    //             email,
-    //             password: hashedPassword,
-    //             username,
-    //             });
-    //     await trainerRef.set(trainer.toFirestore());
-    //     return { trainer };
-    // }
-
     static async login({ username, password }) {
         const trainersRef = db.collection('trainers');
         const snapshot = await trainersRef.where('username', '==', username).get();
@@ -54,7 +27,7 @@ class TrainerService {
 
         // Issue JWT
         const token = jwt.sign(
-            { id: trainer.id, username: trainer.username, role:'trainer' },
+            { id: trainer.id, username: trainer.username, role: 'trainer' },
             JWT_SECRET,
             { expiresIn: '15m' }
         );
@@ -85,6 +58,7 @@ class TrainerService {
             trainerId: trainer.id
         };
     }
+
     static async getManagedUsers(trainerId) {
         const usersRef = db.collection('users');
         const trainerRef = db.collection('trainers').doc(trainerId);
@@ -112,7 +86,7 @@ class TrainerService {
         if (userTrainerSnap.id !== trainerSnap.id) {
             throw new Error('Unauthorized access to user babies');
         }
-        
+
         //Obtain permission reference to get baby profiles
         const permissionRef = userDoc.data().permissionID;
         if (!permissionRef) {
@@ -137,6 +111,26 @@ class TrainerService {
             }
         }
         return babies;
+    }
+
+    static async updateProfile(trainerId, profileData) {
+        const trainerDocRef = db.collection('trainers').doc(trainerId);
+        const trainerDoc = await trainerDocRef.get();
+        if (!trainerDoc.exists) {
+            throw new Error('Trainer not found');
+        }
+        // allowed fields to update
+        const allowedFields = ['name', 'email', 'username'];
+        // filter profileData to only include allowed fields
+        profileData = Object.fromEntries(
+            Object.entries(profileData).filter(([key]) => allowedFields.includes(key))
+        );
+
+        // update trainer document. Allow merge to avoid overwriting other fields
+        await trainerDocRef.update(profileData, { merge: true });
+        
+        const updatedTrainerDoc = await trainerDocRef.get();
+        return Trainer.fromFirestore(updatedTrainerDoc);
     }
 }
 

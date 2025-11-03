@@ -6,7 +6,7 @@ const { Timestamp } = require('firebase-admin/firestore');
 const admin = require("firebase-admin");
 
 class BabyService {
-    static async newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions, gender, height }) {
+    static async newProfile(userId, { name, dob, expectedDueDate, term, weight, healthConditions, gender, height, vaccination, allergies }) {
         // Required fields check
         switch (true) {
             case !name:
@@ -46,6 +46,8 @@ class BabyService {
                 healthConditions,
                 gender,
                 height,
+                vaccination,
+                allergies
             });
 
             // Save baby in Firestore
@@ -81,6 +83,8 @@ class BabyService {
             "healthConditions",
             "height",
             "gender",
+            "vaccination",
+            "allergies"
         ];
 
         const updateData = {};
