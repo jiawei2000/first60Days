@@ -144,7 +144,7 @@ async function onSave() {
                 </VCol>
 
                 <VCol cols="12" md="6">
-                  <VTextField v-model="form.username" label="Username"/>
+                  <VTextField v-model="form.username" label="Username" readonly/>
                 </VCol>
 
                 <VCol cols="12" md="6">
