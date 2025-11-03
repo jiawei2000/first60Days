@@ -1,16 +1,23 @@
 <template>
   <VCard>
-    <!-- Tabs -->
-    <VTabs v-model="tab" grow>
-      <VTab>Feeds</VTab>
-    </VTabs>
+    <!-- Metric Selector -->
+    <VCardText>
+      <VSelect
+        v-model="selectedMetric"
+        :items="metricOptions"
+        label="Select Metric"
+        density="compact"
+        hide-details
+        variant="outlined"
+      />
+    </VCardText>
 
+    <!-- Summary -->
     <VCardText>
       <div class="d-flex align-center justify-space-between">
-        <!-- Total Feeds -->
         <div>
-          <p class="text-body-1 mb-1">Total Feeds</p>
-          <h2 class="text-h4 font-weight-bold">{{ totalFeeds }} feeds</h2>
+          <p class="text-body-1 mb-1">{{ currentLabel }}</p>
+          <h2 class="text-h4 font-weight-bold">{{ totalDisplay }}</h2>
           <div
             v-if="percentChange !== null"
             :class="percentChange >= 0 ? 'text-success' : 'text-error'"
@@ -22,7 +29,7 @@
           </div>
         </div>
 
-        <!-- Feed Circle Summary -->
+        <!-- Circle -->
         <div class="text-center">
           <VCircularProgress
             :model-value="circleValue"
@@ -30,11 +37,11 @@
             size="70"
             width="6"
           />
-          <div class="text-caption mt-2">Today: {{ todayFeeds }} feeds</div>
+          <div class="text-caption mt-2">Today: {{ todayDisplay }}</div>
         </div>
       </div>
 
-      <!-- Line Chart -->
+      <!-- Chart -->
       <ApexChart
         v-if="chartReady"
         type="line"
@@ -51,31 +58,63 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import VueApexCharts from 'vue3-apexcharts'
-
-/* ✅ Register ApexCharts Locally */
 const ApexChart = VueApexCharts
 
-const tab = ref(0)
 const route = useRoute()
 const babyId = route.params.id
 
 const stats = ref([])
-const todayFeeds = ref(0)
-const totalFeeds = ref(0)
-const percentChange = ref(null)
 const chartReady = ref(false)
+const selectedMetric = ref('totalFeeds')
 
-/* ✅ Circle Progress Value */
-const circleValue = computed(() => {
-  return todayFeeds.value > 0 ? Math.min(todayFeeds.value * 10, 100) : 0
+const metricOptions = [
+  { title: 'Total Feeds', value: 'totalFeeds' },
+  { title: 'Urine Count', value: 'totalUrineCount' },
+  { title: 'Stool Count', value: 'totalStoolCount' },
+  { title: 'Cycles > 3hrs', value: 'totalCyclesBeyond3Hrs' },
+  { title: 'Sleep Duration', value: 'totalSleepDuration' },
+  { title: 'Play Duration', value: 'totalPlayDuration' },
+  { title: 'Monitoring Interval', value: 'monInterval' },
+  { title: 'Avg Play Duration', value: 'averagePlayDuration' },
+  { title: 'Avg Lapse Duration', value: 'averageLapseDuration' },
+  { title: 'Avg Milk Intake', value: 'averageMilkIntake' },
+]
+
+/* Convert HH:MM string → total minutes (number) */
+function parseDuration(str) {
+  if (!str || typeof str !== 'string') return 0
+  const [h, m] = str.split(':').map(Number)
+  return h * 60 + m
+}
+
+/* Detect if a metric is a time string */
+function isDurationField(metric) {
+  return [
+    'totalSleepDuration',
+    'totalPlayDuration',
+    'monInterval',
+    'averagePlayDuration',
+    'averageLapseDuration',
+  ].includes(metric)
+}
+
+const chartSeries = computed(() => {
+  const metric = selectedMetric.value
+  return [
+    {
+      name: metric,
+      data: stats.value.map(s =>
+        isDurationField(metric) ? parseDuration(s[metric]) : Number(s[metric])
+      ),
+    },
+  ]
 })
 
-/* ✅ Chart Options */
 const chartOptions = computed(() => ({
   chart: {
-    id: 'feeds-chart',
+    id: 'baby-stats-chart',
     toolbar: { show: false },
-    sparkline: { enabled: false }, // ❗ Disable sparkline to show full axes
+    sparkline: { enabled: false },
   },
   stroke: {
     curve: 'smooth',
@@ -83,28 +122,14 @@ const chartOptions = computed(() => ({
   },
   xaxis: {
     categories: stats.value.map(s => `Day ${s.day}`),
-    labels: {
-      show: true,
-      style: {
-        colors: '#888',
-        fontSize: '12px',
-      },
-    },
-    axisTicks: {
-      show: true,
-    },
-    axisBorder: {
-      show: true,
-    },
+    labels: { style: { colors: '#888', fontSize: '12px' } },
+    axisTicks: { show: true },
+    axisBorder: { show: true },
   },
   yaxis: {
     labels: {
       show: true,
-      style: {
-        colors: '#888',
-        fontSize: '12px',
-      },
-      formatter: val => `${val}`,
+      style: { colors: '#888', fontSize: '12px' },
     },
     min: 0,
     tickAmount: 4,
@@ -121,47 +146,70 @@ const chartOptions = computed(() => ({
   },
   tooltip: {
     y: {
-      formatter: val => `${val} feeds`,
+      formatter: val => {
+        const metric = selectedMetric.value
+        if (isDurationField(metric)) {
+          const h = Math.floor(val / 60)
+          const m = val % 60
+          return `${h}h ${m}m`
+        } else if (metric === 'averageMilkIntake') {
+          return `${val} ml`
+        }
+        return `${val}`
+      },
     },
   },
 }))
 
+const currentLabel = computed(() => {
+  return metricOptions.find(opt => opt.value === selectedMetric.value)?.title || selectedMetric.value
+})
 
-/* ✅ Chart Data */
-const chartSeries = computed(() => [
-  {
-    name: 'Feeds',
-    data: stats.value.map(s => s.totalFeeds),
-  },
-])
+const todayDisplay = computed(() => {
+  const latest = stats.value.at(-1)?.[selectedMetric.value]
+  if (isDurationField(selectedMetric.value)) return latest || '0:00'
+  return latest ?? 0
+})
 
-/* ✅ Fetch Baby Statistics */
+const totalDisplay = computed(() => {
+  const metric = selectedMetric.value
+  const total = stats.value.reduce((acc, s) => {
+    const val = s[metric]
+    if (isDurationField(metric)) return acc + parseDuration(val)
+    return acc + Number(val)
+  }, 0)
+
+  if (isDurationField(metric)) {
+    const h = Math.floor(total / 60)
+    const m = total % 60
+    return `${h}h ${m}m`
+  }
+  if (metric === 'averageMilkIntake') return `${total.toFixed(1)} ml`
+  return total
+})
+
+const percentChange = computed(() => {
+  const metric = selectedMetric.value
+  const today = stats.value.at(-1)?.[metric]
+  const prev = stats.value.at(-2)?.[metric]
+
+  const t = isDurationField(metric) ? parseDuration(today) : Number(today)
+  const p = isDurationField(metric) ? parseDuration(prev) : Number(prev)
+
+  if (isNaN(t) || isNaN(p) || p === 0) return null
+  return parseFloat(((t - p) / p * 100).toFixed(1))
+})
+
+const circleValue = computed(() => {
+  const today = stats.value.at(-1)?.[selectedMetric.value]
+  const val = isDurationField(selectedMetric.value) ? parseDuration(today) : Number(today)
+  return Math.min(val * 10, 100)
+})
+
 onMounted(async () => {
   try {
-    const res = await $api(`/statistics/daily/baby/${babyId}`, {
-      method: 'GET',
-    })
-
-    const data = res.data?.statistics ?? []
-
-    stats.value = data.map(item => ({
-      day: item.day,
-      totalFeeds: item.totalFeeds,
-    }))
-
-    const todayStat = stats.value.at(-1)
-    const prevStat = stats.value.at(-2)
-
-    todayFeeds.value = todayStat?.totalFeeds || 0
-    totalFeeds.value = stats.value.reduce((acc, s) => acc + s.totalFeeds, 0)
-
-    if (prevStat) {
-      const diff = todayFeeds.value - prevStat.totalFeeds
-      percentChange.value = parseFloat(((diff / prevStat.totalFeeds) * 100).toFixed(1))
-    } else {
-      percentChange.value = null
-    }
-
+    const res = await $api(`/statistics/daily/baby/${babyId}`, { method: 'GET' })
+    stats.value = res.data?.statistics || []
     chartReady.value = true
   } catch (e) {
     console.error('Failed to load stats:', e)
