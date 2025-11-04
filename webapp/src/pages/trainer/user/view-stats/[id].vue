@@ -2,7 +2,7 @@
   <div>
     <!-- 🧠 Page Header -->
     <div class="d-flex align-center justify-space-between mb-4">
-      <h2 class="text-h4 font-weight-bold">Statistics for Baby</h2>
+      <h2 class="text-h4 font-weight-bold">Statistics for {{ babyName }}</h2>
 
       <VBtnToggle
         v-model="timeFrame"
@@ -22,11 +22,11 @@
           <VCol cols="12" sm="6" md="4">
             <VCard class="pa-4 d-flex align-center" style="background-color: #f6f9f6">
               <VAvatar size="48" class="me-4" color="success" variant="tonal">
-                <VImg :src="cycle" width="28" height="28" cover />
+                <VImg :src="baby" alt="icon" width="28" height="28" />
               </VAvatar>
               <div>
-                <p class="text-caption text-medium-emphasis mb-0">Current Cycle</p>
-                <h3 class="text-h5 font-weight-bold mb-0">{{ currentCycle || '-' }}</h3>
+                <p class="text-caption text-medium-emphasis mb-0">Age</p>
+                <h3 class="text-h5 font-weight-bold mb-0">{{babyAgeWeeks}} weeks</h3>
                 <p class="text-caption text-success mt-1">Updated today</p>
               </div>
             </VCard>
@@ -83,7 +83,7 @@
                         Current: {{ formatMetric(metric.value, latestValue(metric.value)) }}
                       </p>
                       <p class="text-body-2 text-medium-emphasis mb-0">
-                        Avg: {{ getAverage(metric.value) }}
+                        Average To Date: {{ getAverage(metric.value) }}
                       </p>
                     </div>
 
@@ -167,12 +167,37 @@ import { useRoute } from 'vue-router'
 import VueApexCharts from 'vue3-apexcharts'
 import upArrow from '@/assets/images/cards/up.png'
 import downArrow from '@/assets/images/cards/down.png'
-import cycle from '@/assets/images/cards/cycle.png'
-import entry from '@/assets/images/cards/entry.png'
+import entry from '@/assets/images/cards/fitbit-watch.png'
+import baby from '@/assets/images/cards/chart-success.png'
+
 
 const ApexChart = VueApexCharts
 const route = useRoute()
 const babyId = route.params.id
+const babyName = ref('') //name of the baby
+const babyAgeWeeks = ref(0) //age of the baby in weeks just to displayin one of the top cards
+
+// ==================== Baby Name and AGe FETCH ==================== //
+try {
+  const res = await $api(`/babies/${babyId}`, { method: 'GET' })
+  babyName.value = res.name || 'Baby'
+} catch (e) {
+  console.error('Failed to fetch baby profile:', e)
+}
+
+try {
+  const res = await $api(`/babies/${babyId}`, { method: 'GET' })
+  babyName.value = res.name || 'Baby'
+
+  const dob = new Date(res.dob._seconds * 1000)
+  const now = new Date()
+  const ageInMs = now - dob
+  const ageInWeeks = Math.floor(ageInMs / (1000 * 60 * 60 * 24 * 7))
+  babyAgeWeeks.value = ageInWeeks
+  console.log('Baby age in weeks:', babyAgeWeeks.value)
+} catch (e) {
+  console.error('Failed to fetch baby profile:', e)
+}
 
 const stats = ref([])
 const weeklyStats = ref([
@@ -188,7 +213,7 @@ const activeTab = ref('summary')
 const timeFrame = ref('daily')
 const currentCycle = ref(0)
 const entriesToday = ref(0)
-
+console.log('baby icon path:', baby)
 // ==================== JOURNAL ENTRY FETCH ==================== //
 async function fetchJournalEntries() {
   try {
