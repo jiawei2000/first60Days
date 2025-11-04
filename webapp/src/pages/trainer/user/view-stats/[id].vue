@@ -223,15 +223,15 @@ async function fetchJournalEntries() {
 // ==================== METRIC CONFIG ==================== //
 const metricOptions = [
   { title: 'Total Feeds', value: 'totalFeeds' },
-  { title: 'Urine Count', value: 'totalUrineCount' },
-  { title: 'Stool Count', value: 'totalStoolCount' },
-  { title: 'Cycles > 3hrs', value: 'totalCyclesBeyond3Hrs' },
-  { title: 'Sleep Duration', value: 'totalSleepDuration' },
-  { title: 'Play Duration', value: 'totalPlayDuration' },
-  { title: 'Monitoring Interval', value: 'monInterval' },
-  { title: 'Avg Play Duration', value: 'averagePlayDuration' },
-  { title: 'Avg Lapse Duration', value: 'averageLapseDuration' },
-  { title: 'Avg Milk Intake', value: 'averageMilkIntake' },
+  { title: 'Total Urine Count', value: 'totalUrineCount' },
+  { title: 'Total Stool Count', value: 'totalStoolCount' },
+  { title: 'Cycles Beyond 3 hours', value: 'totalCyclesBeyond3Hrs' },
+  { title: 'Total Sleep Duration', value: 'totalSleepDuration' },
+  { title: 'Total Play Duration', value: 'totalPlayDuration' },
+  { title: 'MON Interval', value: 'monInterval' },
+  { title: 'Avg Play Duration Per Entry', value: 'averagePlayDuration' },
+  { title: 'Lapse Duration', value: 'averageLapseDuration' },
+  { title: 'Avg Milk Intake Per Entry', value: 'averageMilkIntake' },
 ]
 
 // 🔁 Use correct stats based on selected timeframe
@@ -384,6 +384,7 @@ const circleValue = computed(() => {
 onMounted(async () => {
   try {
     const res = await $api(`/statistics/daily/baby/${babyId}`, { method: 'GET' })
+    console.log('Fetched stats:', res)
     stats.value = res.data?.statistics || []
     chartReady.value = true
   } catch (e) {
