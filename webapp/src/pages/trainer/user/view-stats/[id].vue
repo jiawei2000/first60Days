@@ -20,7 +20,7 @@
       <VCardText>
         <VRow class="mb-2">
           <VCol cols="12" sm="6" md="4">
-            <VCard class="pa-4 d-flex align-center" style="background-color: #f6f9f6">
+            <VCard class="pa-4 d-flex align-center" :class="$vuetify.theme.dark ? 'bg-surface' : 'bg-grey-lighten-5'">
               <VAvatar size="48" class="me-4" color="success" variant="tonal">
                 <VImg :src="baby" alt="icon" width="28" height="28" />
               </VAvatar>
@@ -33,7 +33,7 @@
           </VCol>
 
           <VCol cols="12" sm="6" md="4">
-            <VCard class="pa-4 d-flex align-center" style="background-color: #f6f7fb">
+            <VCard class="pa-4 d-flex align-center" :class="$vuetify.theme.dark ? 'bg-surface' : 'bg-grey-lighten-4'">
               <VAvatar size="48" class="me-4" color="info" variant="tonal">
                 <VImg :src="entry" width="28" height="28" cover />
               </VAvatar>
