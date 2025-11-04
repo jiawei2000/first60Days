@@ -4,7 +4,6 @@
     <div class="d-flex align-center justify-space-between mb-4">
       <h2 class="text-h4 font-weight-bold">Statistics for Baby</h2>
 
-      <!-- 🔘 Toggle between Daily / Weekly -->
       <VBtnToggle
         v-model="timeFrame"
         divided
@@ -18,7 +17,6 @@
     </div>
 
     <VCard>
-      <!-- 📊 Top Summary Cards -->
       <VCardText>
         <VRow class="mb-2">
           <VCol cols="12" sm="6" md="4">
@@ -42,12 +40,7 @@
               <div>
                 <p class="text-caption text-medium-emphasis mb-0">Entries Today</p>
                 <h3 class="text-h5 font-weight-bold mb-0">{{ entriesToday }}</h3>
-                <p
-                  :class="[
-                    'text-caption mt-1',
-                    entriesToday > 0 ? 'text-success' : 'text-error',
-                  ]"
-                >
+                <p :class="['text-caption mt-1', entriesToday > 0 ? 'text-success' : 'text-error']">
                   {{ entriesToday > 0 ? 'Good activity' : 'No entries yet' }}
                 </p>
               </div>
@@ -87,7 +80,7 @@
                         {{ metric.title }}
                       </p>
                       <p class="text-body-2 text-medium-emphasis mb-0">
-                        Current: {{ latestValue(metric.value) }}
+                        Current: {{ formatMetric(metric.value, latestValue(metric.value)) }}
                       </p>
                       <p class="text-body-2 text-medium-emphasis mb-0">
                         Avg: {{ getAverage(metric.value) }}
@@ -115,6 +108,8 @@
             <VSelect
               v-model="selectedMetric"
               :items="metricOptions"
+              :item-title="item => `${item.title}`"
+              item-value="value"
               label="Select Metric"
               density="compact"
               hide-details
@@ -135,7 +130,7 @@
                     alt="arrow"
                     style="width: 20px; height: 20px"
                   />
-                  <span>{{ Math.abs(percentChange) }}% from previous period</span>
+                  <span>{{ Math.abs(percentChange) }}% from previous {{ timeFrame === 'daily' ? 'day' : 'week' }}</span>
                 </div>
               </div>
 
@@ -146,7 +141,7 @@
                   size="70"
                   width="6"
                 />
-                <div class="text-caption mt-2">Today: {{ todayDisplay }}</div>
+                <div class="text-caption mt-2">Today: {{ getFormattedValue(selectedMetric.value, activeStats.at(-1)?.[selectedMetric.value]) }}</div>
                 <div class="text-caption text-medium-emphasis">
                   Avg: {{ averageDisplay }}
                 </div>
@@ -166,7 +161,6 @@
     </VCard>
   </div>
 </template>
-
 <script setup lang="js">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
@@ -180,7 +174,6 @@ const ApexChart = VueApexCharts
 const route = useRoute()
 const babyId = route.params.id
 
-// API data
 const stats = ref([])
 const weeklyStats = ref([
   { day: 1, totalFeeds: 4, totalUrineCount: 2, totalStoolCount: 1, totalSleepDuration: '9:30', totalPlayDuration: '1:00', monInterval: '20:00', averagePlayDuration: '0:50', averageLapseDuration: '1:30', averageMilkIntake: 60 },
@@ -193,8 +186,6 @@ const chartReady = ref(false)
 const selectedMetric = ref('totalFeeds')
 const activeTab = ref('summary')
 const timeFrame = ref('daily')
-
-// New summary card values
 const currentCycle = ref(0)
 const entriesToday = ref(0)
 
@@ -203,11 +194,8 @@ async function fetchJournalEntries() {
   try {
     const res = await $api(`/journalEntries/${babyId}`, { method: 'GET' })
     const entries = res || []
-
-    // Current Cycle = highest cycleNo
     currentCycle.value = Math.max(...entries.map(e => e.cycleNo || 0))
 
-    // Entries Today = entries whose awakeTime date == today
     const today = new Date().toISOString().split('T')[0]
     entriesToday.value = entries.filter(e => {
       const awakeDate = new Date(e.awakeTime._seconds * 1000)
@@ -234,7 +222,6 @@ const metricOptions = [
   { title: 'Avg Milk Intake Per Entry', value: 'averageMilkIntake' },
 ]
 
-// 🔁 Use correct stats based on selected timeframe
 const activeStats = computed(() => {
   return timeFrame.value === 'daily' ? stats.value : weeklyStats.value
 })
@@ -253,6 +240,21 @@ function isDurationField(metric) {
     'averagePlayDuration',
     'averageLapseDuration',
   ].includes(metric)
+}
+
+// ✅ NEW: Format value consistently (used for today, avg, etc.)
+function formatMetric(metric, value) {
+  if (isDurationField(metric)) {
+    const totalMin = parseDuration(value)
+    const h = Math.floor(totalMin / 60)
+    const m = Math.round(totalMin % 60)
+    return `${h}h ${m}m`
+  }
+  return value ?? 0
+}
+
+function getFormattedValue(metric, rawValue) {
+  return formatMetric(metric, rawValue)
 }
 
 const thresholds = {
@@ -291,8 +293,7 @@ function getStatusColor(metric) {
 }
 
 function latestValue(metric) {
-  const latest = activeStats.value.at(-1)?.[metric]
-  return isDurationField(metric) ? latest || '0:00' : latest ?? 0
+  return activeStats.value.at(-1)?.[metric] ?? 0
 }
 
 function getAverage(metric) {
@@ -326,7 +327,9 @@ const chartOptions = computed(() => ({
   chart: { id: 'baby-stats-chart', toolbar: { show: false }, foreColor: '#ccc' },
   stroke: { curve: 'smooth', width: 3 },
   xaxis: {
-    categories: activeStats.value.map(s => `Day ${s.day}`),
+    categories: activeStats.value.map((s, i) =>
+      timeFrame.value === 'weekly' ? `Week ${i + 1}` : `Day ${s.day}`
+    ),
     labels: { style: { colors: '#ccc', fontSize: '12px' } },
   },
   yaxis: {
@@ -341,11 +344,9 @@ const currentLabel = computed(() =>
   metricOptions.find(opt => opt.value === selectedMetric.value)?.title || selectedMetric.value
 )
 
-const todayDisplay = computed(() => {
-  const latest = activeStats.value.at(-1)?.[selectedMetric.value]
-  if (isDurationField(selectedMetric.value)) return latest || '0:00'
-  return latest ?? 0
-})
+const todayDisplay = computed(() =>
+  getFormattedValue(selectedMetric.value, activeStats.value.at(-1)?.[selectedMetric.value])
+)
 
 const totalDisplay = computed(() => {
   const metric = selectedMetric.value
@@ -384,7 +385,6 @@ const circleValue = computed(() => {
 onMounted(async () => {
   try {
     const res = await $api(`/statistics/daily/baby/${babyId}`, { method: 'GET' })
-    console.log('Fetched stats:', res)
     stats.value = res.data?.statistics || []
     chartReady.value = true
   } catch (e) {
