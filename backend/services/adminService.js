@@ -46,7 +46,7 @@ class adminService {
         return { admin };
     }
 
-    static async login({ username, password, fcmToken }) {
+    static async login({ username, password }) {
         const adminsRef = db.collection('admins');
         const snapshot = await adminsRef.where('username', '==', username).get();
 
