@@ -37,17 +37,24 @@
             @click="filters.sleep = !filters.sleep"
           >😴 Sleep</VChip>
         </div>
-        <FullCalendar ref="calendarRef" :options="calendarOptions" />
-        <div v-if="currentView === 'dayGridMonth'" class="mt-4">
-          <div class="text-subtitle-1 mb-2">{{ formatSelectedDate(selectedDate) }}</div>
-          <div v-if="dayEvents.length === 0" class="text-medium-emphasis">No entries to display</div>
-          <div v-else class="event-list--mobile">
-            <div v-for="ev in dayEvents" :key="ev.id" class="event-row">
-              <span class="dot" :style="{ backgroundColor: typeColors[ev.extendedProps?.type] || '#888' }"></span>
-              <span class="time">{{ formatEventTime(ev) }}</span>
-              <span class="title">{{ ev.extendedProps?.icon || '' }} {{ ev.title }}</span>
+        <div v-if="currentView === 'dayGridMonth'" class="month-layout">
+          <div class="month-calendar">
+            <FullCalendar ref="calendarRef" :options="calendarOptions" />
+          </div>
+          <div class="month-side">
+            <div class="text-subtitle-1 mb-2">{{ formatSelectedDate(selectedDate) }}</div>
+            <div v-if="dayEvents.length === 0" class="text-medium-emphasis">No entries to display</div>
+            <div v-else class="event-list--mobile">
+              <div v-for="ev in dayEvents" :key="ev.id" class="event-row">
+                <span class="dot" :style="{ backgroundColor: typeColors[ev.extendedProps?.type] || '#888' }"></span>
+                <span class="time">{{ formatEventTime(ev) }}</span>
+                <span class="title">{{ ev.extendedProps?.icon || '' }} {{ ev.title }}</span>
+              </div>
             </div>
           </div>
+        </div>
+        <div v-else>
+          <FullCalendar ref="calendarRef" :options="calendarOptions" />
         </div>
       </VCardText>
     </VCard>
@@ -464,6 +471,11 @@ function removeEvent() {
   padding: 1px 4px;
   font-size: 11px;
   line-height: 14px;
+  white-space: normal;           /* allow wrapping inside month cells */
+  overflow-wrap: anywhere;       /* break long tokens if needed */
+  word-break: break-word;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .filters .v-chip { cursor: pointer; }
@@ -474,5 +486,14 @@ function removeEvent() {
 .event-row .time { color: rgba(255,255,255,0.7); width: 140px; white-space: nowrap; }
 .event-row .title { font-weight: 500; }
 .event-list--mobile { display: flex; flex-direction: column; gap: 6px; }
+
+/* Month two-column layout (calendar + side list) */
+.month-layout { display: flex; gap: 16px; }
+.month-calendar { flex: 1 1 auto; min-width: 0; }
+.month-side { flex: 0 0 340px; max-width: 380px; }
+@media (max-width: 1100px) {
+  .month-layout { flex-direction: column; }
+  .month-side { flex: 1 1 auto; max-width: 100%; }
+}
 
 </style>
