@@ -170,7 +170,7 @@ class StatisticsController {
 
     async createAgeGroupStatistics(req, res) {
         try {
-            const result = await StatisticsService.createAgeGroupStatistics();
+            const result = await StatisticsService.createAgeGroupStatistics(req.body);
             res.json({
                 success: true,
                 message: 'Age group statistics created successfully',
@@ -188,7 +188,7 @@ class StatisticsController {
 
     async createStatisticsByGender(req, res) {
         try {
-            const result = await StatisticsService.createStatisticsByGender();
+            const result = await StatisticsService.createStatisticsByGender(req.body);
             res.json({
                 success: true,
                 message: 'Statistics by gender created successfully',

@@ -8,7 +8,7 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 router.post('/ageGroup', authenticateToken, statisticsController.createAgeGroupStatistics);
 
 //create StatisticsbyGender record
-router.post('/gender', authenticateToken, statisticsController.createStatisticsByGender);
+router.post('/gender', statisticsController.createStatisticsByGender);
 
 
 //get ageGroupStatistics record by Id
