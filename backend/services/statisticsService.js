@@ -1,3 +1,4 @@
+const { Timestamp } = require('firebase-admin/firestore');
 const db = require('../config/database')
 const DailyStatistics = require('../models/dailyStatistics');
 const processStatisticsService = require('./processStatisticsService'); // Import the service to process statistics
@@ -140,6 +141,29 @@ class StatisticsService {
         await db.collection("dailyStatistics").doc(statisticId).set(newStatistics, { merge: true }); 
         console.log(`Recomputed daily statistics for baby ${babyIDRef.id} on ${date}.`);
         }
+
+        async createAgeGroupStatistics(data) {
+        const ageGroupStatsRef = db.collection("ageGroupStatistics").doc();
+        const ageGroupStatsData = {
+            id: ageGroupStatsRef.id,
+            ...data,
+            createdAt: Timestamp.now(),
+        };
+        await ageGroupStatsRef.set(ageGroupStatsData);
+        return ageGroupStatsData;
+    }
+
+    async createStatisticsByGender(data) {
+        const genderStatsRef = db.collection("statisticsByGender").doc();
+        const genderStatsData = {
+            id: genderStatsRef.id,
+            ...data,
+            createdAt: Timestamp.now()
+        };
+        await genderStatsRef.set(genderStatsData);
+        return genderStatsData;
+    }
+
 }
 
 module.exports = new StatisticsService();

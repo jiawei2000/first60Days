@@ -4,6 +4,12 @@ const statisticsController = require('../controllers/statisticsController')
 const { authenticateToken } = require('../middleware/authMiddleware');
 
 // protected
+//create ageGroupStatistics record
+router.post('/ageGroup', authenticateToken, statisticsController.createAgeGroupStatistics);
+
+//create StatisticsbyGender record
+router.post('/gender', authenticateToken, statisticsController.createStatisticsByGender);
+
 
 //get ageGroupStatistics record by Id
 router.get('/ageGroup/:statisticId', authenticateToken,statisticsController.getAgeGroupStatisticsById);
