@@ -117,7 +117,6 @@ class BabyService {
         };
     }
 
-
     static async deleteProfile(userId, babyId) {
         if (!babyId) {
             throw new Error("babyId is required");
@@ -243,6 +242,39 @@ class BabyService {
 
         return { weekNo };
 
+    }
+
+    static async getParentId(babyId) {
+        const babyRef = db.collection("babies").doc(babyId);
+        const snapshot = await babyRef.get();
+        if (!snapshot.exists) {
+            throw new Error("Baby profile not found");
+        }
+        
+        const permissionQuery = await db.collection("permissions")
+            .where("babyIDArr", "array-contains", babyRef)
+            .limit(1)
+            .get();
+
+        if (permissionQuery.empty) {
+            throw new Error("Permission document not found for this baby");
+        }
+        
+        const permissionDoc = permSnap.docs[0];
+        const permissionRef = permissionDoc.ref;
+
+        const userSnap = await db.collection('users')
+            .where('permissionRef', '==', permissionRef)
+            .limit(1)
+            .get();
+
+        if (userSnap.empty) {
+            throw new Error('No user linked to this permission document');
+        }
+
+        const parentId = userSnap.docs[0].id;
+
+        return parentId;
     }
 }
 
