@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/app/controllers/home_controller.dart';
+import 'package:flutter_app/app/controllers/feeding_schedule_controller.dart';
 import 'package:flutter_app/app/models/feed_type.dart';
 import 'package:flutter_app/app/models/journal_entry.dart';
+import 'package:flutter_app/app/models/entry_planner.dart';
+import 'package:flutter_app/app/networking/journal_api_service.dart';
 import 'package:flutter_app/resources/widgets/buttons/partials/primary_button_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:nylo_framework/nylo_framework.dart';
@@ -25,8 +29,16 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage> {
   final CalendarController _controller = CalendarController();
+  final HomeController _homeController = HomeController();
+  final FeedingScheduleController _feedingScheduleController =
+      FeedingScheduleController();
+
+  JournalApiService _journalApiService = JournalApiService();
+
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
+  DateTime _babyDOB = DateTime.now();
+  List<EntryPlanner> _feedingPlanners = [];
   Map<DateTime, List<Map<String, dynamic>>> _eventData = {};
   bool _showBanner = false;
   bool _loading = true;
@@ -35,6 +47,8 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
     _loadEvents();
+    _loadBabyDOB();
+    _loadFeedingPlanners();
   }
 
   void _loadEvents() async {
@@ -46,9 +60,117 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
+  void _loadBabyDOB() async {
+    final babyId = await Keys.selectedBabyId.read();
+    final baby = await _homeController.fetchBabyById(babyId);
+    if (!mounted || baby?.dob == null) return;
+    setState(() {
+      _babyDOB = baby!.dob!;
+    });
+  }
+
+  void _loadFeedingPlanners() async {
+    final babyId = await Keys.selectedBabyId.read();
+    final response =
+        await _feedingScheduleController.fetchPlannerByBabyId(babyId);
+    final plannersData = response?['planner'] as List?;
+    setState(() {
+      _feedingPlanners = plannersData
+              ?.whereType<Map<String, dynamic>>()
+              .map(EntryPlanner.fromJson)
+              .toList() ??
+          [];
+    });
+  }
+
+  EntryPlanner _getEntryPlannerForWeekNo(int weekNo) {
+    final matchingPlans =
+        _feedingPlanners.where((planner) => planner.weekNo == weekNo);
+    if (matchingPlans.isEmpty) {
+      debugPrint("No feeding plan found for Week $weekNo");
+      return new EntryPlanner();
+    }
+
+    EntryPlanner currentPlan = matchingPlans.first;
+    return currentPlan;
+  }
+
+  int _calculateBabyWeek() {
+    final difference = _selectedDay.difference(_babyDOB);
+    final weekNo = (difference.inDays / 7).floor() + 1;
+    return weekNo;
+  }
+
   List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
     final localDay = DateTime(day.year, day.month, day.day);
-    return _eventData[localDay] ?? [];
+    final selectedDay =
+        DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
+
+    if (localDay != selectedDay) {
+      return [];
+    }
+
+    final dayEvents =
+        (_eventData[localDay] ?? []).whereType<Map<String, dynamic>>().toList();
+
+    EntryPlanner entryPlanner = _getEntryPlannerForWeekNo(_calculateBabyWeek());
+    debugPrint("Entry Planner: " + entryPlanner.toJson().toString());
+    // Add Planned Feedings
+    // If number of feeds in Entry planner is more than Day Events skip
+    // If entry planner feedTiming is null or empty, skip
+    if (entryPlanner.feedTimings != null &&
+        entryPlanner.feedTimings!.isNotEmpty &&
+        entryPlanner.feedTimings!.length > dayEvents.length) {
+      for (var index =
+              dayEvents.length; // skip existing events from journal entries
+          index < entryPlanner.feedTimings!.length;
+          index++) {
+        String currentFeedTimeString = entryPlanner.feedTimings![index];
+        DateTime currentFeedTime =
+            _parseStringtoDateTime(currentFeedTimeString) ?? DateTime.now();
+        String lastFeedTimeString = "00:00 AM";
+
+        if (index > 0 && dayEvents.length > index - 1) {
+          lastFeedTimeString = dayEvents[index - 1]['time'] ?? "00:00 AM";
+        } else if (index > 0 &&
+            entryPlanner.feedTimings!.length > index - 1 &&
+            entryPlanner.feedTimings![index - 1].isNotEmpty) {
+          lastFeedTimeString = entryPlanner.feedTimings![index - 1];
+        }
+
+        DateTime lastFeedDateTime =
+            _parseStringtoDateTime(lastFeedTimeString) ?? DateTime.now();
+        // if currentFeedTime is less than 2 hours from lastFeedTime, adjust to 2 hours after
+        if (currentFeedTime.difference(lastFeedDateTime).inMinutes < 120) {
+          currentFeedTime = lastFeedDateTime.add(const Duration(hours: 2));
+          currentFeedTimeString = _formatTimeOnly(currentFeedTime);
+          // if currentFeedTime is more than 3 hours from lastFeedTime, adjust to 3 hours after
+        } else if (currentFeedTime.difference(lastFeedDateTime).inMinutes >
+            180) {
+          currentFeedTime = lastFeedDateTime.add(const Duration(hours: 3));
+          currentFeedTimeString = _formatTimeOnly(currentFeedTime);
+        } else {
+          currentFeedTimeString = entryPlanner.feedTimings![index];
+        }
+
+        dayEvents.add({
+          'title': "Feed ${index + 1}",
+          'time': currentFeedTimeString,
+          'entryId': null,
+          'status': "Planned",
+        });
+      }
+    }
+
+    // Force rename title to "Feed index" for all feed events
+    int feedCount = 1;
+    for (var event in dayEvents) {
+      event['title'] = "Feed $feedCount";
+      feedCount++;
+    }
+
+    debugPrint("Day Events: " + dayEvents.toString());
+    return dayEvents;
   }
 
   @override
@@ -96,7 +218,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             });
                           },
                           calendarFormat: CalendarFormat.month,
-                          eventLoader: _getEventsForDay,
+                          //   eventLoader: _getEventsForDay,
                           calendarStyle: CalendarStyle(
                             todayDecoration: BoxDecoration(
                               color: Colors.purpleAccent,
@@ -180,8 +302,21 @@ class _CalendarPageState extends State<CalendarPage> {
                                 return InkWell(
                                   onTap: () async {
                                     final entryId = event['entryId'];
-                                    final entry = await _controller
-                                        .getJournalEntryById(entryId);
+                                    // add a boolean check for null entry
+                                    bool isPlannedEntry = entryId == null;
+                                    JournalEntry? entry = null;
+
+                                    if (isPlannedEntry) {
+                                      final feedTime = event['time'];
+                                      DateTime feedDateTime =
+                                          _parseStringtoDateTime(feedTime) ??
+                                              DateTime.now();
+                                      entry = JournalEntry(
+                                          startFeedTime: feedDateTime);
+                                    } else {
+                                      entry = await _controller
+                                          .getJournalEntryById(entryId);
+                                    }
 
                                     if (entry == null) {
                                       ScaffoldMessenger.of(context)
@@ -337,15 +472,26 @@ class _CalendarPageState extends State<CalendarPage> {
                                                             );
                                                           }),
                                                         );
-                                                        await _controller
-                                                            .updateJournalEntry(
-                                                          entryId: entry.id!,
-                                                          babyId: await Keys
-                                                              .selectedBabyId
-                                                              .read(),
-                                                          data: updatedData,
-                                                        );
-
+                                                        if (isPlannedEntry) {
+                                                          // use create entry method
+                                                          await _journalApiService
+                                                              .create(
+                                                            id: await Keys
+                                                                .selectedBabyId
+                                                                .read(),
+                                                            data: updatedData,
+                                                          );
+                                                        } else {
+                                                          await _controller
+                                                              .updateJournalEntry(
+                                                            entryId:
+                                                                entry!.id ?? '',
+                                                            babyId: await Keys
+                                                                .selectedBabyId
+                                                                .read(),
+                                                            data: updatedData,
+                                                          );
+                                                        } 
                                                         Navigator.pop(context);
                                                         _loadEvents();
                                                       },
@@ -363,7 +509,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   child: EventTile(
                                     title: event['title'] ?? 'Feed',
                                     subtitle: event['time'] ?? '',
-                                    color: Colors.purple,
+                                    color: Colors.green,
                                     status: event['status'] ?? 'Incomplete',
                                   ),
                                 );
@@ -381,6 +527,14 @@ class _CalendarPageState extends State<CalendarPage> {
 
   String _formatDateTime(DateTime dateTime) {
     return "${dateTime.day}/${dateTime.month}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+  }
+
+  String _formatTimeOnly(DateTime dateTime) {
+    // Format the time as HH:mm AM/PM
+    String hour = dateTime.hour.toString().padLeft(2, '0');
+    String minute = dateTime.minute.toString().padLeft(2, '0');
+    String period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
   DateTime? parseDateTimeString(String dateTimeString) {
@@ -405,5 +559,46 @@ class _CalendarPageState extends State<CalendarPage> {
         minute == null) return null;
 
     return DateTime(year, month, day, hour, minute);
+  }
+
+  DateTime? _parseStringtoDateTime(String value) {
+    if (value.isEmpty) return null;
+    final lower = value.trim().toLowerCase();
+    final isPM = lower.contains('pm');
+    final isAM = lower.contains('am');
+
+    final clean = lower.replaceAll(RegExp(r'[^0-9:]'), '');
+    final segments = clean.split(':');
+    if (segments.length < 2) return null;
+
+    int? hour = int.tryParse(segments[0]);
+    final minute = int.tryParse(segments[1]);
+    if (hour == null || minute == null) return null;
+
+    if (isPM && hour < 12) {
+      hour += 12;
+    }
+    if (isAM && hour == 12) {
+      hour = 0;
+    }
+
+    final now = DateTime.now();
+    return DateTime(
+      now.year,
+      now.month,
+      now.day,
+      hour.clamp(0, 23),
+      minute.clamp(0, 59),
+    );
+  }
+
+  String convertTo24HourString(String timeString) {
+    DateTime? dateTime = _parseStringtoDateTime(timeString);
+    if (dateTime == null) {
+      return '';
+    }
+    String hour = dateTime.hour.toString().padLeft(2, '0');
+    String minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }

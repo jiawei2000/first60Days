@@ -23,10 +23,8 @@ class DaySectionHeader extends StatelessWidget {
 
     return Row(
       children: [
-        Text(
-          "$label - ${DateFormat.yMMMMd().format(date)}",
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        ),
+        Text("$label - ${DateFormat('d MMMM yyyy').format(date)}",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
       ],
     );
   }
