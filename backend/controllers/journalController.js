@@ -4,7 +4,7 @@ const journalController = {
     async createEntry(req, res) {
         try {
             const { babyId } = req.params;
-            const { ...entryData } = req.body;
+            const { ...entryData } = req.body; 
 
             if (!babyId) {
                 return res.status(400).json({ error: "babyId is required" });

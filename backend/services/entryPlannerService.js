@@ -3,17 +3,19 @@ const EntryPlanner = require("../models/EntryPlanner");
 const db = require('../config/database');
 
 class EntryPlannerService {
-
+    //need to be fixed 
     static async createPlanner(babyId, plannerData) {
         if (!babyId) throw new Error("babyId is required");
         if (!plannerData || !plannerData.weekNo) throw new Error("weekNo is required in plannerData");
+
+        //plannerData contains: totalFeeds, firstFeedTime(hh:mm), lastFeedTime (hh:mm), weekNo
 
         const plannerCollection = db
             .collection("babies")
             .doc(babyId)
             .collection("entryPlanner");
 
-        // Step 1: Check if there's already a planner with the same weekNo
+        //if weekNo exists, update it
         const existingQuery = await plannerCollection
             .where("weekNo", "==", plannerData.weekNo)
             .limit(1)
@@ -45,7 +47,7 @@ class EntryPlannerService {
         const message = planner.generateFeedTimings();
 
         // Step 5: Save to Firestore (stores strings, not timestamps)
-        await plannerRef.set(planner.toFirestore(), { merge: false });
+        await plannerRef.set(planner.toFirestore(), { merge: false }); //this line of code is saving the id as a field in firestore
 
         // Step 6: Return planner and message
         return { planner, message };

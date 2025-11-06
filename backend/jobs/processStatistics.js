@@ -13,15 +13,15 @@ cron.schedule('* * * * *', async () => {
       //probably can do daily statistics here too
         await ProcessStatisticsService.processDailyStatistics();
         console.log("Daily statistics processing job completed.");
-        //pause for a bit to avoid overload
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // //pause for a bit to avoid overload
+        // await new Promise(resolve => setTimeout(resolve, 2000));
 
-        await ProcessStatisticsService.processStatisticsByGender();
-        console.log("Gender statistics processing job completed.");
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // await ProcessStatisticsService.processStatisticsByGender();
+        // console.log("Gender statistics processing job completed.");
+        // await new Promise(resolve => setTimeout(resolve, 2000));
         
-        await ProcessStatisticsService.processStatisticsByAgeGroup();
-        console.log("Age group statistics processing job completed.");
+        // await ProcessStatisticsService.processStatisticsByAgeGroup();
+        // console.log("Age group statistics processing job completed.");
     
         
     } catch (error) {
