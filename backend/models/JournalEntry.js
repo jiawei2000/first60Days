@@ -2,20 +2,23 @@ const { Timestamp } = require('firebase-admin/firestore');
 
 class JournalEntry {
     constructor(id, {
-        awakeTime,
-        cycleNo,
-        feedType,
-        remarks,
-        sleepDuration,
-        startFeedTime,
-        startPlayTime,
-        startSleepTime,
-        hasStool,
-        hasUrine
+        awakeTime = null,
+        feedType = [],
+        remarks = "",
+        sleepDuration = null,
+        startFeedTime = null,
+        startPlayTime = null,
+        startSleepTime = null,
+        hasStool = false,
+        hasUrine = false,
+
+        cycleNo = null,
+        status //either "COMPLETE" or "INCOMPLETE"
     }) {
         this.id = id;
 
         // normalize dates → always Firestore Timestamp
+        //if null/undefined, set to null
         this.awakeTime = JournalEntry.toTimestamp(awakeTime);
         this.startFeedTime = JournalEntry.toTimestamp(startFeedTime);
         this.startPlayTime = JournalEntry.toTimestamp(startPlayTime);
@@ -34,6 +37,8 @@ class JournalEntry {
         // ensure booleans
         this.hasStool = Boolean(hasStool);
         this.hasUrine = Boolean(hasUrine);
+
+        this.status = status === "COMPLETE" ? "COMPLETE" : "INCOMPLETE"; //default to INCOMPLETE
     }
 
     toFirestore() {
@@ -48,6 +53,7 @@ class JournalEntry {
             startSleepTime: this.startSleepTime,
             hasStool: this.hasStool,
             hasUrine: this.hasUrine,
+            status: this.status
         };
     }
 
@@ -101,6 +107,32 @@ class JournalEntry {
 
         return formatted;
     }
+
+    static checkStatus(entryData) {
+        const requiredFields = [
+            "awakeTime",
+            "startFeedTime",
+            "startSleepTime",
+            "feedType",
+            "sleepDuration",
+            "hasStool",
+            "hasUrine",
+        ];
+
+        // If *any* required field is missing or null → INCOMPLETE
+        for (const field of requiredFields) {
+            const value = entryData[field];
+            if (value === null || value === undefined) return "INCOMPLETE";
+        }
+
+        if (Array.isArray(entryData.feedType) && entryData.feedType.length === 0) {
+            return "INCOMPLETE";
+        }
+
+        // Special rule: startPlayTime can be null → still COMPLETE
+        return "COMPLETE";
+    }
+
 }
 
 module.exports = JournalEntry;

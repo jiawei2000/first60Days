@@ -8,31 +8,47 @@ const { authenticateToken, authorizeRoles } = require('../middleware/authMiddlew
 router.post('/', adminController.registerNew);
 router.post('/login', adminController.login);
 
-// Protected routes
-//create new trainer accounts 
+// -------------------------------------------------------------
+// 🟢 POST Routes (Create resources)
+// -------------------------------------------------------------
+
+// Create new trainer accounts
 router.post('/registerTrainer', authenticateToken, adminController.registerTrainer);
-//create new user accounts
+
+// Create new user accounts
 router.post('/registerUser', authenticateToken, adminController.registerUser);
 
-//edit admin profile
+// -------------------------------------------------------------
+// 🟡 PUT Routes (Update or modify resources)
+// -------------------------------------------------------------
+
+// Edit admin profile
 router.put('/editAdminProfile', authenticateToken, adminController.editAdminProfile);
 
-//get all trainers
-router.get('/trainers', authenticateToken, adminController.getAllTrainers);
-
-//get all users (main)
-router.get('/users', authenticateToken, adminController.getAllUsers);
-
-//get user (main) by ID
-router.get('/user/:userId', authenticateToken, adminController.getUserById);
-
-//get trainer by ID
-router.get('/trainer/:trainerId', authenticateToken, adminController.getTrainerById);
-
-//edit user (main) by ID
+// Edit user (main) by ID
 router.put('/editUser/:userId', authenticateToken, adminController.editUserById);
 
-//update trainer ID for a user
+// Update trainer ID for a specific user
 router.put('/updateUserTrainer/:userId', authenticateToken, adminController.updateUserTrainer);
+
+// -------------------------------------------------------------
+// 🔵 GET Routes (Retrieve resources)
+// -------------------------------------------------------------
+
+// Get user (main) by ID
+router.get('/user/:userId', authenticateToken, adminController.getUserById);
+
+// Get trainer by ID
+router.get('/trainer/:trainerId', authenticateToken, adminController.getTrainerById);
+
+// Get all trainers
+router.get('/trainers', authenticateToken, adminController.getAllTrainers);
+
+// Get all users (main)
+router.get('/users', authenticateToken, adminController.getAllUsers);
+
+//get admin dashboard data
+router.get('/dashboard', adminController.getAdminDashboardData);
+
 
 module.exports = router;

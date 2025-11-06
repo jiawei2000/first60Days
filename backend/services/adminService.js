@@ -46,7 +46,7 @@ class adminService {
         return { admin };
     }
 
-    static async login({ username, password, fcmToken }) {
+    static async login({ username, password }) {
         const adminsRef = db.collection('admins');
         const snapshot = await adminsRef.where('username', '==', username).get();
 
@@ -342,6 +342,24 @@ class adminService {
         await adminRef.update(updatedData, { merge: true });
         const updatedAdminDoc = await adminRef.get();
         return Admin.fromFirestore(updatedAdminDoc);
+    }
+
+    static async getAdminDashboardData() {
+        // Example: Fetch total number of users and trainers
+        const usersRef = db.collection('users');
+        const trainersRef = db.collection('trainers');
+        const babiesRef = db.collection('babies');
+
+        const usersSnapshot = await usersRef.where('deletedAt', '==', null).get();
+        const trainersSnapshot = await trainersRef.where('deletedAt', '==', null).get();
+        const babiesSnapshot = await babiesRef.where('deletedAt', '==', null).get();
+
+        return {
+            totalUsers: usersSnapshot.size,
+            totalTrainers: trainersSnapshot.size,
+            totalBabies: babiesSnapshot.size
+        };
+
     }
 }
 

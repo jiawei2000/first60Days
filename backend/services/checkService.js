@@ -2,6 +2,9 @@ const db = require('../config/database');
 const Check = require('../models/Check');
 const { Timestamp } = require('firebase-admin/firestore');
 
+const BabyService = require("./babyService");
+const NotificationService = require("./notificationService");
+
 class CheckService {
     static async processDailyChecks() {
         try {
@@ -66,15 +69,27 @@ class CheckService {
                         createdAt: Timestamp.now(),
                     });
 
+                    // Fetch parent user ID
+                    const parentId = await BabyService.getParentId(babyId);
+                    const babyName = babyDoc.data().name;
+
                     //notification warnings 
                     if (stats.urineCount < 5){
-                        //Urine count less than 5 
+                        //Urine count less than 5
+                        NotificationService.sendToUserId(
+                            parentId, 
+                            "Low Urine Output",
+                            `Baby ${babyName} might be dehydrated as they had only ${stats.urineCount} urine output yesterday. Consider increasing fluid intake.`,
+                        );
                     }
 
                     if (stats.stoolCount == 0){
                         //if no stool count, check pass 7 days records
+                        
                         //if no stools for the pass 3 days, increase fluid intake 
+                        
                         //in no stools for the pass 7 days, see doctor 
+                        
                     }
 
                     //number of entry count should technically follow entry planner
@@ -82,6 +97,11 @@ class CheckService {
                     //from week 6-10 shud minimally have 7
                     if (stats.entryCount < 6){
                         //warning 
+                        NotificationService.sendToUserId(
+                            parentId, 
+                            "Missing Journal Entries",
+                            `Baby ${babyName} is missing journal entries. Please ensure all entries are logged.`,
+                        );
                     }
 
                     if (stats.interval.count > 0){

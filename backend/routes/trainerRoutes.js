@@ -21,4 +21,5 @@ router.put('/profile', authenticateToken, trainerController.updateProfile);
 router.get('/users/:userId/babies', authenticateToken, trainerController.getManagedUserBabies);
 
 
+
 module.exports = router;
