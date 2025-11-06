@@ -112,6 +112,16 @@ const adminController = {
             res.status(400).json({ error: error.message });
         }
     },
+
+    async getAdminDashboardData(req, res) {
+        try {
+            // const adminId = req.user.id; // from JWT
+            const data = await AdminService.getAdminDashboardData();
+            res.json({ success: true, message: 'Dashboard data retrieved successfully', data });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
 }
 
 module.exports = adminController;
