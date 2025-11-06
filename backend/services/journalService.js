@@ -22,9 +22,6 @@ class JournalService {
         return new JournalEntry(newEntryRef.id, entryData);
     }
 
-
-
-
     static async editEntry(babyId, entryId, updateData) {
         const journalRef = db
             .collection("babies")
@@ -40,19 +37,19 @@ class JournalService {
 
         const existingData = existingSnap.data();
 
-        // ✅ 2. Merge existing data with incoming updates
+        // 2. Merge existing data with incoming updates
         const mergedData = { ...existingData, ...updateData };
 
-        // ✅ 3. Recalculate completion status for the entire entry
+        // 3. Recalculate completion status for the entire entry
         mergedData.status = JournalEntry.checkStatus(mergedData);
 
-        // ✅ 4. Validate & normalize fields (partial = true for selective updates)
+        // 4. Validate & normalize fields (partial = true for selective updates)
         const validatedData = JournalEntry.validateData(mergedData, { partial: true });
 
-        // ✅ 5. Update Firestore document
+        // 5. Update Firestore document
         await journalRef.update(validatedData);
 
-        // ✅ 6. Return the updated normalized entry
+        // 6. Return the updated normalized entry
         const snapshot = await journalRef.get();
         return new JournalEntry(snapshot.id, snapshot.data());
     }
