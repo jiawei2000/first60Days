@@ -28,7 +28,7 @@ class _FourthWidgetState extends JourneyState<FourthWidget> {
         children: [
           Text('Digital Nanny', style: Theme.of(context).textTheme.headlineMedium),
           Image.asset(
-            getImageAsset("fourthwidget.jpg")
+            getImageAsset("baby3.png"),
           ),
           const SizedBox(height: 20),
           Text('Communicate with your trainer'),
