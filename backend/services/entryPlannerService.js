@@ -1,6 +1,8 @@
 const EntryPlanner = require("../models/EntryPlanner");
-
 const db = require('../config/database');
+//import dayjs
+const dayjs = require("dayjs");
+
 
 class EntryPlannerService {
     static async createPlanner(babyId, plannerData) {
@@ -119,16 +121,51 @@ class EntryPlannerService {
 
         const existingData = doc.data();
 
-        // Merge updates with existing fields
-        const mergedData = { ...existingData, ...updateData };
+        //feedTimings is an array: [ "03:00 AM", "06:00 AM", ...]
+        //from updateData, update, firstFeedTime and lastFeedTime in existingData
+              const feedTimings = updateData.feedTimings; //array of time strings
+        const firstFeedTime = feedTimings[0]; //hh:mm AM/PM
+        const lastFeedTime = feedTimings[feedTimings.length - 1]; //hh:mm AM/PM
 
-        // Rebuild planner and regenerate fields
-        const updatedPlanner = new EntryPlanner(plannerId, mergedData);
+        //convert firstFeedTime and lastFeedTime to "HH:mm" 24hr format for storage
+        const firstFeedTime24 = dayjs(firstFeedTime, "hh:mm A").format("HH:mm");
+        const lastFeedTime24 = dayjs(lastFeedTime, "hh:mm A").format("HH:mm");
+
+        //calculate MonInterval using 1st and last feed time.
+        const first = EntryPlanner.toDateFromTimeStr(firstFeedTime24);
+        const last = EntryPlanner.toDateFromTimeStr(lastFeedTime24);
+
+        // Handle wrap-around (e.g., 03:00 → 00:00 next day)
+        let endMs = last.getTime();
+        const startMs = first.getTime();
+        if (endMs <= startMs) {
+            endMs += 24 * 60 * 60 * 1000; // add 24 hours
+        }
+
+        // Total duration in hours
+        const totalDuration = (endMs - startMs) / (1000 * 60 * 60); 
+
+        //calculate MONInterval
+        const remainingHours = 24 - totalDuration;
+
+        //convert remainingHours to hh:mm format
+        const hours = Math.floor(remainingHours);
+        const minutes = Math.round((remainingHours - hours) * 60);
+        const MONIntervalStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+        //update totalFeeds based on feedTimings length
+        const totalFeeds = feedTimings.length;
+
+        // Merge updates with existing fields
+        const mergedData = { ...existingData, ...updateData, firstFeedTime: firstFeedTime24, lastFeedTime: lastFeedTime24, MONInterval: MONIntervalStr, totalFeeds: totalFeeds };
 
         // Update only the necessary fields in Firestore
-        await plannerRef.update(updatedPlanner.toFirestore());
+        await plannerRef.update(mergedData, { merge: true });
+        const updatedPlannerDoc = await plannerRef.get();
 
-        return updatedPlanner;
+        const updatedPlanner = new EntryPlanner(plannerId, updatedPlannerDoc.data());
+
+        return { updatedPlanner };
     }
 
     static async getPlanners(babyId) {

@@ -158,7 +158,7 @@ class EntryPlanner {
 
     static toTimeStr(dateObj) {
         // return dayjs(dateObj).format("HH:mm");
-        return dayjs(dateObj).format("h:mm A"); // e.g., "3:00 AM"
+        return dayjs(dateObj).format("hh:mm A"); // e.g., "3:00 AM"
     }
 
     static toTimestamp(value) {
