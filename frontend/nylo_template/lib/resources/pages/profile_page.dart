@@ -4,6 +4,7 @@ import '/resources/widgets/buttons/buttons.dart';
 import 'caregiver_page.dart'; // <-- add this import
 import 'baby_page.dart'; // <-- add this import
 import 'choose_baby_page.dart';
+import '/app/events/logout_event.dart';
 import '/app/networking/baby_service_api_service.dart';
 import '/config/keys.dart';
 // If you want a Babies page later, create it similarly and import here.
@@ -135,7 +136,7 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             Button.primary(
               text: "Logout",
               onPressed: () async {
-                // TODO: sign out; then route to login
+                await event<LogoutEvent>();
               },
             ),
           ],
