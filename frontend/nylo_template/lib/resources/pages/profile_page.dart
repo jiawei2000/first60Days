@@ -3,6 +3,9 @@ import 'package:nylo_framework/nylo_framework.dart';
 import '/resources/widgets/buttons/buttons.dart';
 import 'caregiver_page.dart'; // <-- add this import
 import 'baby_page.dart'; // <-- add this import
+import 'choose_baby_page.dart';
+import '/app/networking/baby_service_api_service.dart';
+import '/config/keys.dart';
 // If you want a Babies page later, create it similarly and import here.
 
 class ProfilePage extends NyStatefulWidget {
@@ -12,10 +15,27 @@ class ProfilePage extends NyStatefulWidget {
 
 class _ProfilePageState extends NyPage<ProfilePage> {
   String accountName = "Jiawei";
-  String currentBabyName = "Kai Wong"; // update when you switch babies
+  String currentBabyName = ""; // will load from selected baby
+  final _babyService = BabyServiceApiService();
 
   @override
-  get init => () {};
+  get init => () async {
+        await _refreshCurrentBabyName();
+      };
+
+  Future<void> _refreshCurrentBabyName() async {
+    try {
+      final id = await Keys.selectedBabyId.read();
+      if (id == null || id.toString().isEmpty) {
+        setState(() => currentBabyName = "");
+        return;
+      }
+      final baby = await _babyService.getBabyById(id.toString());
+      setState(() => currentBabyName = baby?.name ?? "");
+    } catch (_) {
+      // ignore
+    }
+  }
 
   @override
   Widget view(BuildContext context) {
@@ -69,8 +89,8 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             // Switch baby (functionality later)
             Button.outlined(
               text: "Switch Baby",
-              onPressed: () {
-                // TODO: open switcher (bottom sheet / page) and update `currentBabyName`
+              onPressed: () async {
+                routeTo(ChooseBabyPage.path);
               },
             ),
 
