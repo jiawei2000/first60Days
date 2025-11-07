@@ -69,11 +69,11 @@ class _JournalEntryFormState extends NyState<JournalEntryForm> {
               },
             ),
             CupertinoDateField(
-                label: 'Sleep Time',
-                textController: widget.sleepTimeController),
+                label: 'Play Time', textController: widget.playTimeController),
             const SizedBox(height: 12),
             CupertinoDateField(
-                label: 'Play Time', textController: widget.playTimeController),
+                label: 'Sleep Time',
+                textController: widget.sleepTimeController),
             LabeledTextField(
                 label: 'Remarks',
                 textController: widget.remarksController,
