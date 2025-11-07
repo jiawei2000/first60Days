@@ -292,7 +292,9 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ),
                               ),
                             ),
-                            DaySectionHeader(date: _selectedDay),
+                            DaySectionHeader(
+                                date: _selectedDay,
+                                weekNo: _calculateBabyWeek()),
                             const SizedBox(height: 8),
                             if (events.isEmpty)
                               const Text("No entries to display",
