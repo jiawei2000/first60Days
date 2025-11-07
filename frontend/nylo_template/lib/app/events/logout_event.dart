@@ -1,4 +1,5 @@
 import 'package:nylo_framework/nylo_framework.dart';
+import '/config/keys.dart';
 
 class LogoutEvent implements NyEvent {
   @override
@@ -11,7 +12,14 @@ class DefaultListener extends NyListener {
   @override
   handle(dynamic event) async {
     await Auth.logout();
+    // Clear any locally stored app-specific keys
+    try {
+      await Keys.caregiverName.save(null);
+      await Keys.selectedBabyId.save(null);
+    } catch (_) {}
 
     routeToInitial();
   }
 }
+
+

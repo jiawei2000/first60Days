@@ -15,14 +15,33 @@ class ProfilePage extends NyStatefulWidget {
 }
 
 class _ProfilePageState extends NyPage<ProfilePage> {
-  String accountName = "Jiawei";
+  String accountName = "";
   String currentBabyName = ""; // will load from selected baby
   final _babyService = BabyServiceApiService();
+  final TextEditingController _caregiverCtrl = TextEditingController();
+  final TextEditingController _babyNameCtrl = TextEditingController();
 
   @override
   get init => () async {
+        await _refreshCaregiverName();
         await _refreshCurrentBabyName();
       };
+
+  Future<void> _refreshCaregiverName() async {
+    try {
+      final name = await Keys.caregiverName.read();
+      final v = (name?.toString() ?? '').trim();
+      setState(() {
+        accountName = v;
+        _caregiverCtrl.text = v;
+      });
+    } catch (_) {
+      setState(() {
+        accountName = "";
+        _caregiverCtrl.text = "";
+      });
+    }
+  }
 
   Future<void> _refreshCurrentBabyName() async {
     try {
@@ -32,7 +51,11 @@ class _ProfilePageState extends NyPage<ProfilePage> {
         return;
       }
       final baby = await _babyService.getBabyById(id.toString());
-      setState(() => currentBabyName = baby?.name ?? "");
+      final v = baby?.name ?? "";
+      setState(() {
+        currentBabyName = v;
+        _babyNameCtrl.text = v;
+      });
     } catch (_) {
       // ignore
     }
@@ -58,10 +81,10 @@ class _ProfilePageState extends NyPage<ProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           children: [
             // Account name (read-only)
-            Text("Name", style: t.labelLarge),
+            Text("Caregiver Name", style: t.labelLarge),
             const SizedBox(height: 6),
             TextFormField(
-              initialValue: accountName,
+              controller: _caregiverCtrl,
               readOnly: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
@@ -73,10 +96,10 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             const SizedBox(height: 16),
 
             // Current baby name (read-only)
-            Text("Current Baby", style: t.labelLarge),
+            Text("Baby Name", style: t.labelLarge),
             const SizedBox(height: 6),
             TextFormField(
-              initialValue: currentBabyName,
+              controller: _babyNameCtrl,
               readOnly: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),

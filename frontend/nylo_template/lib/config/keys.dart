@@ -24,6 +24,7 @@ class Keys {
 
   static StorageKey bearerToken = 'SK_BEARER_TOKEN';
   static StorageKey selectedBabyId = 'SK_SELECTED_BABY_ID';
+  static StorageKey caregiverName = 'SK_CAREGIVER_NAME';
 
   // static StorageKey coins = 'SK_COINS';
 
