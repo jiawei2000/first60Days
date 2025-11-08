@@ -8,6 +8,7 @@ import 'buttons/partials/text_only_button_widget.dart';
 
 class JournalEntryForm extends StatefulWidget {
   final TextEditingController wakeTimeController;
+  final TextEditingController sleepDurationController;
   final TextEditingController feedTimeController;
   final TextEditingController sleepTimeController;
   final TextEditingController playTimeController;
@@ -19,6 +20,7 @@ class JournalEntryForm extends StatefulWidget {
   const JournalEntryForm({
     super.key,
     required this.wakeTimeController,
+    required this.sleepDurationController,
     required this.feedTimeController,
     required this.sleepTimeController,
     required this.playTimeController,
@@ -48,7 +50,14 @@ class _JournalEntryFormState extends NyState<JournalEntryForm> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           children: [
             CupertinoDateField(
-                label: 'Awake Time', textController: widget.wakeTimeController),
+                label: 'Wake up Time',
+                textController: widget.wakeTimeController),
+            const SizedBox(height: 12),
+            LabeledTextField(
+              label: 'Sleep Duration (hours)',
+              textController: widget.sleepDurationController,
+              hintText: "e.g. 3.5",
+            ),
             const SizedBox(height: 12),
             CupertinoDateField(
                 label: 'Feed Time', textController: widget.feedTimeController),
