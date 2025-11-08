@@ -5,10 +5,11 @@ async function askOpenAI(question) {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   console.log('OpenAI Key (partial):', OPENAI_API_KEY?.slice(0, 10));
 
-  const prompt = `
+const prompt = `
 You are an assistant converting natural language questions into Firestore filter queries.
 
-The Firestore collection is called "babies". Each document has these fields:
+There are 2 collections:
+1. "babies" with fields:
 - name (string)
 - dob (timestamp)
 - createdAt (timestamp)
@@ -22,17 +23,35 @@ The Firestore collection is called "babies". Each document has these fields:
 - vaccination (string)
 - allergies (string)
 
-Question: "${question}"
+2. "users" with fields:
+- email (string)
+- password (string)
+- phoneNo (string)
+- username (string)
+- createdAt (timestamp)
+- lastLoginAt (timestamp)
+- deletedAt (timestamp)
+- permissionID (string)
+- relation (string or null)
+- fcmTokens (array)
+- name (string)
+- trainerID (string or null)
+- createdByAdminID (string or null)
 
-Respond ONLY with clean JSON like:
+Given a question, respond ONLY with a JSON like:
 {
-  "collection": "babies",
+  "collection": "users",
   "filters": [
-    { "field": "dob", "op": "<", "value": "2025-08-01" }
+    { "field": "relation", "op": "==", "value": "parent" },
+    { "field": "deletedAt", "op": "==", "value": null }
   ],
+  "sort": { "field": "createdAt", "direction": "desc" },
   "limit": 50
 }
+
+Question: "${question}"
 `;
+
 
   const response = await axios.post(
     'https://api.openai.com/v1/chat/completions',

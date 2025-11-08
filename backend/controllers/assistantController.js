@@ -16,7 +16,10 @@ async function handleQuery(req, res) {
     let q = db.collection(interpreted.collection);
 
     // Fields considered timestamp-based
-    const timestampFields = ['dob', 'createdAt', 'deletedAt', 'expectedDueDate'];
+    const timestampFields = [
+  'dob', 'createdAt', 'deletedAt', 'expectedDueDate', 'lastLoginAt'
+];
+
 
     // --- Step 1: Apply only the first date range filter (Firestore-friendly)
     let firestoreFilter = interpreted.filters?.find(f => timestampFields.includes(f.field));
