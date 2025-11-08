@@ -11,12 +11,16 @@ class JournalEntry extends Model {
   DateTime? startSleepTime;
   bool? hasStool;
   bool? hasUrine;
+  String? status;
+  double? sleepDuration;
 
   static StorageKey key = 'journal_entry';
 
   JournalEntry(
       {String? this.id,
       String? this.remarks,
+      String? this.status,
+      double? this.sleepDuration,
       DateTime? this.startWakeTime,
       DateTime? this.startFeedTime,
       DateTime? this.startPlayTime,
@@ -38,12 +42,16 @@ class JournalEntry extends Model {
     startSleepTime = parseTimestamp(data['startSleepTime']);
     hasStool = data['hasStool'];
     hasUrine = data['hasUrine'];
+    status = data['status'];
+    sleepDuration = (data['sleepDuration'] as num?)?.toDouble();
   }
 
   @override
   toJson() => {
         "id": id,
         "remarks": remarks,
+        "status": status,
+        "sleepDuration": sleepDuration,
         "feedType": feedTypes?.map((item) => item.toJson()).toList(),
         "awakeTime": startWakeTime?.toIso8601String(),
         "startFeedTime": startFeedTime?.toIso8601String(),

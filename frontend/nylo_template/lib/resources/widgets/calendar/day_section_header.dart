@@ -3,8 +3,10 @@ import 'package:intl/intl.dart';
 
 class DaySectionHeader extends StatelessWidget {
   final DateTime date;
+  final int weekNo;
 
-  const DaySectionHeader({Key? key, required this.date}) : super(key: key);
+  const DaySectionHeader({Key? key, required this.date, required this.weekNo})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,16 +16,18 @@ class DaySectionHeader extends StatelessWidget {
 
     String label;
     if (isToday) {
-      label = "TODAY";
+      label = "Today";
     } else if (isTomorrow) {
-      label = "TOMORROW";
+      label = "Tomorrow";
     } else {
-      label = DateFormat.EEEE().format(date).toUpperCase();
+      label = DateFormat.EEEE().format(date);
     }
+
+    final weekLabel = weekNo > 0 ? " [Week $weekNo]" : "";
 
     return Row(
       children: [
-        Text("$label - ${DateFormat('d MMMM yyyy').format(date)}",
+        Text("$weekLabel  $label - ${DateFormat('d MMMM yyyy').format(date)}",
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
       ],
     );
