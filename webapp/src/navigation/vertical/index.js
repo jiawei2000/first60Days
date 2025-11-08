@@ -24,6 +24,12 @@ export default [
         icon: { icon: 'bx-user' },
         viewBy: 'admin'
     },
+    {
+        title: 'Manage Thresholds',
+        to: { name: 'admin-threshold-manage-threshold' },
+        icon: { icon: 'bx-user' },
+        viewBy: 'admin'
+    },
     // Trainer Pages
     {
         title: 'Home',

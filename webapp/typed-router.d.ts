@@ -23,6 +23,8 @@ declare module 'vue-router/auto-routes' {
     'admin': RouteRecordInfo<'admin', '/admin', Record<never, never>, Record<never, never>>,
     'admin-login': RouteRecordInfo<'admin-login', '/admin/login', Record<never, never>, Record<never, never>>,
     'admin-statistics-view-statistics': RouteRecordInfo<'admin-statistics-view-statistics', '/admin/statistics/view-statistics', Record<never, never>, Record<never, never>>,
+    'admin-threshold-edit-threshold-id': RouteRecordInfo<'admin-threshold-edit-threshold-id', '/admin/threshold/edit-threshold/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    'admin-threshold-manage-threshold': RouteRecordInfo<'admin-threshold-manage-threshold', '/admin/threshold/manageThreshold', Record<never, never>, Record<never, never>>,
     'admin-trainer-create-trainer': RouteRecordInfo<'admin-trainer-create-trainer', '/admin/trainer/create-trainer', Record<never, never>, Record<never, never>>,
     'admin-trainer-manage-trainer': RouteRecordInfo<'admin-trainer-manage-trainer', '/admin/trainer/manage-trainer', Record<never, never>, Record<never, never>>,
     'admin-user-create-user': RouteRecordInfo<'admin-user-create-user', '/admin/user/create-user', Record<never, never>, Record<never, never>>,
