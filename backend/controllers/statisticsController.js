@@ -168,6 +168,42 @@ class StatisticsController {
         }
     }
 
+    async createAgeGroupStatistics(req, res) {
+        try {
+            const result = await StatisticsService.createAgeGroupStatistics(req.body);
+            res.json({
+                success: true,
+                message: 'Age group statistics created successfully',
+                data: { statistic: result }
+            });
+        } catch (error) {
+            console.error('Error creating age group statistics:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to create age group statistics',
+                error: error.message
+            });
+        }
+    }
+
+    async createStatisticsByGender(req, res) {
+        try {
+            const result = await StatisticsService.createStatisticsByGender(req.body);
+            res.json({
+                success: true,
+                message: 'Statistics by gender created successfully',
+                data: { statistic: result }
+            });
+        } catch (error) {
+            console.error('Error creating statistics by gender:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to create statistics by gender',
+                error: error.message
+            });
+        }
+    }
+
 }
 
 module.exports = new StatisticsController();

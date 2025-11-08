@@ -27,7 +27,7 @@ class _ThirdWidgetState extends JourneyState<ThirdWidget> {
         children: [
           Text('Digital Nanny', style: Theme.of(context).textTheme.headlineMedium),
           Image.asset(
-            getImageAsset("thirdwidget.jpg")
+            getImageAsset("baby2.png"),
           ),
           const SizedBox(height: 20),
           Text('Receive real time notifications'),

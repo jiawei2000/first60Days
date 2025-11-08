@@ -9,12 +9,16 @@ class JournalService {
             .doc(babyId)
             .collection("journalEntries");
 
-        // Create a JournalEntry instance → validates & normalizes
+        // Determine completion status
+        entryData.status = JournalEntry.checkStatus(entryData);
+
+        // Create normalized instance
         const entry = new JournalEntry(null, entryData);
 
-        // Save normalized data
+        //  Save to Firestore
         const newEntryRef = await journalRef.add(entry.toFirestore());
 
+        // Return instance with new ID
         return new JournalEntry(newEntryRef.id, entryData);
     }
 
@@ -25,15 +29,31 @@ class JournalService {
             .collection("journalEntries")
             .doc(entryId);
 
-        // Use JournalEntry class to validate & normalize fields
-        const validatedData = JournalEntry.validateData(updateData, { partial: true });
+        // ✅ 1. Fetch existing data
+        const existingSnap = await journalRef.get();
+        if (!existingSnap.exists) {
+            throw new Error(`Journal entry ${entryId} not found for baby ${babyId}.`);
+        }
 
+        const existingData = existingSnap.data();
+
+        // 2. Merge existing data with incoming updates
+        const mergedData = { ...existingData, ...updateData };
+
+        // 3. Recalculate completion status for the entire entry
+        mergedData.status = JournalEntry.checkStatus(mergedData);
+
+        // 4. Validate & normalize fields (partial = true for selective updates)
+        const validatedData = JournalEntry.validateData(mergedData, { partial: true });
+
+        // 5. Update Firestore document
         await journalRef.update(validatedData);
 
+        // 6. Return the updated normalized entry
         const snapshot = await journalRef.get();
-        
         return new JournalEntry(snapshot.id, snapshot.data());
     }
+
 
 
     static async getEntries(babyId) {

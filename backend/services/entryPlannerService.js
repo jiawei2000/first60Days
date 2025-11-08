@@ -1,30 +1,35 @@
 const EntryPlanner = require("../models/EntryPlanner");
-
 const db = require('../config/database');
+//import dayjs
+const dayjs = require("dayjs");
+
 
 class EntryPlannerService {
-
     static async createPlanner(babyId, plannerData) {
         if (!babyId) throw new Error("babyId is required");
-        if (!plannerData || !plannerData.weekNo) throw new Error("weekNo is required in plannerData");
+        if (!plannerData || !plannerData.weekNo)
+            throw new Error("weekNo is required in plannerData");
 
+        // plannerData contains: totalFeeds, firstFeedTime(hh:mm), lastFeedTime (hh:mm), weekNo
         const plannerCollection = db
             .collection("babies")
             .doc(babyId)
             .collection("entryPlanner");
 
-        // Step 1: Check if there's already a planner with the same weekNo
+        // Step 1: Check if planner for this week already exists
         const existingQuery = await plannerCollection
             .where("weekNo", "==", plannerData.weekNo)
             .limit(1)
             .get();
 
         let plannerRef;
+        let isUpdate = false;
 
         if (!existingQuery.empty) {
-            // Override existing doc
+            // Update existing doc
             const existingDoc = existingQuery.docs[0];
             plannerRef = plannerCollection.doc(existingDoc.id);
+            isUpdate = true;
             console.log(`Updating existing planner for week ${plannerData.weekNo}...`);
         } else {
             // Create a new planner
@@ -32,24 +37,32 @@ class EntryPlannerService {
             console.log(`Creating new planner for week ${plannerData.weekNo}...`);
         }
 
-        // Step 2: Validate that firstFeedTime and lastFeedTime are valid HH:mm strings
+        // Step 2: Validate time format
         const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-        if (!timeRegex.test(plannerData.firstFeedTime) || !timeRegex.test(plannerData.lastFeedTime)) {
+        if (
+            !timeRegex.test(plannerData.firstFeedTime) ||
+            !timeRegex.test(plannerData.lastFeedTime)
+        ) {
             throw new Error("Invalid time format. Expected 'HH:mm'");
         }
 
-        // Step 3: Initialize planner object
+        // Step 3: Create EntryPlanner instance (with id in memory only)
         const planner = new EntryPlanner(plannerRef.id, plannerData);
 
-        // Step 4: Generate feed timings
+        // Step 4: Generate feed timings (e.g. internal calculation)
         const message = planner.generateFeedTimings();
 
-        // Step 5: Save to Firestore (stores strings, not timestamps)
-        await plannerRef.set(planner.toFirestore(), { merge: false });
+        // Step 5: Prepare Firestore-safe data (excluding `id`)
+        const plannerFirestoreData = planner.toFirestore();
+        delete plannerFirestoreData.id; // prevent saving ID as a field 
 
-        // Step 6: Return planner and message
+        // Step 6: Save to Firestore
+        await plannerRef.set(plannerFirestoreData, { merge: isUpdate });
+
+        // Step 7: Return planner and message
         return { planner, message };
     }
+
 
     static async getPlannerById(babyId, plannerId) {
         const docRef = db
@@ -108,16 +121,51 @@ class EntryPlannerService {
 
         const existingData = doc.data();
 
-        // Merge updates with existing fields
-        const mergedData = { ...existingData, ...updateData };
+        //feedTimings is an array: [ "03:00 AM", "06:00 AM", ...]
+        //from updateData, update, firstFeedTime and lastFeedTime in existingData
+              const feedTimings = updateData.feedTimings; //array of time strings
+        const firstFeedTime = feedTimings[0]; //hh:mm AM/PM
+        const lastFeedTime = feedTimings[feedTimings.length - 1]; //hh:mm AM/PM
 
-        // Rebuild planner and regenerate fields
-        const updatedPlanner = new EntryPlanner(plannerId, mergedData);
+        //convert firstFeedTime and lastFeedTime to "HH:mm" 24hr format for storage
+        const firstFeedTime24 = dayjs(firstFeedTime, "hh:mm A").format("HH:mm");
+        const lastFeedTime24 = dayjs(lastFeedTime, "hh:mm A").format("HH:mm");
+
+        //calculate MonInterval using 1st and last feed time.
+        const first = EntryPlanner.toDateFromTimeStr(firstFeedTime24);
+        const last = EntryPlanner.toDateFromTimeStr(lastFeedTime24);
+
+        // Handle wrap-around (e.g., 03:00 → 00:00 next day)
+        let endMs = last.getTime();
+        const startMs = first.getTime();
+        if (endMs <= startMs) {
+            endMs += 24 * 60 * 60 * 1000; // add 24 hours
+        }
+
+        // Total duration in hours
+        const totalDuration = (endMs - startMs) / (1000 * 60 * 60); 
+
+        //calculate MONInterval
+        const remainingHours = 24 - totalDuration;
+
+        //convert remainingHours to hh:mm format
+        const hours = Math.floor(remainingHours);
+        const minutes = Math.round((remainingHours - hours) * 60);
+        const MONIntervalStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+        //update totalFeeds based on feedTimings length
+        const totalFeeds = feedTimings.length;
+
+        // Merge updates with existing fields
+        const mergedData = { ...existingData, ...updateData, firstFeedTime: firstFeedTime24, lastFeedTime: lastFeedTime24, MONInterval: MONIntervalStr, totalFeeds: totalFeeds };
 
         // Update only the necessary fields in Firestore
-        await plannerRef.update(updatedPlanner.toFirestore());
+        await plannerRef.update(mergedData, { merge: true });
+        const updatedPlannerDoc = await plannerRef.get();
 
-        return updatedPlanner;
+        const updatedPlanner = new EntryPlanner(plannerId, updatedPlannerDoc.data());
+
+        return { updatedPlanner };
     }
 
     static async getPlanners(babyId) {

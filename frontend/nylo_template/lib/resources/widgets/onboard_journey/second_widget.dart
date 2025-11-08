@@ -27,7 +27,7 @@ class _SecondWidgetState extends JourneyState<SecondWidget> {
         children: [
           Text('Digital Nanny', style: Theme.of(context).textTheme.headlineMedium),
           Image.asset(
-            getImageAsset("secondwidget.jpg")
+            getImageAsset("baby1.png"),
           ),
           const SizedBox(height: 20),
           Text('Update the baby journal online'),

@@ -18,11 +18,20 @@ class ProcessStatisticsService {
         }
 
         // Get yesterday’s start and end timestamps
-        const yesterday = new Date();
-        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+        // const yesterday = new Date();
+        // yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+        // const startOfDay = new Date(Date.UTC(yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(), 0, 0, 0, 0));
+        // const endOfDay = new Date(Date.UTC(yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(), 23, 59, 59, 999));
 
-        const startOfDay = new Date(Date.UTC(yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(), 0, 0, 0, 0));
-        const endOfDay = new Date(Date.UTC(yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(), 23, 59, 59, 999));
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        // yesterday.setDate(yesterday.getDate());
+
+        const startOfDay = new Date(yesterday);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(yesterday);
+        endOfDay.setHours(23, 59, 59, 999);
 
         // Process all babies sequentially
         for (const babyDoc of babiesSnap.docs) {
@@ -36,12 +45,10 @@ class ProcessStatisticsService {
                 .orderBy("awakeTime", "asc")
                 .get();
             // console.log(`Query matched ${entriesSnap.size} documents.`);
-
-            const entries = entriesSnap.docs.map(doc => doc.data());
-            if (entries.length === 0) {
-                console.log(`No journal entries found for baby ${babyId} on ${yesterday.toISOString().split('T')[0]}.`);
-            }
-            console.log(entries);
+            //filter for status == "COMPLETE"
+            const entries = entriesSnap.docs.map(doc => doc.data()).filter(entry => entry.status === "COMPLETE");
+            console.log(`total entries: ${entries.length} for baby ${babyId} on ${yesterday.toISOString().split('T')[0]}.`);
+            
             // Calculate daily statistics
             const result = this.calculateDailyStatistics(entries);
             result.date = yesterday.toISOString().split('T')[0];
