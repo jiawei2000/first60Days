@@ -6,6 +6,7 @@ import '../widgets/buttons/partials/primary_button_widget.dart';
 import '../../app/networking/journal_api_service.dart';
 import '../../app/models/journal_entry.dart';
 import '../../app/models/feed_type.dart';
+import '../../app/utils/sleep_duration_utils.dart';
 import '/config/keys.dart';
 
 class CreateJournalEntryPage extends NyStatefulWidget {
@@ -18,6 +19,7 @@ class CreateJournalEntryPage extends NyStatefulWidget {
 
 class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
   final TextEditingController wakeTimeController = TextEditingController();
+  final TextEditingController sleepDurationController = TextEditingController();
   final TextEditingController feedTimeController = TextEditingController();
   final TextEditingController sleepTimeController = TextEditingController();
   final TextEditingController playTimeController = TextEditingController();
@@ -35,6 +37,7 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
         //Initialize form
         form = JournalEntryForm(
           wakeTimeController: wakeTimeController,
+          sleepDurationController: sleepDurationController,
           feedTimeController: feedTimeController,
           sleepTimeController: sleepTimeController,
           playTimeController: playTimeController,
@@ -75,6 +78,7 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
       startFeedTime: parseDateTimeString(feedTimeController.text),
       startSleepTime: parseDateTimeString(sleepTimeController.text),
       startPlayTime: parseDateTimeString(playTimeController.text),
+      sleepDuration: parseSleepDuration(sleepDurationController.text),
       feedTypes: List.generate(feedTypeControllers.length, (index) {
         return FeedType(
           type: feedTypeControllers[index].text,
@@ -83,6 +87,8 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
         );
       }),
       remarks: remarksController.text,
+      hasStool: false,
+      hasUrine: false,
     );
 
     final babyId = await Keys.selectedBabyId.read();
@@ -104,7 +110,7 @@ class _CreateJournalEntryPageState extends NyPage<CreateJournalEntryPage> {
         ),
       );
 
-      Navigator.pop(context); 
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
 
