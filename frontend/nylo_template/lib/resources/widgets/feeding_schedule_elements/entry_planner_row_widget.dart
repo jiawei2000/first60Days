@@ -40,7 +40,8 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
       children: [
         Align(
           alignment: Alignment.center,
-          child: Text('MON Interval: ${calculateMONInterval()}').displaySmall(
+          child: Text('MON Interval: ${widget.entryPlanner.mONInterval}')
+              .displaySmall(
             color: context.color.content.withAlpha((255.0 * 0.6).round()),
           ),
         ),
@@ -135,7 +136,10 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
                         _feedTimings[feedTimeIndex] =
                             _newTimeTextController.text;
                       });
-                      await _updateFeedTiming();
+                      String newMon = await _updateFeedTiming();
+                      setState(() {
+                        widget.entryPlanner.mONInterval = newMon;
+                      });
                     },
                     child: const Text('Done'),
                   ),
@@ -161,7 +165,7 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
     );
   }
 
-  Future<void> _updateFeedTiming() async {
+  Future<String> _updateFeedTiming() async {
     // Sort _feedTimings by time
     _feedTimings.sort((a, b) {
       final timeA = _parseTimeString(a);
@@ -171,52 +175,23 @@ class _EntryPlannerRowState extends NyState<EntryPlannerRow> {
     });
     final babyId = await Keys.selectedBabyId.read();
     if (babyId == null) {
-      debugPrint("❌ No baby selected");
-      return null; // or return null / throw depending on context
+      return "No baby selected"; // or return null / throw depending on context
     }
-    await controller.updateFeedTimingByPlannerId(
+    final response = await controller.updateFeedTimingByPlannerId(
       babyId: babyId,
       plannerId: widget.entryPlanner.id!,
       data: {
         'feedTimings': _feedTimings,
       },
     );
-  }
 
-  String calculateMONInterval() {
-    final firstTiming = _feedTimings.isNotEmpty ? _feedTimings.first : null;
-    final lastTiming = _feedTimings.isNotEmpty ? _feedTimings.last : null;
-
-    if (firstTiming == null || lastTiming == null) {
-      return '0';
-    }
-
-    final parsedFirst = _parseTimeString(firstTiming);
-    final parsedLast = _parseTimeString(lastTiming);
-
-    final firstTime =
-        TimeOfDay(hour: parsedFirst!.hour, minute: parsedFirst.minute);
-    final lastTime =
-        TimeOfDay(hour: parsedLast!.hour, minute: parsedLast.minute);
-
-    final firstTotalMinutes = firstTime.hour * 60 + firstTime.minute;
-    final lastTotalMinutes = lastTime.hour * 60 + lastTime.minute;
-
-    final differenceMinutes = firstTotalMinutes - lastTotalMinutes + 24 * 60;
-
-    // return difference in hours and minutes
-    final hours = (differenceMinutes ~/ 60).abs();
-    final minutes = (differenceMinutes % 60).abs();
-    if (minutes == 0) {
-      return '$hours h';
-    }
-    return '$hours h $minutes m';
+    return response['planner']['updatedPlanner']['MONInterval'] ?? "";
   }
 
   String _formatTimeString(DateTime time) {
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.hour < 12 ? 'am' : 'pm';
+    final period = time.hour < 12 ? 'AM' : 'PM';
     if (hour == '00') {
       return "12:$minute $period";
     } else if (int.parse(hour) > 12) {

@@ -45,14 +45,13 @@ class CalendarController {
         final feedTime = entry.startFeedTime?.toUtc() ?? DateTime.now();
         final localDay = DateTime(feedTime.year, feedTime.month, feedTime.day);
         final eventTime = DateFormat('hh:mm a').format(feedTime);
+        final status = entry.status ?? "No Status";
 
         events.putIfAbsent(localDay, () => []).add({
           "title": "Feed ${i + 1}",
           "time": eventTime,
           "entryId": entry.id,
-          "status": (entry.startFeedTime != null && entry.startSleepTime != null)
-                  ? "Complete"
-                  : "Incomplete",
+          "status": status,
         });
       }
     }
