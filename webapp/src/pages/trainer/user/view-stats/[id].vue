@@ -68,165 +68,168 @@
 
       <VDivider />
 
-      <VWindow v-model="activeTab" class="pa-4">
-        <!-- 🟩 SUMMARY TAB -->
-        <VWindowItem value="summary">
-          <VCardText>
-            <h3 class="text-h5 font-weight-medium mb-4">
-              {{ timeFrame === 'daily' ? 'Daily Summary' : 'Weekly Summary' }}
-            </h3>
+        <VWindow v-model="activeTab" class="pa-4">
+  <!-- 🧭 Shared Date Picker (Top for both Summary & Trends) -->
+  <div class="d-flex align-center justify-end mb-2" style="position: relative; z-index: 10;">
+    <VMenu
+      v-model="dateMenu"
+      transition="scale-transition"
+      location="bottom end"
+      offset-y
+      max-width="290"
+      min-width="auto"
+    >
+      <template #activator="{ props }">
+        <VBtn
+          v-bind="props"
+          variant="flat"
+          color="primary"
+          size="small"
+          rounded="lg"
+          elevation="1"
+        >
+          {{ selectedDate ? selectedDate.toISOString().split('T')[0] : 'Select date' }}
+        </VBtn>
+      </template>
 
-            <VRow>
-              <VCol
-                v-for="metric in metricOptions"
-                :key="metric.value"
-                cols="12"
-                sm="6"
-                md="4"
-              >
-                <VCard class="pa-4" elevation="1">
-                  <div class="d-flex align-center justify-space-between">
-                    <div>
-                      <p class="text-subtitle-1 font-weight-medium mb-1">
-                        {{ metric.title }}
-                      </p>
-                      <p class="text-body-2 text-medium-emphasis mb-0">
-                        Current: {{ formatMetric(metric.value, latestValue(metric.value)) }}
-                      </p>
-                      <p class="text-body-2 text-medium-emphasis mb-0">
-                        Average To Date: {{ getAverage(metric.value) }}
-                      </p>
-                    </div>
+      <VDatePicker
+        v-model="selectedDate"
+        color="primary"
+        :max="new Date()"
+        @update:model-value="() => {
+          updateStatsForSelectedDate()
+          dateMenu.value = false
+        }"
+      />
+    </VMenu>
+  </div>
 
-                    <VChip
-                      :color="getStatusColor(metric.value)"
-                      text-color="white"
-                      label
-                      size="small"
-                    >
-                      {{ getStatusLabel(metric.value) }}
-                    </VChip>
-                  </div>
-                </VCard>
-              </VCol>
-            </VRow>
-          </VCardText>
-        </VWindowItem>
+  <!-- 🟩 SUMMARY TAB -->
+  <VWindowItem value="summary">
+    <VCardText>
+      <h3 class="text-h5 font-weight-medium mb-4">
+        {{ timeFrame === 'daily' ? 'Daily Summary' : 'Weekly Summary' }}
+      </h3>
 
-        <!-- 📈 TRENDS TAB -->
-        <VWindowItem value="trends">
-          <VCardText>
-            <!-- 📅 Compact Date Picker -->
-            <div class="d-flex align-center justify-end mb-2" style="position: relative; z-index: 10;">
-            <VMenu
-              v-model="dateMenu"
-              transition="scale-transition"
-              location="bottom end"
-              offset-y
-              max-width="290"
-              min-width="auto"
-            >
-              <template #activator="{ props }">
-                <VBtn
-                  v-bind="props"
-                  variant="flat"
-                  color="primary"
-                  size="small"
-                  rounded="lg"
-                  elevation="1"
-                >
-                  {{ selectedDate.toISOString().split('T')[0] }}
-                </VBtn>
-              </template>
+      <p v-if="timeFrame === 'weekly' && currentWeekLabel" class="text-caption text-medium-emphasis mb-4">
+        Showing week: <strong>{{ currentWeekLabel }}</strong>
+      </p>
 
-              <VDatePicker
-                v-model="selectedDate"
-                color="primary"
-                :max="new Date()"
-                @update:model-value="() => {
-                  fetchDailyStats()
-                  dateMenu.value = false   // ✅ close after selecting date
-                }"
-              />
-            </VMenu>
-
-            </div>
-
-            <p class="text-caption text-medium-emphasis text-end mb-4">
-              Showing last 7 days up to
-              <strong>{{ selectedDate.toISOString().split('T')[0] }}</strong>
-            </p>
-
-            <!-- Metric Selector -->
-            <VSelect
-              v-model="selectedMetric"
-              :items="metricOptions"
-              :item-title="item => `${item.title}`"
-              item-value="value"
-              label="Select Metric"
-              density="compact"
-              hide-details
-              variant="outlined"
-              class="mb-4"
-            />
-
-            <!-- Chart Header + Progress -->
-            <div class="d-flex align-center justify-space-between mb-6">
+      <VRow>
+        <VCol
+          v-for="metric in metricOptions"
+          :key="metric.value"
+          cols="12"
+          sm="6"
+          md="4"
+        >
+          <VCard class="pa-4" elevation="1">
+            <div class="d-flex align-center justify-space-between">
               <div>
-                <p class="text-body-1 mb-1">{{ currentLabel }}</p>
-                <h2 class="text-h4 font-weight-bold">{{ totalDisplay }}</h2>
-                <div
-                  v-if="percentChange !== null"
-                  :class="[
-                    'd-flex align-center gap-1',
-                    percentChange >= 0 ? 'text-success' : 'text-error',
-                  ]"
-                >
-                  <img
-                    :src="percentChange >= 0 ? upArrow : downArrow"
-                    alt="arrow"
-                    style="width: 20px; height: 20px"
-                  />
-                  <span>
-                    {{ Math.abs(percentChange) }}% from previous
-                    {{ timeFrame === 'daily' ? 'day' : 'week' }}
-                  </span>
-                </div>
+                <p class="text-subtitle-1 font-weight-medium mb-1">
+                  {{ metric.title }}
+                </p>
+                <p class="text-body-2 text-medium-emphasis mb-0">
+                  Current: {{ formatMetric(metric.value, latestValue(metric.value)) }}
+                </p>
+                <p class="text-body-2 text-medium-emphasis mb-0">
+                  Average To Date: {{ getAverage(metric.value) }}
+                </p>
               </div>
 
-              <div class="text-center">
-                <VCircularProgress
-                  :model-value="circleValue"
-                  color="primary"
-                  size="70"
-                  width="6"
-                />
-                <div class="text-caption mt-2">
-                  Today:
-                  {{
-                    getFormattedValue(
-                      selectedMetric.value,
-                      activeStats.at(-1)?.[selectedMetric.value]
-                    )
-                  }}
-                </div>
-                <div class="text-caption text-medium-emphasis">
-                  Avg: {{ averageDisplay }}
-                </div>
-              </div>
+              <VChip
+                :color="getStatusColor(metric.value)"
+                text-color="white"
+                label
+                size="small"
+              >
+                {{ getStatusLabel(metric.value) }}
+              </VChip>
             </div>
+          </VCard>
+        </VCol>
+      </VRow>
+    </VCardText>
+  </VWindowItem>
 
-            <!-- 📊 Chart -->
-            <ApexChart
-              v-if="chartReady"
-              type="line"
-              height="250"
-              :options="chartOptions"
-              :series="chartSeries"
+  <!-- 📈 TRENDS TAB -->
+  <VWindowItem value="trends">
+    <VCardText>
+      <p class="text-caption text-medium-emphasis text-end mb-4">
+        Showing last 7 days up to
+        <strong>{{ selectedDate ? selectedDate.toISOString().split('T')[0] : '' }}</strong>
+      </p>
+
+      <!-- Metric Selector -->
+      <VSelect
+        v-model="selectedMetric"
+        :items="metricOptions"
+        :item-title="item => `${item.title}`"
+        item-value="value"
+        label="Select Metric"
+        density="compact"
+        hide-details
+        variant="outlined"
+        class="mb-4"
+      />
+
+      <!-- Chart Header + Progress -->
+      <div class="d-flex align-center justify-space-between mb-6">
+        <div>
+          <p class="text-body-1 mb-1">{{ currentLabel }}</p>
+          <h2 class="text-h4 font-weight-bold">{{ totalDisplay }}</h2>
+          <div
+            v-if="percentChange !== null"
+            :class="[
+              'd-flex align-center gap-1',
+              percentChange >= 0 ? 'text-success' : 'text-error',
+            ]"
+          >
+            <img
+              :src="percentChange >= 0 ? upArrow : downArrow"
+              alt="arrow"
+              style="width: 20px; height: 20px"
             />
-          </VCardText>
-        </VWindowItem>
-      </VWindow>
+            <span>
+              {{ Math.abs(percentChange) }}% from previous
+              {{ timeFrame === 'daily' ? 'day' : 'week' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <VCircularProgress
+            :model-value="circleValue"
+            color="primary"
+            size="70"
+            width="6"
+          />
+          <div class="text-caption mt-2">
+            Today:
+            {{
+              getFormattedValue(
+                selectedMetric.value,
+                activeStats.at(-1)?.[selectedMetric.value]
+              )
+            }}
+          </div>
+          <div class="text-caption text-medium-emphasis">
+            Avg: {{ averageDisplay }}
+          </div>
+        </div>
+      </div>
+
+      <!-- 📊 Chart -->
+      <ApexChart
+        v-if="chartReady"
+        type="line"
+        height="250"
+        :options="chartOptions"
+        :series="chartSeries"
+      />
+    </VCardText>
+  </VWindowItem>
+</VWindow>
     </VCard>
   </div>
 </template>
@@ -258,6 +261,7 @@
   const entriesToday = ref(0)
   const selectedDate = ref(new Date()) // store as Date object, not string
   const rangeDays = 7
+  const currentWeekLabel = ref(null)
 
   try {
     const res = await $api(`/babies/${babyId}`, { method: 'GET' })
@@ -270,6 +274,27 @@
   } catch (e) {
     console.error('Failed to fetch baby profile:', e)
   }
+
+  async function updateStatsForSelectedDate() {
+  if (timeFrame.value === 'daily') {
+    await fetchDailyStats()
+  } else {
+    // Weekly mode — find the matching week
+    const picked = new Date(selectedDate.value)
+    const week = weeklyStats.value.find(w => {
+      const start = new Date(w.startDate)
+      const end = new Date(w.endDate)
+      return picked >= start && picked <= end
+    })
+    if (week) {
+      currentWeekLabel.value = `${week.startDate} → ${week.endDate}`
+      stats.value = [week]
+    } else {
+      currentWeekLabel.value = null
+      stats.value = []
+    }
+  }
+}
 
   async function fetchJournalEntries() {
     try {
@@ -349,7 +374,8 @@
 
 
 
-  watch(selectedDate, fetchDailyStats)
+  watch(selectedDate, updateStatsForSelectedDate)
+
 
   const metricOptions = [
     { title: 'Total Feeds', value: 'totalFeeds' },
@@ -384,6 +410,26 @@
       'averageLapseDuration',
     ].includes(metric)
   }
+
+  async function updateSummary() {
+  if (timeFrame.value === 'daily') {
+    await fetchDailyStats()
+  } else {
+    const picked = new Date(summaryDate.value)
+    const week = weeklyStats.value.find(w => {
+      const start = new Date(w.startDate)
+      const end = new Date(w.endDate)
+      return picked >= start && picked <= end
+    })
+    if (week) {
+      currentWeekLabel.value = `${week.startDate} → ${week.endDate}`
+      stats.value = [week]
+    } else {
+      currentWeekLabel.value = null
+      stats.value = []
+    }
+  }
+}
 
   function formatMetric(metric, value) {
     if (isDurationField(metric)) {
