@@ -138,13 +138,13 @@
               </div>
 
               <VChip
-                :color="getStatusColor(metric.value)"
-                text-color="white"
-                label
-                size="small"
-              >
-                {{ getStatusLabel(metric.value) }}
-              </VChip>
+  :color="getThresholdStatus(metric.value).color"
+  text-color="white"
+  label
+  size="small"
+>
+  {{ getThresholdStatus(metric.value).label }}
+</VChip>
             </div>
           </VCard>
         </VCol>
@@ -262,6 +262,8 @@
   const selectedDate = ref(new Date()) // store as Date object, not string
   const rangeDays = 7
   const currentWeekLabel = ref(null)
+  const dailyThresholds = ref(null)
+const weeklyThresholds = ref(null)
 
   try {
     const res = await $api(`/babies/${babyId}`, { method: 'GET' })
@@ -310,6 +312,75 @@
       console.error('Failed to fetch journal entries:', err)
     }
   }
+
+  async function fetchThresholds() {
+  try {
+    const [dailyRes, weeklyRes] = await Promise.all([
+      $api('/thresholds/daily', { method: 'GET' }),
+      $api('/thresholds/weekly', { method: 'GET' })
+    ])
+
+    dailyThresholds.value = dailyRes[0]  // assuming your example response is an array
+    weeklyThresholds.value = weeklyRes[0]
+  } catch (err) {
+    console.error('Failed to fetch thresholds:', err)
+  }
+}
+
+function getThresholdStatus(metricKey) {
+  const thresholds =
+    timeFrame.value === 'daily' ? dailyThresholds.value : weeklyThresholds.value
+  if (!thresholds)
+    return { label: 'UNKNOWN', color: 'grey', message: 'No data' }
+
+  const actualKey =
+    timeFrame.value === 'weekly' && metricKey === 'monInterval'
+      ? 'averageMonInterval'
+      : metricKey
+
+  const weekKey = `week${babyAgeWeeks.value}`
+  console.log('Evaluating threshold for', actualKey, 'at', weekKey)
+  const metric = thresholds[actualKey]
+  if (!metric || !metric.value || metric.value[weekKey] === undefined)
+    return { label: 'UNKNOWN', color: 'grey', message: 'No threshold' }
+
+  const thresholdVal = metric.value[weekKey]
+  const actualVal = activeStats.value.at(-1)?.[metricKey]
+
+  const parse = (v) => {
+    if (typeof v === 'string' && v.includes(':')) {
+      const [h, m] = v.split(':').map(Number)
+      return h * 60 + m
+    }
+    return Number(v)
+  }
+
+  const tVal = parse(thresholdVal)
+  const aVal = parse(actualVal)
+  if (isNaN(tVal) || isNaN(aVal))
+    return { label: 'UNKNOWN', color: 'grey', message: 'Invalid data' }
+
+  // 🔹 Define which metrics should invert (lower = better)
+  const invertedMetrics = [
+    'totalCyclesBeyond3Hrs',
+    'averageLapseDuration',
+    'lapseDuration', // just in case naming differs
+  ]
+  const invertLogic = invertedMetrics.includes(metricKey)
+
+  // 🔹 Compare properly based on metric type
+  const meetsTarget = invertLogic ? aVal <= tVal : aVal >= tVal
+
+  // 🔹 Determine status + color
+  const label = meetsTarget ? metric.label.above : metric.label.below
+  const message = meetsTarget ? metric.message.above : metric.message.below
+  const color = label === 'ALERT' ? 'error' : label === 'NORMAL' ? 'success' : 'grey'
+
+  return { label, color, message }
+}
+
+
+
 
   async function fetchWeeklyStats() {
     try {
@@ -577,8 +648,12 @@
   })
 
   onMounted(async () => {
-    await fetchDailyStats()
-    await fetchWeeklyStats()
-    await fetchJournalEntries()
-  })
+  await Promise.all([
+    fetchThresholds(),
+    fetchDailyStats(),
+    fetchWeeklyStats(),
+    fetchJournalEntries(),
+  ])
+})
+
   </script>
