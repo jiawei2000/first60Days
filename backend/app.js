@@ -26,6 +26,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 
 const statisticsRoutes = require('./routes/statisticsRoutes');
 const excelRoutes = require('./routes/excelRoutes');
+const assistantRoutes = require('./routes/assistant');
 
 // require('./jobs/batchJobs');
 // require('./jobs/topicNotifications');
@@ -51,6 +52,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/excel', excelRoutes);
 app.use('/api/thresholds', thresholdRoutes);
+app.use('/api/assistant', assistantRoutes);
 
 // Error handling middleware
 app.use((req, res, next) => {
