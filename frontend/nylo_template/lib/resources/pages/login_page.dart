@@ -7,6 +7,7 @@ import '/resources/widgets/buttons/buttons.dart';
 import '/app/networking/user_api_service.dart';
 import '/config/keys.dart';
 import '/resources/pages/choose_baby_page.dart';
+import '/resources/helpers/loading.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -87,31 +88,33 @@ class _LoginPageState extends NyPage<LoginPage> {
   }
 
   void onLogin(String username, String password) async {
-    final fcmToken = await _getFcmTokenWithPermission();
+    await LoadingOverlay.show(message: 'Signing in...');
+    try {
+      final fcmToken = await _getFcmTokenWithPermission();
 
-    var response =
-        await userApiService.login(username: username, password: password, fcmToken: fcmToken,);
+      var response = await userApiService.login(
+        username: username,
+        password: password,
+        fcmToken: fcmToken,
+      );
 
-    // Handle response
-    if (response != null) {
-      // showToastSuccess(title: "Login success", description: "Login Successful");
-      await Auth.authenticate(data: {"token": response['token']});
-      await Keys.bearerToken.save(response['token']);
-      // Persist caregiver/account name for Profile display
-      await Keys.caregiverName.save(username);
-      // Navigate to navigation hub
+      // Handle response
+      if (response != null) {
+        await Auth.authenticate(data: {"token": response['token']});
+        await Keys.bearerToken.save(response['token']);
+        // Persist caregiver/account name for Profile display
+        await Keys.caregiverName.save(username);
 
-      // Test subscribe to daily topic
-      //    so the cron job can reach this device
-      if (fcmToken != null) {
-        await FirebaseMessaging.instance.subscribeToTopic('daily_baby_journal');
+        if (fcmToken != null) {
+          await FirebaseMessaging.instance.subscribeToTopic('daily_baby_journal');
+        }
+
+        routeTo(ChooseBabyPage.path, navigationType: NavigationType.pushAndForgetAll);
+      } else {
+        showToastWarning(title: "Login failed", description: "Please try again");
       }
-
-
-      routeTo(ChooseBabyPage.path, navigationType: NavigationType.pushAndForgetAll);
-    } else {
-      // Show error message
-      showToastWarning(title: "Login failed", description: "Please try again");
+    } finally {
+      LoadingOverlay.hide();
     }
   }
 }
