@@ -1,15 +1,17 @@
+// services/assistantBabiesService.js
 const axios = require('axios');
 require('dotenv').config();
 
-async function askOpenAI(question) {
+async function askBabies(question) {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-  console.log('OpenAI Key (partial):', OPENAI_API_KEY?.slice(0, 10));
+  console.log('[AssistantBabies] Key (partial):', OPENAI_API_KEY?.slice(0, 10));
 
-const prompt = `
-You are an assistant converting natural language questions into Firestore filter queries.
+  const prompt = `
+You are an assistant that converts natural language questions about BABIES
+into Firestore filter queries.
 
-There are 2 collections:
-1. "babies" with fields:
+Collection: "babies"
+Fields:
 - name (string)
 - dob (timestamp)
 - createdAt (timestamp)
@@ -23,49 +25,33 @@ There are 2 collections:
 - vaccination (string)
 - allergies (string)
 
-2. "users" with fields:
-- email (string)
-- password (string)
-- phoneNo (string)
-- username (string)
-- createdAt (timestamp)
-- lastLoginAt (timestamp)
-- deletedAt (timestamp)
-- permissionID (string)
-- relation (string or null)
-- fcmTokens (array)
-- name (string)
-- trainerID (string or null)
-- createdByAdminID (string or null)
-
 Given a question, respond ONLY with a JSON like:
 {
-  "collection": "users",
+  "collection": "babies",
   "filters": [
-    { "field": "relation", "op": "==", "value": "parent" },
+    { "field": "gender", "op": "==", "value": "Female" },
     { "field": "deletedAt", "op": "==", "value": null }
   ],
-  "sort": { "field": "createdAt", "direction": "desc" },
+  "sort": { "field": "dob", "direction": "asc" },
   "limit": 50
 }
 
 Question: "${question}"
 `;
 
-
   const response = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2
+      temperature: 0.2,
     },
     {
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      timeout: 60000
+      timeout: 60000,
     }
   );
 
@@ -75,4 +61,4 @@ Question: "${question}"
   return json;
 }
 
-module.exports = { askGpt: askOpenAI };
+module.exports = { askBabies };
