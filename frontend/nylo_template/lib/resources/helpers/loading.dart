@@ -50,7 +50,10 @@ class LoadingOverlay {
                       Text(
                         message,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ],
                   ],
