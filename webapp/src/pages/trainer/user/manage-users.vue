@@ -8,6 +8,7 @@
             placeholder="Try: 'Show users created in 2025'"
             append-inner-icon="bx-search"
             @keyup.enter="performSearch"
+            @click:append-inner="performSearch"
           />
         </VCol>
         <VCol class="d-flex justify-end">
