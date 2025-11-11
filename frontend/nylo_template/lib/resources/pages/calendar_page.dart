@@ -5,6 +5,7 @@ import 'package:flutter_app/app/models/feed_type.dart';
 import 'package:flutter_app/app/models/journal_entry.dart';
 import 'package:flutter_app/app/models/entry_planner.dart';
 import 'package:flutter_app/app/networking/journal_api_service.dart';
+import 'package:flutter_app/app/utils/sleep_duration_utils.dart';
 import 'package:flutter_app/resources/widgets/buttons/partials/primary_button_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:nylo_framework/nylo_framework.dart';
@@ -114,7 +115,6 @@ class _CalendarPageState extends State<CalendarPage> {
         (_eventData[localDay] ?? []).whereType<Map<String, dynamic>>().toList();
 
     EntryPlanner entryPlanner = _getEntryPlannerForWeekNo(_calculateBabyWeek());
-    debugPrint("Entry Planner: " + entryPlanner.toJson().toString());
     // Add Planned Feedings
     // If number of feeds in Entry planner is more than Day Events skip
     // If entry planner feedTiming is null or empty, skip
@@ -143,11 +143,19 @@ class _CalendarPageState extends State<CalendarPage> {
         // if currentFeedTime is less than 2 hours from lastFeedTime, adjust to 2 hours after
         if (currentFeedTime.difference(lastFeedDateTime).inMinutes < 120) {
           currentFeedTime = lastFeedDateTime.add(const Duration(hours: 2));
+          // if after adding it goes past midnight, exit loop
+          if (currentFeedTime.day != lastFeedDateTime.day) {
+            break;
+          }
           currentFeedTimeString = _formatTimeOnly(currentFeedTime);
           // if currentFeedTime is more than 3 hours from lastFeedTime, adjust to 3 hours after
         } else if (currentFeedTime.difference(lastFeedDateTime).inMinutes >
             180) {
           currentFeedTime = lastFeedDateTime.add(const Duration(hours: 3));
+          // if after adding it goes past midnight, exit loop
+          if (currentFeedTime.day != lastFeedDateTime.day) {
+            break;
+          }
           currentFeedTimeString = _formatTimeOnly(currentFeedTime);
         } else {
           currentFeedTimeString = entryPlanner.feedTimings![index];
@@ -169,7 +177,6 @@ class _CalendarPageState extends State<CalendarPage> {
       feedCount++;
     }
 
-    debugPrint("Day Events: " + dayEvents.toString());
     return dayEvents;
   }
 
@@ -292,7 +299,9 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ),
                               ),
                             ),
-                            DaySectionHeader(date: _selectedDay),
+                            DaySectionHeader(
+                                date: _selectedDay,
+                                weekNo: _calculateBabyWeek()),
                             const SizedBox(height: 8),
                             if (events.isEmpty)
                               const Text("No entries to display",
@@ -361,6 +370,10 @@ class _CalendarPageState extends State<CalendarPage> {
                                                 ? _formatDateTime(
                                                     entry.startFeedTime!)
                                                 : "");
+                                    final sleepDurationController =
+                                        TextEditingController(
+                                            text: formatSleepDuration(
+                                                entry.sleepDuration));
                                     final sleepTimeController =
                                         TextEditingController(
                                             text: entry.startSleepTime != null
@@ -412,6 +425,8 @@ class _CalendarPageState extends State<CalendarPage> {
                                                       child: JournalEntryForm(
                                                         wakeTimeController:
                                                             wakeTimeController,
+                                                        sleepDurationController:
+                                                            sleepDurationController,
                                                         feedTimeController:
                                                             feedTimeController,
                                                         sleepTimeController:
@@ -449,9 +464,15 @@ class _CalendarPageState extends State<CalendarPage> {
                                                               parseDateTimeString(
                                                                   sleepTimeController
                                                                       .text),
+                                                          sleepDuration:
+                                                              parseSleepDuration(
+                                                                  sleepDurationController
+                                                                      .text),
                                                           remarks:
                                                               remarksController
                                                                   .text,
+                                                          hasStool: false,
+                                                          hasUrine: false,
                                                           feedTypes: List.generate(
                                                               feedTypeControllers
                                                                   .length,
@@ -491,7 +512,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                                                 .read(),
                                                             data: updatedData,
                                                           );
-                                                        } 
+                                                        }
                                                         Navigator.pop(context);
                                                         _loadEvents();
                                                       },
