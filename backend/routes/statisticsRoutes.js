@@ -33,7 +33,7 @@ router.get('/gender/:statisticId', authenticateToken, statisticsController.getSt
 router.get('/ageGroup', authenticateToken, statisticsController.getAllAgeGroupStatistics);
 
 // // get all StatisticsbyGender records
-// router.get('/gender', authenticateToken, statisticsController.getAllGenderStatistics);
+router.get('/gender', authenticateToken, statisticsController.getAllGenderStatistics);
 
 // // recompute and store daily statistics by statisticId
 // router.post('/recompute/daily/:statisticId', statisticsController.recomputeDailyStatisticsById);
