@@ -13,5 +13,6 @@ const upload = multer({
 router.get('/usersInfo', ExcelController.exportUsers);
 router.get('/babysJournal/:babyId', ExcelController.exportBabyJournal);
 router.post('/importJournal/:babyId', upload.single('file'), ExcelController.importJournalEntriesFromExcel);
+router.post('/importFakeData/:babyId', upload.single('file'), ExcelController.importFakeDataExcel);
 
 module.exports = router;

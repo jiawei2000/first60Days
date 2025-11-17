@@ -351,6 +351,261 @@ class ExcelService {
     return { count: chron.length };
   }
 
+  static async importFakeDataExcel(babyId, fileBufferOrPath) {
+    if (!babyId) throw new Error('babyId is required');
+
+    const ExcelJS = require('exceljs');
+
+    // ---- Load workbook
+    const workbook = new ExcelJS.Workbook();
+    if (Buffer.isBuffer(fileBufferOrPath)) {
+      await workbook.xlsx.load(fileBufferOrPath);
+    } else if (typeof fileBufferOrPath === 'string') {
+      await workbook.xlsx.readFile(fileBufferOrPath);
+    } else {
+      throw new Error('fileBufferOrPath must be a Buffer or a file path string');
+    }
+
+    const ws = workbook.worksheets[0];
+    if (!ws) throw new Error('No worksheets found in Excel');
+
+    // ---- Header map (normalize spaces/newlines)
+    const headers = {};
+    ws.getRow(1).eachCell((cell, colNumber) => {
+      const name = String(cell.value || '')
+        .replace(/\r/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      headers[name] = colNumber;
+    });
+
+    const get = (row, header) => {
+      const idx = headers[header];
+      if (!idx) return null;
+      const cell = row.getCell(idx);
+      return cell?.value ?? null;
+    };
+
+    // ---- Helpers to force dates into 2025
+    const forceYear2025DateOnly = (d) => {
+      if (!(d instanceof Date) || isNaN(d)) return null;
+      return new Date(2025, d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    };
+
+    // Parse "M/D/YYYY" (or "MM/DD/YYYY"), optionally with time (e.g. "6/29/2021 7:30 AM")
+    // Always return local midnight on the same month/day in 2025
+    const parseMDY = (s) => {
+      if (s instanceof Date && !isNaN(s)) {
+        // ExcelJS may already give a Date
+        return forceYear2025DateOnly(new Date(s.getFullYear(), s.getMonth(), s.getDate(), 0, 0, 0, 0));
+      }
+
+      if (typeof s === 'number') {
+        // Excel serial date (date component only if >= 1)
+        const whole = Math.floor(s);
+        const epoch = new Date(Date.UTC(1899, 11, 30)); // Excel 1900 epoch
+        const d = new Date(epoch.getTime() + whole * 86400000);
+        return forceYear2025DateOnly(d);
+      }
+
+      if (typeof s === 'string') {
+        const t = s.trim();
+
+        // 1) Pure date: M/D/YYYY (no leading zeros required)
+        let m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) {
+          const mm = Number(m[1]), dd = Number(m[2]);
+          return new Date(2025, mm - 1, dd, 0, 0, 0, 0);
+        }
+
+        // 2) Datetime like "M/D/YYYY HH:mm[:ss] [AM|PM]" -> extract the date part only
+        m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
+        if (m) {
+          const mm = Number(m[1]), dd = Number(m[2]);
+          return new Date(2025, mm - 1, dd, 0, 0, 0, 0);
+        }
+
+        // 3) Fallback: try native parse; if it yields a full Date, coerce to 2025 month/day
+        const d = new Date(t);
+        if (!isNaN(d)) {
+          return new Date(2025, d.getMonth(), d.getDate(), 0, 0, 0, 0);
+        }
+      }
+
+      return null;
+    };
+
+    // Convert time cell to Date using a fallback date (already 2025).
+    // Accepts: Date, "HH:mm[:ss]" (24h), "h:mm[:ss] AM/PM", Excel serial fractions, or datetime strings.
+    // If a full datetime is provided, we take only its time and apply it to the fallback 2025 date.
+    const toTimeOnDate = (v, fallbackDate) => {
+      if (!fallbackDate) return null;
+
+      let h = 0, m = 0, s = 0;
+
+      if (v instanceof Date && !isNaN(v)) {
+        h = v.getHours(); m = v.getMinutes(); s = v.getSeconds();
+      } else if (typeof v === 'number') {
+        const totalSeconds = Math.round((v % 1) * 86400);
+        h = Math.floor(totalSeconds / 3600);
+        m = Math.floor((totalSeconds % 3600) / 60);
+        s = totalSeconds % 60;
+      } else if (typeof v === 'string') {
+        const t = v.trim();
+
+        // "HH:mm[:ss]" 24h
+        let tm = t.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+        if (tm) {
+          h = Number(tm[1]); m = Number(tm[2]); s = Number(tm[3] || 0);
+        } else {
+          // "h:mm[:ss] AM/PM"
+          tm = t.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
+          if (tm) {
+            let hh = Number(tm[1]);
+            m = Number(tm[2]); s = Number(tm[3] || 0);
+            const ap = tm[4].toUpperCase();
+            if (ap === 'AM') { h = hh % 12; } else { h = (hh % 12) + 12; }
+          } else {
+            // Full datetime string: use only its time part
+            const d = new Date(t);
+            if (!isNaN(d)) { h = d.getHours(); m = d.getMinutes(); s = d.getSeconds(); }
+            else { return null; }
+          }
+        }
+      } else {
+        return null;
+      }
+
+      const d = new Date(fallbackDate);
+      d.setHours(h, m, s, 0);
+      return d;
+    };
+
+    const toBool = (v) => {
+      const s = String(v ?? '').trim().toLowerCase();
+      if (['yes', 'true', 'y', '1'].includes(s)) return true;
+      if (['no', 'false', 'n', '0'].includes(s)) return false;
+      if (typeof v === 'number') return v !== 0;
+      return false;
+    };
+
+    // ---- Build raw rows
+    const raw = [];
+    ws.eachRow((row, rowNum) => {
+      if (rowNum === 1) return;
+
+      const dateCell = get(row, 'Date');
+      let dayDate = parseMDY(dateCell);
+
+      const awakeTime = toTimeOnDate(get(row, 'Wake Up Time'), dayDate);
+      const startFeedTime = toTimeOnDate(get(row, 'Start of Feed'), dayDate);
+      const startPlayTime = toTimeOnDate(get(row, 'Start of Play'), dayDate);
+      const startSleepTime = toTimeOnDate(get(row, 'Start of Sleep'), dayDate);
+
+      const hasUrine = toBool(get(row, 'Pee'));
+      const hasStool = toBool(get(row, 'Poo'));
+      const remarks = String(get(row, 'Remarks') ?? '').trim();
+
+      // Sleep duration: minutes -> hours (number)
+      let sleepHours;
+      const sleepMinRaw = get(row, 'Sleep Duration (min)');
+      if (sleepMinRaw === '' || sleepMinRaw == null || Number.isNaN(Number(sleepMinRaw))) {
+        sleepHours = undefined; // compute later if possible
+      } else {
+        const mins = Number(sleepMinRaw);
+        sleepHours = mins >= 0 ? +(mins / 60).toFixed(2) : undefined;
+      }
+
+      const n = (x) => Number(x ?? 0) || 0;
+      const ebmMl = n(get(row, 'EBM (ml)'));
+      const formulaMl = n(get(row, 'Formula (ml)'));
+      const breastR = n(get(row, 'Feed Duration on R breast (min)'));
+      const breastL = n(get(row, 'Feed Duration on L breast (min)'));
+
+      const feedType = [];
+      if (ebmMl > 0) feedType.push({ type: 'EBM', unit: 'ml', value: ebmMl });
+      if (formulaMl > 0) feedType.push({ type: 'Formula', unit: 'ml', value: formulaMl });
+      if (breastR > 0) feedType.push({ type: 'Breast (Right)', unit: 'minutes', value: breastR });
+      if (breastL > 0) feedType.push({ type: 'Breast (Left)', unit: 'minutes', value: breastL });
+
+      const meaningful =
+        awakeTime || startFeedTime || startPlayTime || startSleepTime ||
+        feedType.length || remarks || hasUrine || hasStool || sleepHours != null;
+      if (!meaningful) return;
+
+      const key = `${dayDate.getMonth() + 1}/${dayDate.getDate()}/${2025}`;
+
+      raw.push({
+        _dayKey: key,
+        _dayDate: dayDate,
+        _sort: startFeedTime ? startFeedTime.getTime() : (awakeTime ? awakeTime.getTime() : 0),
+        awakeTime: awakeTime || undefined,
+        startFeedTime: startFeedTime || undefined,
+        startPlayTime: startPlayTime || undefined,
+        startSleepTime: startSleepTime || undefined,
+        hasUrine,
+        hasStool,
+        remarks,
+        sleepDuration: sleepHours, // hours (number or undefined for now)
+        feedType,
+        // never set "status" here
+      });
+    });
+
+    // ---- Group by day and cap to 8 per day
+    const byDay = new Map();
+    for (const r of raw) {
+      if (!byDay.has(r._dayKey)) byDay.set(r._dayKey, []);
+      byDay.get(r._dayKey).push(r);
+    }
+    const kept = [];
+    for (const [, arr] of byDay) {
+      arr.sort((a, b) => a._sort - b._sort);
+      kept.push(...arr.slice(0, 8).map((e, i) => ({ ...e, cycleNo: i + 1 })));
+    }
+
+    // ---- Compute missing sleepDuration from Start of Sleep -> next Awake Time
+    // Build a single chronological sequence across days (all in 2025)
+    const chron = kept.slice().sort((a, b) => a._sort - b._sort);
+
+    for (let i = 0; i < chron.length; i++) {
+      const cur = chron[i];
+
+      if (cur.sleepDuration == null) {
+        let hours = undefined;
+
+        if (cur.startSleepTime) {
+          // find next entry that has an awakeTime
+          let end = null;
+          for (let j = i + 1; j < chron.length; j++) {
+            if (chron[j].awakeTime) { end = chron[j].awakeTime; break; }
+          }
+          if (end) {
+            const diffMin = Math.max(0, Math.round((end - cur.startSleepTime) / 60000));
+            hours = diffMin / 60;
+          }
+        }
+
+        // sanitize: clamp to [0, 12], round to 2dp, guarantee a number
+        if (hours == null || !isFinite(hours) || hours < 0) hours = 0;
+        if (hours > 12) hours = 12;
+        cur.sleepDuration = +hours.toFixed(2);
+      }
+    }
+
+    // ---- Persist
+    const created = [];
+    for (const e of chron) {
+      const { _dayKey, _dayDate, _sort, ...payload } = e; // strip helper fields
+      const clean = Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== undefined));
+      const res = await JournalService.createEntry(babyId, clean);
+      created.push(res);
+    }
+
+    return { count: chron.length };
+  }
+
+
 
 }
 
