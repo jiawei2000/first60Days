@@ -5,8 +5,7 @@
   :headers="headers"
   :items="journalEntries"
   :items-per-page="10"
-  :loading="loading"
-  loading-text="Loading journal entries..."
+  :no-data-text="loading ? 'Loading journal entries...' : 'No journal entries available'"
 >
   <template #item.feedType="{ item }">
     <VMenu location="bottom">
