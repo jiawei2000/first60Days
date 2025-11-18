@@ -223,16 +223,14 @@ async function loadEntries() {
       if (!awakeStart) continue
 
       mapped.push({
-        id: e.id,
-        title: `Entry ${e.cycleNo ? `#${e.cycleNo}` : ''}`,
-        start: awakeStart,
-        end: addMinutes(awakeStart, 15),
-        allDay: false,
-        backgroundColor: '#42A5F5',
-        borderColor: '#42A5F5',
-        textColor: '#fff',
-        extendedProps: { type: 'entry', icon: '📘', details: e },
-      })
+  id: e.id,
+  title: `Entry ${e.cycleNo ? `#${e.cycleNo}` : ''}`,
+  start: awakeStart,
+  allDay: false,
+  display: 'list-item', // ✅ FORCES inline style
+  extendedProps: { type: 'entry', icon: '📘', details: e },
+})
+
     }
 
     events.value = mapped
