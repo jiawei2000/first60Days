@@ -17,6 +17,7 @@ class Keys {
           bearerToken,
           selectedBabyId,
           userId,
+          nextFeedTime,
         ];
       };
 
@@ -26,4 +27,5 @@ class Keys {
   static StorageKey selectedBabyId = 'SK_SELECTED_BABY_ID';
   static StorageKey caregiverName = 'SK_CAREGIVER_NAME';
   static StorageKey userId = 'SK_USER_ID';
+  static StorageKey nextFeedTime = 'SK_NEXT_FEED_TIME';
 }

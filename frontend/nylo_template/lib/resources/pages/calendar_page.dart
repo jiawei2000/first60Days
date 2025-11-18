@@ -115,7 +115,8 @@ class _CalendarPageState extends State<CalendarPage> {
         (_eventData[localDay] ?? []).whereType<Map<String, dynamic>>().toList();
 
     EntryPlanner entryPlanner = _getEntryPlannerForWeekNo(_calculateBabyWeek());
-    // Add Planned Feedings
+    String nextFeedingTimeString = "null";
+    final bool isSelectedDayToday = isSameDay(_selectedDay, DateTime.now());
     // If number of feeds in Entry planner is more than Day Events skip
     // If entry planner feedTiming is null or empty, skip
     if (entryPlanner.feedTimings != null &&
@@ -167,6 +168,13 @@ class _CalendarPageState extends State<CalendarPage> {
           'entryId': null,
           'status': "Planned",
         });
+
+        if (isSelectedDayToday &&
+            (nextFeedingTimeString.isEmpty ||
+                nextFeedingTimeString == "null")) {
+          nextFeedingTimeString = currentFeedTimeString;
+          Keys.nextFeedTime.save(nextFeedingTimeString);
+        }
       }
     }
 
@@ -177,6 +185,7 @@ class _CalendarPageState extends State<CalendarPage> {
       feedCount++;
     }
 
+    print("NExt: " + nextFeedingTimeString);
     return dayEvents;
   }
 

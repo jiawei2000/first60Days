@@ -12,6 +12,7 @@ import '../widgets/buttons/partials/primary_button_widget.dart';
 import '/resources/pages/profile_page.dart';
 import '/config/keys.dart';
 import '/config/weekly_messages.dart';
+import '/app/notifiers/feed_notifier.dart';
 
 class HomePage extends NyStatefulWidget<HomeController> {
   static RouteView path = ("/home", (_) => HomePage());
@@ -26,17 +27,27 @@ class _HomePageState extends NyPage<HomePage> {
   int? _weekNo;
   bool _loading = true;
   String? _weeklyMessage;
+  String? _nextFeedTime;
   final Random _random = Random();
   final NotificationController _notificationController =
       NotificationController();
   List<dynamic> _notifications = [];
   bool _notificationsLoading = true;
+  late final VoidCallback _nextFeedTimeListener;
 
   @override
   get init => () async {
         _notificationController.construct(context);
+        _nextFeedTimeListener = () {
+          if (!mounted) return;
+          setState(() {
+            _nextFeedTime = FeedNotifiers.nextFeedTime.value;
+          });
+        };
+        FeedNotifiers.nextFeedTime.addListener(_nextFeedTimeListener);
         final babyId = await Keys.selectedBabyId.read();
         final userId = await Keys.userId.read();
+        await _refreshNextFeedTime();
 
         print("UserId: $userId");
 
@@ -82,6 +93,18 @@ class _HomePageState extends NyPage<HomePage> {
           _notificationsLoading = false;
         });
       };
+
+  @override
+  void activate() {
+    super.activate();
+    _refreshNextFeedTime();
+  }
+
+  @override
+  void dispose() {
+    FeedNotifiers.nextFeedTime.removeListener(_nextFeedTimeListener);
+    super.dispose();
+  }
 
   @override
   LoadingStyle get loadingStyle => LoadingStyle.normal();
@@ -235,7 +258,7 @@ class _HomePageState extends NyPage<HomePage> {
               /// 🟡 Reminders (Full width)
               _reminderTile(
                 "$babyName’s next feeding time is at ",
-                "10:34 AM",
+                _nextFeedTime ?? "",
               ),
               _notificationsSection(theme),
             ],
@@ -325,5 +348,10 @@ class _HomePageState extends NyPage<HomePage> {
   String _formatNotificationMessage(dynamic notification) {
     final message = notification?['message']?.toString() ?? "No message";
     return message;
+  }
+
+  Future<void> _refreshNextFeedTime() async {
+    final nextFeedTime = await Keys.nextFeedTime.read();
+    FeedNotifiers.nextFeedTime.value = nextFeedTime;
   }
 }
