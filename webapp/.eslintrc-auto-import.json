@@ -18,6 +18,7 @@
     "VNode": true,
     "WritableComputedRef": true,
     "acceptHMRUpdate": true,
+    "activeRequests": true,
     "alphaDashValidator": true,
     "alphaValidator": true,
     "asyncComputed": true,
@@ -58,6 +59,7 @@
     "extendRef": true,
     "formatDate": true,
     "formatDateToMonthShort": true,
+    "formatSecondsToDateString": true,
     "getActivePinia": true,
     "getCurrentInstance": true,
     "getCurrentScope": true,
@@ -77,6 +79,7 @@
     "isReadonly": true,
     "isRef": true,
     "isToday": true,
+    "isUiLoading": true,
     "kFormatter": true,
     "lengthValidator": true,
     "logicAnd": true,
@@ -142,6 +145,8 @@
     "shallowReactive": true,
     "shallowReadonly": true,
     "shallowRef": true,
+    "startLoading": true,
+    "stopLoading": true,
     "storeToRefs": true,
     "syncRef": true,
     "syncRefs": true,
@@ -359,8 +364,6 @@
     "watchThrottled": true,
     "watchTriggerable": true,
     "watchWithFilter": true,
-    "whenever": true,
-    "formatSecondsToDateString": true,
-    "useToken": true
+    "whenever": true
   }
 }
