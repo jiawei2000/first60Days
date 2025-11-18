@@ -210,7 +210,7 @@ class ProcessStatisticsService {
             const stats = this.calculateConsolidatedStatistics(ageGroupStats[week]);
             result.ageGroupStatistics[`week${week}`] = stats;
         }
-        await db.collection("ageGroupStatistics").add(result);
+        await db.collection("ageGroupStatistics").add(result); //generate auto ID
         console.log(`Age group statistics saved for date ${dateStr}.`);
     }
 

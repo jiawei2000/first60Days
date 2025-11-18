@@ -138,14 +138,13 @@ class StatisticsService {
         const journalEntries = journalEntriesSnap.docs.map(doc => doc.data());
         const newStatistics = processStatisticsService.calculateDailyStatistics(journalEntries);
         //only need to update the existing document
-        await db.collection("dailyStatistics").doc(statisticId).set(newStatistics, { merge: true }); 
+        await db.collection("dailyStatistics").doc(statisticId).set(newStatistics, { merge: true });
         console.log(`Recomputed daily statistics for baby ${babyIDRef.id} on ${date}.`);
-        }
+    }
 
-        async createAgeGroupStatistics(data) {
+    async createAgeGroupStatistics(data) {
         const ageGroupStatsRef = db.collection("ageGroupStatistics").doc();
         const ageGroupStatsData = {
-            id: ageGroupStatsRef.id,
             ...data,
             createdAt: Timestamp.now(),
         };
@@ -156,11 +155,10 @@ class StatisticsService {
     async createStatisticsByGender(data) {
         const genderStatsRef = db.collection("statisticsByGender").doc();
         const genderStatsData = {
-            id: genderStatsRef.id,
             ...data,
             createdAt: Timestamp.now()
         };
-        await genderStatsRef.set(genderStatsData);
+        await genderStatsRef.set(genderStatsData); 
         return genderStatsData;
     }
 
