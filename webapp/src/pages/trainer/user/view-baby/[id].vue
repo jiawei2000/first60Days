@@ -5,7 +5,24 @@
         <div>
           <div class="text-h6">Baby Schedule for {{ babyName || '...' }}</div>
         </div>
+
+        <!-- Date Picker Menu -->
+        <VMenu v-model="datePickerMenu" :close-on-content-click="false" location="bottom end">
+          <template #activator="{ props }">
+            <VBtn color="primary" v-bind="props" variant="flat" size="small">📅 Jump to Date</VBtn>
+          </template>
+
+          <VCard class="pa-2">
+            <VDatePicker
+              v-model="selectedDate"
+              show-adjacent-months
+              color="primary"
+              @update:modelValue="onDatePicked"
+            />
+          </VCard>
+        </VMenu>
       </VCardTitle>
+
 
       <VCardText>
         <FullCalendar ref="calendarRef" :options="calendarOptions" />
@@ -87,8 +104,8 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
-import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin from '@fullcalendar/interaction'
+// import timeGridPlugin from '@fullcalendar/timegrid'
+// import interactionPlugin from '@fullcalendar/interaction'
 import listPlugin from '@fullcalendar/list'
 import '@core/scss/template/libs/full-calendar.scss'
 
@@ -103,6 +120,17 @@ const isDrawerOpen = ref(false)
 const entryDetails = ref(null)
 const events = ref([])
 const currentView = ref('dayGridMonth')
+
+const datePickerMenu = ref(false)
+const selectedDate = ref(null)
+
+function onDatePicked(dateStr) {
+  datePickerMenu.value = false
+  if (calendarRef.value?.getApi) {
+    calendarRef.value.getApi().gotoDate(dateStr)
+  }
+}
+
 
 /* ---------- Helpers ---------- */
 function tsToIso(ts) {
@@ -217,12 +245,12 @@ async function loadEntries() {
 
 /* ---------- Calendar Options ---------- */
 const calendarOptions = ref({
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+  plugins: [dayGridPlugin, listPlugin], // Removed timeGridPlugin and interactionPlugin (if not needed)
   initialView: 'dayGridMonth',
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
-    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+    right: 'dayGridMonth,listWeek', // Only month and list
   },
   height: 'auto',
   expandRows: true,
@@ -238,7 +266,6 @@ const calendarOptions = ref({
     currentView.value = arg.view.type
   },
 
-  // Open drawer with details
   eventClick(info) {
     const entry = info.event.extendedProps?.details
     if (!entry) return
