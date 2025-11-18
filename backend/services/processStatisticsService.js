@@ -272,7 +272,7 @@ class ProcessStatisticsService {
 
     // ---------------------------------------------------------------------------
     // Daily statistics computation
-    calculateDailyStatistics(entries) {
+    calculateDailyStatistics(entries) {//
         const statistics = {
             // Summed fields
             totalFeeds: entries.length,
