@@ -2,11 +2,9 @@
   <div class="pa-4">
     <VCard class="pa-2">
       <VCardTitle class="d-flex align-center justify-space-between pr-4">
-        <div>
-          <div class="text-h6">Baby Schedule for {{ babyName || '...' }}</div>
-        </div>
+        <div class="text-h6">Baby Schedule for {{ babyName || '...' }}</div>
 
-        <!-- Date Picker Menu -->
+        <!-- Date Picker -->
         <VMenu v-model="datePickerMenu" :close-on-content-click="false" location="bottom end">
           <template #activator="{ props }">
             <VBtn color="primary" v-bind="props" variant="flat" size="small">📅 Jump to Date</VBtn>
@@ -23,28 +21,26 @@
         </VMenu>
       </VCardTitle>
 
-
       <VCardText>
         <FullCalendar ref="calendarRef" :options="calendarOptions" />
       </VCardText>
     </VCard>
 
-    <!-- Right Drawer: Entry Details -->
+    <!-- Entry Drawer -->
     <VNavigationDrawer v-model="isDrawerOpen" location="end" temporary width="420">
       <VToolbar density="comfortable" title="Entry Details" />
       <div class="pa-4">
         <div v-if="entryDetails">
           <div class="text-subtitle-1 mb-3">
             {{ formatDateTime(entryDetails.awakeTime) }}
-            <span class="text-medium-emphasis">(Entry time)</span>
+            <span class="text-medium-emphasis"></span>
           </div>
 
           <VList density="compact" lines="two">
             <VListItem>
               <VListItemTitle>📘 Entry #</VListItemTitle>
-              <VListItemSubtitle>{{ safe(entryDetails.cycleNo) }}</VListItemSubtitle>
+              <VListItemSubtitle>{{ safe(entryDetails.entryNo) }}</VListItemSubtitle>
             </VListItem>
-
 
             <VDivider class="my-2" />
 
@@ -78,8 +74,6 @@
               <VListItemSubtitle>{{ formatDurationHours(entryDetails.sleepDuration) }}</VListItemSubtitle>
             </VListItem>
 
-
-            <!-- Generic passthrough for any extra fields you might add later -->
             <template v-for="(val, key) in extraFields(entryDetails)" :key="key">
               <VListItem>
                 <VListItemTitle>{{ key }}</VListItemTitle>
@@ -89,7 +83,6 @@
           </VList>
 
           <VDivider class="my-3" />
-
           <VBtn color="primary" block @click="isDrawerOpen = false">Close</VBtn>
         </div>
 
@@ -106,35 +99,21 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
-// import timeGridPlugin from '@fullcalendar/timegrid'
-// import interactionPlugin from '@fullcalendar/interaction'
-import listPlugin from '@fullcalendar/list'
 import '@core/scss/template/libs/full-calendar.scss'
 
-definePage({ meta: { trainerOnly: true } })
-
+/* ---------- State ---------- */
 const route = useRoute()
 const babyId = computed(() => route.params.id)
 const babyName = ref('')
-
 const calendarRef = ref(null)
 const isDrawerOpen = ref(false)
 const entryDetails = ref(null)
 const events = ref([])
 const currentView = ref('dayGridMonth')
-
 const datePickerMenu = ref(false)
 const selectedDate = ref(null)
 
-function onDatePicked(dateStr) {
-  datePickerMenu.value = false
-  if (calendarRef.value?.getApi) {
-    calendarRef.value.getApi().gotoDate(dateStr)
-  }
-}
-
-
-/* ---------- Helpers ---------- */
+/* ---------- Utility Functions ---------- */
 function tsToIso(ts) {
   if (!ts) return null
   if (typeof ts === 'string') return new Date(ts).toISOString()
@@ -142,16 +121,10 @@ function tsToIso(ts) {
   if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toISOString()
   return null
 }
-function addMinutes(iso, minutes) {
-  const d = new Date(iso)
-  d.setMinutes(d.getMinutes() + (minutes || 0))
-  return d.toISOString()
-}
+
 function formatDateTime(ts) {
   if (!ts) return '—'
-  const d = typeof ts === 'object' && typeof ts._seconds === 'number'
-    ? new Date(ts._seconds * 1000)
-    : new Date(ts)
+  const d = typeof ts === 'object' && ts._seconds ? new Date(ts._seconds * 1000) : new Date(ts)
   if (isNaN(d.getTime())) return '—'
   return d.toLocaleString(undefined, {
     weekday: 'short',
@@ -162,16 +135,15 @@ function formatDateTime(ts) {
     minute: '2-digit',
   })
 }
+
 function safe(val, suffix = '') {
-  if (val === null || val === undefined || val === '') return '—'
-  return `${val}${suffix}`
+  return val === null || val === undefined || val === '' ? '—' : `${val}${suffix}`
 }
+
 function prettyFeedTypes(feedType) {
-  if (!Array.isArray(feedType) || !feedType.length) return ''
-  return feedType
+  return (Array.isArray(feedType) ? feedType : [])
     .map(f => {
-      if (!f) return ''
-      const unit = f.unit ? String(f.unit) : ''
+      const unit = f.unit || ''
       const value = typeof f.value === 'number' ? f.value : ''
       const name = f.name ?? f.type ?? ''
       return [name, value && unit ? `${value} ${unit}` : ''].filter(Boolean).join(' • ')
@@ -179,13 +151,17 @@ function prettyFeedTypes(feedType) {
     .filter(Boolean)
     .join(', ')
 }
-function extraFields(entry) {
-  const used = new Set([
-    'id', 'cycleNo',
-    'awakeTime', 'startFeedTime', 'startPlayTime', 'startSleepTime',
-    'sleepDuration', 'feedType',
-  ])
 
+function formatDurationHours(hoursFloat) {
+  if (!hoursFloat || typeof hoursFloat !== 'number') return '—'
+  const hours = Math.floor(hoursFloat)
+  const minutes = Math.round((hoursFloat - hours) * 60)
+  return [hours && `${hours} ${hours === 1 ? 'Hour' : 'Hours'}`, minutes && `${minutes} ${minutes === 1 ? 'Minute' : 'Minutes'}`]
+    .filter(Boolean).join(' ')
+}
+
+function extraFields(entry) {
+  const used = new Set(['id', 'cycleNo', 'awakeTime', 'startFeedTime', 'startPlayTime', 'startSleepTime', 'sleepDuration', 'feedType','iso','timestamp','entryNo','dateKey'])
   const labelMap = {
     hasStool: 'Has the baby pooped?',
     hasUrine: 'Has the baby peed?',
@@ -193,49 +169,27 @@ function extraFields(entry) {
     status: 'Entry Status',
   }
 
-  const formatValue = (key, val) => {
-    if (key === 'hasStool' || key === 'hasUrine') {
-      return val === true ? 'Yes ✅' : val === false ? 'No ❌' : '—'
-    }
-
-    if (key === 'status') {
-      const map = {
-        COMPLETE: 'The entry is marked as complete ✅',
-        INCOMPLETE: 'The entry is incomplete ⚠️',
-      }
-      return map[val] || val
-    }
-
-    if (typeof val === 'boolean') return val ? 'Yes' : 'No'
-    if (val && typeof val === 'object' && '_seconds' in val) return formatDateTime(val)
-    return typeof val === 'string' || typeof val === 'number' ? val : JSON.stringify(val)
-  }
-
   const out = {}
-  for (const k in entry || {}) {
+  for (const k in entry) {
     if (used.has(k)) continue
     const label = labelMap[k] || k
-    const value = formatValue(k, entry[k])
-    out[label] = value
+    const val = entry[k]
+    out[label] =
+      k === 'hasStool' || k === 'hasUrine' ? (val === true ? 'Yes ✅' : val === false ? 'No ❌' : '—') :
+      k === 'status' ? { COMPLETE: 'Complete ✅', INCOMPLETE: 'Incomplete ⚠️' }[val] || val :
+      typeof val === 'boolean' ? (val ? 'Yes' : 'No') :
+      val && typeof val === 'object' && '_seconds' in val ? formatDateTime(val) :
+      typeof val === 'string' || typeof val === 'number' ? val : JSON.stringify(val)
   }
 
   return out
 }
 
-function formatDurationHours(hoursFloat) {
-  if (!hoursFloat || typeof hoursFloat !== 'number') return '—'
-
-  const hours = Math.floor(hoursFloat)
-  const minutes = Math.round((hoursFloat - hours) * 60)
-
-  const hourPart = hours > 0 ? `${hours} ${hours === 1 ? 'Hour' : 'Hours'}` : ''
-  const minutePart = minutes > 0 ? `${minutes} ${minutes === 1 ? 'Minute' : 'Minutes'}` : ''
-
-  return [hourPart, minutePart].filter(Boolean).join(' ')
+function getLocalDateKeyFromAwakeTime(isoString) {
+  return new Date(isoString).toLocaleDateString('en-CA') // YYYY-MM-DD
 }
 
-
-/* ---------- Load Baby Info ---------- */
+/* ---------- Data Loading ---------- */
 async function loadBabyInfo() {
   try {
     const id = babyId.value
@@ -244,72 +198,91 @@ async function loadBabyInfo() {
     babyName.value = res?.name || 'Unknown Baby'
   } catch (err) {
     console.error('Failed to load baby info', err)
-    babyName.value = 'Unknown Baby'
   }
 }
 
-/* ---------- Load + Map Entries as Events ---------- */
 async function loadEntries() {
   try {
     const id = babyId.value
     if (!id) return
+
     const res = await $api(`journalEntries/${id}`, { method: 'GET' })
     const list = Array.isArray(res) ? res : []
-    const mapped = []
 
-    for (const e of list) {
-      const awakeStart = tsToIso(e.awakeTime)
-      if (!awakeStart) continue
+    const normalized = list
+      .map(e => {
+        const iso = tsToIso(e.awakeTime)
+        if (!iso) return null
+        return {
+          ...e,
+          iso,
+          timestamp: new Date(iso).getTime(),
+          dateKey: getLocalDateKeyFromAwakeTime(iso),
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.timestamp - b.timestamp)
 
-      mapped.push({
-  id: e.id,
-  title: `Entry ${e.cycleNo ? `#${e.cycleNo}` : ''}`,
-  start: awakeStart,
-  allDay: false,
-  display: 'list-item', // ✅ FORCES inline style
-  extendedProps: { type: 'entry', icon: '📘', details: e },
-})
+    const grouped = {}
+    const calendarEvents = []
 
+    for (const entry of normalized) {
+      const { id, dateKey, iso } = entry
+      if (!grouped[dateKey]) grouped[dateKey] = []
+      if (grouped[dateKey].some(e => e.id === id)) continue
+
+      const entryNo = grouped[dateKey].length + 1
+      entry.entryNo = entryNo
+      grouped[dateKey].push(entry)
+
+      calendarEvents.push({
+        id: `${id}-${dateKey}`,
+        title: `Entry #${entryNo}`,
+        start: new Date(iso),
+        allDay: false,
+        display: 'list-item',
+        extendedProps: {
+          type: 'entry',
+          icon: '📘',
+          details: entry,
+        },
+      })
     }
 
-    events.value = mapped
+    events.value = calendarEvents
     await nextTick()
     calendarRef.value?.getApi()?.refetchEvents()
   } catch (err) {
-    console.error('Failed to load journal entries for calendar', err)
+    console.error('Failed to load journal entries', err)
   }
 }
 
-/* ---------- Calendar Options ---------- */
+/* ---------- Calendar Setup ---------- */
 const calendarOptions = ref({
-  plugins: [dayGridPlugin, listPlugin], // Removed timeGridPlugin and interactionPlugin (if not needed)
+  plugins: [dayGridPlugin],
   initialView: 'dayGridMonth',
+  timezone: 'local',
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
-    right: 'dayGridMonth,listWeek', // Only month and list
+    right: '',
   },
   height: 'auto',
   expandRows: true,
-  selectable: false,
   nowIndicator: true,
-  eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
-  displayEventEnd: true,
   dayMaxEvents: 3,
   moreLinkClick: 'popover',
+  eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
   events: computed(() => events.value),
-
   datesSet(arg) {
     currentView.value = arg.view.type
   },
-
   eventClick(info) {
     const entry = info.event.extendedProps?.details
     if (!entry) return
     entryDetails.value = entry
     isDrawerOpen.value = true
   },
-
   eventContent(arg) {
     const icon = arg.event.extendedProps?.icon || ''
     const time = arg.timeText ? `${arg.timeText} ` : ''
@@ -330,6 +303,11 @@ watch(babyId, async () => {
   await loadBabyInfo()
   await loadEntries()
 })
+
+function onDatePicked(dateStr) {
+  datePickerMenu.value = false
+  calendarRef.value?.getApi()?.gotoDate(dateStr)
+}
 </script>
 
 <style scoped>
