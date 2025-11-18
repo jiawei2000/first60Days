@@ -7,7 +7,6 @@ import '/resources/widgets/buttons/buttons.dart';
 import '/app/networking/user_api_service.dart';
 import '/config/keys.dart';
 import '/resources/pages/choose_baby_page.dart';
-import '/resources/helpers/loading.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -49,10 +48,11 @@ class _LoginPageState extends NyPage<LoginPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Button.primary(
                   text: "Login",
+                  loadingStyle: LoadingStyle.normal(),
                   submitForm: (
                     form,
                     (data) async {
-                      onLogin(data['username'], data['password']);
+                      await onLogin(data['username'], data['password']);
                     }
                   ),
                 ),
@@ -87,34 +87,29 @@ class _LoginPageState extends NyPage<LoginPage> {
     return token;
   }
 
-  void onLogin(String username, String password) async {
-    await LoadingOverlay.show(message: 'Signing in...');
-    try {
-      final fcmToken = await _getFcmTokenWithPermission();
+  Future<void> onLogin(String username, String password) async {
+    final fcmToken = await _getFcmTokenWithPermission();
 
-      var response = await userApiService.login(
-        username: username,
-        password: password,
-        fcmToken: fcmToken,
-      );
+    final response = await userApiService.login(
+      username: username,
+      password: password,
+      fcmToken: fcmToken,
+    );
 
-      // Handle response
-      if (response != null) {
-        await Auth.authenticate(data: {"token": response['token']});
-        await Keys.bearerToken.save(response['token']);
-        // Persist caregiver/account name for Profile display
-        await Keys.caregiverName.save(username);
+    // Handle response
+    if (response != null) {
+      await Auth.authenticate(data: {"token": response['token']});
+      await Keys.bearerToken.save(response['token']);
+      // Persist caregiver/account name for Profile display
+      await Keys.caregiverName.save(username);
 
-        if (fcmToken != null) {
-          await FirebaseMessaging.instance.subscribeToTopic('daily_baby_journal');
-        }
-
-        routeTo(ChooseBabyPage.path, navigationType: NavigationType.pushAndForgetAll);
-      } else {
-        showToastWarning(title: "Login failed", description: "Please try again");
+      if (fcmToken != null) {
+        await FirebaseMessaging.instance.subscribeToTopic('daily_baby_journal');
       }
-    } finally {
-      LoadingOverlay.hide();
+
+      routeTo(ChooseBabyPage.path, navigationType: NavigationType.pushAndForgetAll);
+    } else {
+      showToastWarning(title: "Login failed", description: "Please try again");
     }
   }
 }

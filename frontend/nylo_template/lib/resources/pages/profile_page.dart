@@ -7,7 +7,6 @@ import 'choose_baby_page.dart';
 import '/app/events/logout_event.dart';
 import '/app/networking/baby_service_api_service.dart';
 import '/config/keys.dart';
-import '/resources/helpers/loading.dart';
 // If you want a Babies page later, create it similarly and import here.
 
 class ProfilePage extends NyStatefulWidget {
@@ -24,13 +23,8 @@ class _ProfilePageState extends NyPage<ProfilePage> {
 
   @override
   get init => () async {
-        await LoadingOverlay.show(message: 'Loading profile...');
-        try {
-          await _refreshCaregiverName();
-          await _refreshCurrentBabyName();
-        } finally {
-          LoadingOverlay.hide();
-        }
+        await _refreshCaregiverName();
+        await _refreshCurrentBabyName();
       };
 
   Future<void> _refreshCaregiverName() async {
