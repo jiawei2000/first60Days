@@ -1,81 +1,71 @@
 <template>
-  <VContainer>
-    <h2 class="text-h5 font-weight-bold mb-4">Admin Statistics</h2>
+  <VCard title="Admin Statistics">
+    <VCardText>
+      <!-- 📊 Tab Switch -->
+      <VTabs v-model="activeTab" background-color="transparent" grow class="mb-4">
+        <VTab value="gender">By Gender</VTab>
+        <VTab value="age">By Age</VTab>
+      </VTabs>
 
-    <VTabs v-model="activeTab" background-color="transparent" grow>
-      <VTab value="gender">By Gender</VTab>
-      <VTab value="age">By Age</VTab>
-    </VTabs>
+      <VDivider class="mb-4" />
 
-    <VDivider />
+      <VWindow v-model="activeTab">
+        <!-- 🔹 GENDER STATS -->
+        <VWindowItem value="gender">
+          <VSelect
+            v-model="selectedGenderMetric"
+            :items="metricOptions"
+            label="Select Metric"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            hide-details
+            class="mb-4"
+          />
 
-    <VWindow v-model="activeTab" class="mt-4">
-      <!-- Gender Stats -->
-      <VWindowItem value="gender">
-        <VCard>
-          <VCardText>
-            <VSelect
-              v-model="selectedGenderMetric"
-              :items="metricOptions"
-              label="Select Metric"
-              item-title="label"
-              item-value="value"
-              variant="outlined"
-              hide-details
-              class="mb-4"
+          <div v-if="chartReady && genderChartSeries?.[0]?.data?.length">
+            <ApexChart
+              type="line"
+              height="300"
+              :options="genderChartOptions"
+              :series="genderChartSeries"
             />
+          </div>
+          <div v-else class="text-medium-emphasis text-center mt-4">
+            No data available for gender stats.
+          </div>
+        </VWindowItem>
 
-            <div
-              v-if="chartReady && genderChartSeries?.[0]?.data?.length"
-            >
-              <ApexChart
-                type="line"
-                height="300"
-                :options="genderChartOptions"
-                :series="genderChartSeries"
-              />
-            </div>
-            <div v-else class="text-medium-emphasis text-center mt-4">
-              No data available for gender stats.
-            </div>
-          </VCardText>
-        </VCard>
-      </VWindowItem>
+        <!-- 🔹 AGE STATS -->
+        <VWindowItem value="age">
+          <VSelect
+            v-model="selectedAgeMetric"
+            :items="metricOptions"
+            label="Select Metric"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            hide-details
+            class="mb-4"
+          />
 
-      <!-- Age Stats -->
-      <VWindowItem value="age">
-        <VCard>
-          <VCardText>
-            <VSelect
-              v-model="selectedAgeMetric"
-              :items="metricOptions"
-              label="Select Metric"
-              item-title="label"
-              item-value="value"
-              variant="outlined"
-              hide-details
-              class="mb-4"
+          <div v-if="chartReady && ageChartSeries?.[0]?.data?.length">
+            <ApexChart
+              type="line"
+              height="300"
+              :options="ageChartOptions"
+              :series="ageChartSeries"
             />
-
-            <div
-              v-if="chartReady && ageChartSeries?.[0]?.data?.length"
-            >
-              <ApexChart
-                type="line"
-                height="300"
-                :options="ageChartOptions"
-                :series="ageChartSeries"
-              />
-            </div>
-            <div v-else class="text-medium-emphasis text-center mt-4">
-              No data available for age stats.
-            </div>
-          </VCardText>
-        </VCard>
-      </VWindowItem>
-    </VWindow>
-  </VContainer>
+          </div>
+          <div v-else class="text-medium-emphasis text-center mt-4">
+            No data available for age stats.
+          </div>
+        </VWindowItem>
+      </VWindow>
+    </VCardText>
+  </VCard>
 </template>
+
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
