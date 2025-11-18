@@ -71,37 +71,39 @@
         <VWindow v-model="activeTab" class="pa-4">
   <!-- 🧭 Shared Date Picker (Top for both Summary & Trends) -->
   <div class="d-flex align-center justify-end mb-2" style="position: relative; z-index: 10;">
-    <VMenu
-      v-model="dateMenu"
-      transition="scale-transition"
-      location="bottom end"
-      offset-y
-      max-width="290"
-      min-width="auto"
+<VMenu
+  v-model="dateMenu"
+  transition="scale-transition"
+  location="bottom end"
+  offset-y
+  max-width="290"
+  min-width="auto"
+  :close-on-content-click="false" 
+>
+  <template #activator="{ props }">
+    <VBtn
+      v-bind="props"
+      variant="flat"
+      color="primary"
+      size="small"
+      rounded="lg"
+      elevation="1"
     >
-      <template #activator="{ props }">
-        <VBtn
-          v-bind="props"
-          variant="flat"
-          color="primary"
-          size="small"
-          rounded="lg"
-          elevation="1"
-        >
-          {{ selectedDate ? selectedDate.toISOString().split('T')[0] : 'Select date' }}
-        </VBtn>
-      </template>
+      {{ selectedDate ? selectedDate.toISOString().split('T')[0] : 'Select date' }}
+    </VBtn>
+  </template>
 
-      <VDatePicker
-        v-model="selectedDate"
-        color="primary"
-        :max="new Date()"
-        @update:model-value="() => {
-          updateStatsForSelectedDate()
-          dateMenu.value = false
-        }"
-      />
-    </VMenu>
+  <VDatePicker
+    v-model="selectedDate"
+    color="primary"
+    :max="new Date()"
+    @update:modelValue="() => {
+      updateStatsForSelectedDate()
+      dateMenu.value = false  // ✅ manually close after selection
+    }"
+/>
+</VMenu>
+
   </div>
 
   <!-- 🟩 SUMMARY TAB -->
