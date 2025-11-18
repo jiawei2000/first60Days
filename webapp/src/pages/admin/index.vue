@@ -22,29 +22,59 @@
 
     <VRow v-else>
       <VCol cols="12" md="4">
-        <VCard>
-          <VCardText class="d-flex flex-column">
-            <span class="text-subtitle-2 text-medium-emphasis mb-1">Total Trainers</span>
-            <span class="text-h4 font-weight-bold">{{ dashboardData.totalTrainers }}</span>
-          </VCardText>
+        <VCard
+          class="pa-4 d-flex align-center"
+          :class="$vuetify.theme.dark ? 'bg-surface' : 'bg-grey-lighten-5'"
+        >
+          <VAvatar size="48" class="me-4" color="primary" variant="tonal">
+            <VIcon icon="bx-user-voice" />
+          </VAvatar>
+          <div>
+            <p class="text-caption text-medium-emphasis mb-0">
+              Total Trainers
+            </p>
+            <h3 class="text-h5 font-weight-bold mb-0">
+              {{ dashboardData.totalTrainers }}
+            </h3>
+          </div>
         </VCard>
       </VCol>
 
       <VCol cols="12" md="4">
-        <VCard>
-          <VCardText class="d-flex flex-column">
-            <span class="text-subtitle-2 text-medium-emphasis mb-1">Total Users</span>
-            <span class="text-h4 font-weight-bold">{{ dashboardData.totalUsers }}</span>
-          </VCardText>
+        <VCard
+          class="pa-4 d-flex align-center"
+          :class="$vuetify.theme.dark ? 'bg-surface' : 'bg-grey-lighten-4'"
+        >
+          <VAvatar size="48" class="me-4" color="info" variant="tonal">
+            <VIcon icon="bx-user" />
+          </VAvatar>
+          <div>
+            <p class="text-caption text-medium-emphasis mb-0">
+              Total Users
+            </p>
+            <h3 class="text-h5 font-weight-bold mb-0">
+              {{ dashboardData.totalUsers }}
+            </h3>
+          </div>
         </VCard>
       </VCol>
 
       <VCol cols="12" md="4">
-        <VCard>
-          <VCardText class="d-flex flex-column">
-            <span class="text-subtitle-2 text-medium-emphasis mb-1">Total Babies</span>
-            <span class="text-h4 font-weight-bold">{{ dashboardData.totalBabies }}</span>
-          </VCardText>
+        <VCard
+          class="pa-4 d-flex align-center"
+          :class="$vuetify.theme.dark ? 'bg-surface' : 'bg-grey-lighten-3'"
+        >
+          <VAvatar size="48" class="me-4" color="success" variant="tonal">
+            <VIcon icon="bx-baby-carriage" />
+          </VAvatar>
+          <div>
+            <p class="text-caption text-medium-emphasis mb-0">
+              Total Babies
+            </p>
+            <h3 class="text-h5 font-weight-bold mb-0">
+              {{ dashboardData.totalBabies }}
+            </h3>
+          </div>
         </VCard>
       </VCol>
     </VRow>

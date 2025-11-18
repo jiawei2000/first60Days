@@ -22,29 +22,59 @@
 
     <VRow v-else>
       <VCol cols="12" md="4">
-        <VCard>
-          <VCardText class="d-flex flex-column">
-            <span class="text-subtitle-2 text-medium-emphasis mb-1">Parents Assigned</span>
-            <span class="text-h4 font-weight-bold">{{ metrics.parentsAssigned }}</span>
-          </VCardText>
+        <VCard
+          class="pa-4 d-flex align-center"
+          :class="$vuetify.theme.dark ? 'bg-surface' : 'bg-grey-lighten-5'"
+        >
+          <VAvatar size="48" class="me-4" color="primary" variant="tonal">
+            <VIcon icon="bx-group" />
+          </VAvatar>
+          <div>
+            <p class="text-caption text-medium-emphasis mb-0">
+              Parents Assigned
+            </p>
+            <h3 class="text-h5 font-weight-bold mb-0">
+              {{ metrics.parentsAssigned }}
+            </h3>
+          </div>
         </VCard>
       </VCol>
 
       <VCol cols="12" md="4">
-        <VCard>
-          <VCardText class="d-flex flex-column">
-            <span class="text-subtitle-2 text-medium-emphasis mb-1">Babies Assigned</span>
-            <span class="text-h4 font-weight-bold">{{ metrics.babiesAssigned }}</span>
-          </VCardText>
+        <VCard
+          class="pa-4 d-flex align-center"
+          :class="$vuetify.theme.dark ? 'bg-surface' : 'bg-grey-lighten-4'"
+        >
+          <VAvatar size="48" class="me-4" color="info" variant="tonal">
+            <VIcon icon="bx-baby-carriage" />
+          </VAvatar>
+          <div>
+            <p class="text-caption text-medium-emphasis mb-0">
+              Babies Assigned
+            </p>
+            <h3 class="text-h5 font-weight-bold mb-0">
+              {{ metrics.babiesAssigned }}
+            </h3>
+          </div>
         </VCard>
       </VCol>
 
       <VCol cols="12" md="4">
-        <VCard>
-          <VCardText class="d-flex flex-column">
-            <span class="text-subtitle-2 text-medium-emphasis mb-1">Babies with Alerts</span>
-            <span class="text-h4 font-weight-bold">{{ metrics.babiesWithAlerts }}</span>
-          </VCardText>
+        <VCard
+          class="pa-4 d-flex align-center"
+          :class="$vuetify.theme.dark ? 'bg-surface' : 'bg-grey-lighten-3'"
+        >
+          <VAvatar size="48" class="me-4" color="error" variant="tonal">
+            <VIcon icon="bx-error" />
+          </VAvatar>
+          <div>
+            <p class="text-caption text-medium-emphasis mb-0">
+              Babies with Alerts
+            </p>
+            <h3 class="text-h5 font-weight-bold mb-0">
+              {{ metrics.babiesWithAlerts }}
+            </h3>
+          </div>
         </VCard>
       </VCol>
     </VRow>
