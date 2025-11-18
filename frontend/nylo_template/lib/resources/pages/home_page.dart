@@ -1,13 +1,16 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
-import '/config/keys.dart';
 import '/app/models/baby.dart';
 import '/app/controllers/home_controller.dart';
 import '/resources/widgets/safearea_widget.dart';
 import '/resources/pages/create_journal_entry_page.dart';
 import '../widgets/buttons/partials/primary_button_widget.dart';
 import '/resources/pages/profile_page.dart';
+import '/config/keys.dart';
+import '/config/weekly_messages.dart';
 
 class HomePage extends NyStatefulWidget<HomeController> {
   static RouteView path = ("/home", (_) => HomePage());
@@ -21,6 +24,8 @@ class _HomePageState extends NyPage<HomePage> {
   Baby? _baby;
   int? _weekNo;
   bool _loading = true;
+  String? _weeklyMessage;
+  final Random _random = Random();
 
   @override
   get init => () async {
@@ -39,9 +44,18 @@ class _HomePageState extends NyPage<HomePage> {
         final baby = await controller.fetchBabyById(babyId);
         final weekNo = await controller.fetchWeekNo(babyId);
 
+        String? selectedMessage;
+        if (weekNo != null) {
+          final messages = weeklyMessages[weekNo];
+          if (messages != null && messages.isNotEmpty) {
+            selectedMessage = messages[_random.nextInt(messages.length)];
+          }
+        }
+
         setState(() {
           _baby = baby;
           _weekNo = weekNo;
+          _weeklyMessage = selectedMessage;
           _loading = false;
         });
       };
@@ -64,6 +78,8 @@ class _HomePageState extends NyPage<HomePage> {
     final progress = (_weekNo != null && _weekNo! > 0 && _weekNo! <= 10)
         ? _weekNo! / 10
         : 0.0;
+    final weeklyMessage =
+        _weeklyMessage ?? "Error loading message. Please try again later.";
 
     return Scaffold(
       appBar: AppBar(
@@ -123,7 +139,7 @@ class _HomePageState extends NyPage<HomePage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        "This week your baby will start to lift their head slightly and be able to turn their head towards familiar sounds.",
+                        weeklyMessage,
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),
