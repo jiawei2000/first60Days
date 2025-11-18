@@ -5,6 +5,7 @@ import 'package:nylo_framework/nylo_framework.dart';
 
 import '/app/models/baby.dart';
 import '/app/controllers/home_controller.dart';
+import '/app/controllers/notification_controller.dart';
 import '/resources/widgets/safearea_widget.dart';
 import '/resources/pages/create_journal_entry_page.dart';
 import '../widgets/buttons/partials/primary_button_widget.dart';
@@ -26,10 +27,18 @@ class _HomePageState extends NyPage<HomePage> {
   bool _loading = true;
   String? _weeklyMessage;
   final Random _random = Random();
+  final NotificationController _notificationController =
+      NotificationController();
+  List<dynamic> _notifications = [];
+  bool _notificationsLoading = true;
 
   @override
   get init => () async {
+        _notificationController.construct(context);
         final babyId = await Keys.selectedBabyId.read();
+        final userId = await Keys.userId.read();
+
+        print("UserId: $userId");
 
         if (babyId == null) {
           NyLogger.error("No baby selected.");
@@ -43,6 +52,16 @@ class _HomePageState extends NyPage<HomePage> {
 
         final baby = await controller.fetchBabyById(babyId);
         final weekNo = await controller.fetchWeekNo(babyId);
+        dynamic notificationResponse;
+        if (userId != null) {
+          try {
+            notificationResponse =
+                await _notificationController.fetchNotifications(userId);
+            print("Notifications: $notificationResponse");
+          } catch (error) {
+            print("Error fetching notifications: $error");
+          }
+        }
 
         String? selectedMessage;
         if (weekNo != null) {
@@ -52,11 +71,15 @@ class _HomePageState extends NyPage<HomePage> {
           }
         }
 
+        final notifications = _parseNotifications(notificationResponse);
+
         setState(() {
           _baby = baby;
           _weekNo = weekNo;
           _weeklyMessage = selectedMessage;
           _loading = false;
+          _notifications = notifications;
+          _notificationsLoading = false;
         });
       };
 
@@ -92,16 +115,15 @@ class _HomePageState extends NyPage<HomePage> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
-            onTap: () {
-              routeTo(ProfilePage.path);
-            },
-            child: const CircleAvatar(
-              radius: 18,
-              backgroundImage:
-                  AssetImage('public/images/baby_icon_animated.png'),
+              onTap: () {
+                routeTo(ProfilePage.path);
+              },
+              child: const CircleAvatar(
+                radius: 18,
+                backgroundImage:
+                    AssetImage('public/images/baby_icon_animated.png'),
+              ),
             ),
-          ),
-
           )
         ],
       ),
@@ -212,14 +234,10 @@ class _HomePageState extends NyPage<HomePage> {
 
               /// 🟡 Reminders (Full width)
               _reminderTile(
-                "$babyName’s next feeding time is at",
+                "$babyName’s next feeding time is at ",
                 "10:34 AM",
               ),
-              const SizedBox(height: 12),
-              _reminderTile(
-                "$babyName’s only had 4 urine records yesterday. Try to increase fluid intake. Aim for 6-8 per day.",
-                "",
-              ),
+              _notificationsSection(theme),
             ],
           ),
         ),
@@ -267,5 +285,45 @@ class _HomePageState extends NyPage<HomePage> {
         ],
       ),
     );
+  }
+
+  List<dynamic> _parseNotifications(dynamic response) {
+    if (response is List) {
+      return response;
+    }
+    if (response is Map && response['data'] is List) {
+      return List<dynamic>.from(response['data']);
+    }
+    return [];
+  }
+
+  Widget _notificationsSection(ThemeData theme) {
+    if (_notificationsLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        if (_notifications.isEmpty)
+          _reminderTile("No notifications yet.", "")
+        else
+          ..._notifications.map(
+            (notification) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _reminderTile(
+                _formatNotificationMessage(notification),
+                "",
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _formatNotificationMessage(dynamic notification) {
+    final message = notification?['message']?.toString() ?? "No message";
+    return message;
   }
 }
