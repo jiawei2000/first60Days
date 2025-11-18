@@ -8,7 +8,7 @@ class CaregiverApiService extends NyApiService {
       : super(buildContext, decoders: modelDecoders);
 
   @override
-  String get baseUrl => getEnv('API_BASE_URL') + "/users"; // http://10.0.2.2:3000/api/users
+  String get baseUrl => getEnv('API_BASE_URL') + "/users"; // e.g. http://10.0.2.2:3000/api/users
 
   /// POST /users/registerSub
   Future<dynamic> registerSub({
@@ -17,18 +17,23 @@ class CaregiverApiService extends NyApiService {
     required String phoneNo,
     required String username,
     required List<String> babyIDArr,
-    String? relation, // ← add
+    String? relation,
+    String? name,
   }) async {
     final token = await Keys.bearerToken.read() ?? "";
-    final body = {
+
+    // Backend expects a "name" field; fall back to username if not provided.
+    final Map<String, dynamic> body = {
       "email": email,
       "password": password,
       "phoneNo": phoneNo,
       "username": username,
+      "name": (name == null || name.trim().isEmpty) ? username : name,
       "babyIDArr": babyIDArr,
-      "relation": relation, // ← add
-    };
-    NyLogger.info("→ POST /users/registerSub body=$body"); // DEBUG
+      "relation": relation,
+    }..removeWhere((k, v) => v == null || (v is String && v.trim().isEmpty));
+
+    NyLogger.info("→ POST /users/registerSub body=$body");
 
     return await network<dynamic>(
       request: (request) => request.post("/registerSub", data: body),
@@ -39,7 +44,7 @@ class CaregiverApiService extends NyApiService {
     );
   }
 
-    /// GET /users/subAccounts
+  /// GET /users/subAccounts
   Future<List<dynamic>> getSubAccounts() async {
     final token = await Keys.bearerToken.read() ?? "";
     NyLogger.info("→ GET /users/subAccounts");
@@ -68,3 +73,4 @@ class CaregiverApiService extends NyApiService {
     );
   }
 }
+

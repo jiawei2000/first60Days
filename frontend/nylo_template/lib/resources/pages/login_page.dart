@@ -97,6 +97,8 @@ class _LoginPageState extends NyPage<LoginPage> {
       // showToastSuccess(title: "Login success", description: "Login Successful");
       await Auth.authenticate(data: {"token": response['token']});
       await Keys.bearerToken.save(response['token']);
+      // Persist caregiver/account name for Profile display
+      await Keys.caregiverName.save(username);
       // Navigate to navigation hub
 
       // Test subscribe to daily topic

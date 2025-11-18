@@ -3,6 +3,10 @@ import 'package:nylo_framework/nylo_framework.dart';
 import '/resources/widgets/buttons/buttons.dart';
 import 'caregiver_page.dart'; // <-- add this import
 import 'baby_page.dart'; // <-- add this import
+import 'choose_baby_page.dart';
+import '/app/events/logout_event.dart';
+import '/app/networking/baby_service_api_service.dart';
+import '/config/keys.dart';
 // If you want a Babies page later, create it similarly and import here.
 
 class ProfilePage extends NyStatefulWidget {
@@ -11,11 +15,51 @@ class ProfilePage extends NyStatefulWidget {
 }
 
 class _ProfilePageState extends NyPage<ProfilePage> {
-  String accountName = "Jiawei";
-  String currentBabyName = "Kai Wong"; // update when you switch babies
+  String accountName = "";
+  String currentBabyName = ""; // will load from selected baby
+  final _babyService = BabyServiceApiService();
+  final TextEditingController _caregiverCtrl = TextEditingController();
+  final TextEditingController _babyNameCtrl = TextEditingController();
 
   @override
-  get init => () {};
+  get init => () async {
+        await _refreshCaregiverName();
+        await _refreshCurrentBabyName();
+      };
+
+  Future<void> _refreshCaregiverName() async {
+    try {
+      final name = await Keys.caregiverName.read();
+      final v = (name?.toString() ?? '').trim();
+      setState(() {
+        accountName = v;
+        _caregiverCtrl.text = v;
+      });
+    } catch (_) {
+      setState(() {
+        accountName = "";
+        _caregiverCtrl.text = "";
+      });
+    }
+  }
+
+  Future<void> _refreshCurrentBabyName() async {
+    try {
+      final id = await Keys.selectedBabyId.read();
+      if (id == null || id.toString().isEmpty) {
+        setState(() => currentBabyName = "");
+        return;
+      }
+      final baby = await _babyService.getBabyById(id.toString());
+      final v = baby?.name ?? "";
+      setState(() {
+        currentBabyName = v;
+        _babyNameCtrl.text = v;
+      });
+    } catch (_) {
+      // ignore
+    }
+  }
 
   @override
   Widget view(BuildContext context) {
@@ -37,10 +81,10 @@ class _ProfilePageState extends NyPage<ProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           children: [
             // Account name (read-only)
-            Text("Name", style: t.labelLarge),
+            Text("Caregiver Name", style: t.labelLarge),
             const SizedBox(height: 6),
             TextFormField(
-              initialValue: accountName,
+              controller: _caregiverCtrl,
               readOnly: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
@@ -52,10 +96,10 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             const SizedBox(height: 16),
 
             // Current baby name (read-only)
-            Text("Current Baby", style: t.labelLarge),
+            Text("Baby Name", style: t.labelLarge),
             const SizedBox(height: 6),
             TextFormField(
-              initialValue: currentBabyName,
+              controller: _babyNameCtrl,
               readOnly: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
@@ -69,8 +113,8 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             // Switch baby (functionality later)
             Button.outlined(
               text: "Switch Baby",
-              onPressed: () {
-                // TODO: open switcher (bottom sheet / page) and update `currentBabyName`
+              onPressed: () async {
+                routeTo(ChooseBabyPage.path);
               },
             ),
 
@@ -115,7 +159,7 @@ class _ProfilePageState extends NyPage<ProfilePage> {
             Button.primary(
               text: "Logout",
               onPressed: () async {
-                // TODO: sign out; then route to login
+                await event<LogoutEvent>();
               },
             ),
           ],

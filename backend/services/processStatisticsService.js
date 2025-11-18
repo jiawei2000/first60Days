@@ -1,4 +1,4 @@
-const e = require('express');
+// const e = require('express');
 const db = require('../config/database');
 const { Timestamp } = require('firebase-admin/firestore');
 
@@ -17,15 +17,15 @@ class ProcessStatisticsService {
             return;
         }
 
-        // Get yesterday’s start and end timestamps
+        // Get yesterday’s start and end timestamps in UTC
         // const yesterday = new Date();
         // yesterday.setUTCDate(yesterday.getUTCDate() - 1);
         // const startOfDay = new Date(Date.UTC(yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(), 0, 0, 0, 0));
         // const endOfDay = new Date(Date.UTC(yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(), 23, 59, 59, 999));
 
+        //CANT SOLVE THE FILTERING ISSUE. getting 6 entries instead of 8
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        // yesterday.setDate(yesterday.getDate());
 
         const startOfDay = new Date(yesterday);
         startOfDay.setHours(0, 0, 0, 0);
@@ -33,7 +33,26 @@ class ProcessStatisticsService {
         const endOfDay = new Date(yesterday);
         endOfDay.setHours(23, 59, 59, 999);
 
-        // Process all babies sequentially
+        // const yesterday = new Date();
+        // yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+
+        // // explicitly construct start and end in UTC
+        // const startOfDay = Timestamp.fromDate(new Date(Date.UTC(
+        //     yesterday.getUTCFullYear(),
+        //     yesterday.getUTCMonth(),
+        //     yesterday.getUTCDate(), // ← midnight UTC
+        //     0, 0, 0, 0
+        // )));
+
+        // const endOfDay = Timestamp.fromDate(new Date(Date.UTC(
+        //     yesterday.getUTCFullYear(),
+        //     yesterday.getUTCMonth(),
+        //     yesterday.getUTCDate(),
+        //     23, 59, 59, 999
+        // )));
+
+        console.log('Date range:', startOfDay, 'to', endOfDay);
+        // Process all babies sequentiallydailyStatistics
         for (const babyDoc of babiesSnap.docs) {
             const babyId = babyDoc.id;
             const babyRef = db.collection("babies").doc(babyId);
@@ -47,11 +66,12 @@ class ProcessStatisticsService {
             // console.log(`Query matched ${entriesSnap.size} documents.`);
             //filter for status == "COMPLETE"
             const entries = entriesSnap.docs.map(doc => doc.data()).filter(entry => entry.status === "COMPLETE");
-            console.log(`total entries: ${entries.length} for baby ${babyId} on ${yesterday.toISOString().split('T')[0]}.`);
-            
+            console.log(`total COMPLETED entries: ${entries.length} for baby ${babyId} on ${yesterday}.`);
+
             // Calculate daily statistics
             const result = this.calculateDailyStatistics(entries);
             result.date = yesterday.toISOString().split('T')[0];
+            // result.date = yesterday;
             result.createdAt = Timestamp.now();
             result.babyIDRef = babyRef;
 
@@ -208,6 +228,7 @@ class ProcessStatisticsService {
             totalSleepDuration: 0,
             totalPlayDuration: 0,
             totalCyclesBeyond3Hrs: 0,
+            totalMilkVolume: 0, // ml
 
             // Averaged fields
             averageMonInterval: 0,
@@ -225,6 +246,7 @@ class ProcessStatisticsService {
             statistics.totalFeeds += dayStat.totalFeeds;
             statistics.totalUrineCount += dayStat.totalUrineCount;
             statistics.totalStoolCount += dayStat.totalStoolCount;
+            statistics.totalMilkVolume += dayStat.totalMilkVolume;
             statistics.totalCyclesBeyond3Hrs += dayStat.totalCyclesBeyond3Hrs;
             statistics.totalPlayDuration += this.toFloatHours(dayStat.totalPlayDuration);
             statistics.totalSleepDuration += this.toFloatHours(dayStat.totalSleepDuration);
@@ -250,7 +272,7 @@ class ProcessStatisticsService {
 
     // ---------------------------------------------------------------------------
     // Daily statistics computation
-    calculateDailyStatistics(entries) {
+    calculateDailyStatistics(entries) {//
         const statistics = {
             // Summed fields
             totalFeeds: entries.length,
@@ -260,13 +282,13 @@ class ProcessStatisticsService {
             totalSleepDuration: 0, // hh:mm
             totalPlayDuration: 0, // hh:mm
             monInterval: 0, // hh:mm
-
+            totalMilkVolume: 0, // ml
             // Averaged fields
             averagePlayDuration: 0, // hh:mm
             averageLapseDuration: 0,// hh:mm
             averageMilkIntake: 0,
         };
-        console.log(entries);
+        // console.log(entries);
         // Handle case with no entries
         if (entries.length === 0) {
             statistics.totalSleepDuration = '00:00';
@@ -336,6 +358,7 @@ class ProcessStatisticsService {
         });
 
         // Finalize daily statistics
+        statistics.totalMilkVolume = totalMilkAmount;
         statistics.averagePlayDuration = this.toHHMM(statistics.totalPlayDuration / entries.length || 0);
         statistics.totalPlayDuration = this.toHHMM(statistics.totalPlayDuration);
         statistics.averageLapseDuration = this.toHHMM(totalLapseDuration / entries.length || 0);
@@ -356,6 +379,7 @@ class ProcessStatisticsService {
             averagePlayDuration: 0, // hh:mm
             averageMonInterval: 0, // hh:mm
             averageMilkIntake: 0, // ml per bottle feed per baby
+            averageTotalMilkVolume: 0, // ml per baby
             totalBabies: dailyStatsEntries.length
         };
         if (dailyStatsEntries.length === 0) {
@@ -372,7 +396,8 @@ class ProcessStatisticsService {
             statistics.averageSleepDuration += this.toFloatHours(dayStat.totalSleepDuration);
             statistics.averagePlayDuration += this.toFloatHours(dayStat.totalPlayDuration);
             statistics.averageMonInterval += this.toFloatHours(dayStat.monInterval);
-            statistics.averageMilkIntake += parseFloat(dayStat.averageMilkIntake);
+            statistics.averageMilkIntake += dayStat.averageMilkIntake;
+            statistics.averageTotalMilkVolume += dayStat.totalMilkVolume;
         });
 
         const count = dailyStatsEntries.length;
@@ -385,6 +410,7 @@ class ProcessStatisticsService {
         statistics.averagePlayDuration = this.toHHMM(statistics.averagePlayDuration / count);
         statistics.averageMonInterval = this.toHHMM(statistics.averageMonInterval / count);
         statistics.averageMilkIntake = this.roundTo(statistics.averageMilkIntake / count);
+        statistics.averageTotalMilkVolume = this.roundTo(statistics.averageTotalMilkVolume / count);
         return statistics;
     }
 
@@ -404,6 +430,27 @@ class ProcessStatisticsService {
     roundTo(value, decimals = 2) {
         const factor = Math.pow(10, decimals);
         return Math.round(value * factor) / factor;
+    }
+
+    getFirestoreDateRangeForLocalDay(timezone = "Asia/Singapore", daysAgo = 0) {
+        const dayjs = require("dayjs");
+        const utc = require("dayjs/plugin/utc");
+        const tz = require("dayjs/plugin/timezone");
+        dayjs.extend(utc);
+        dayjs.extend(tz);
+
+        // Get the target day in the specified timezone
+        const localDay = dayjs().tz(timezone).subtract(daysAgo, "day");
+
+        // Start and end of that day in local time, converted to UTC for Firestore
+        const startUTC = localDay.startOf("day").utc().toDate();
+        const endUTC = localDay.endOf("day").utc().toDate();
+
+        return {
+            startUTC,
+            endUTC,
+            localLabel: localDay.format("YYYY-MM-DD")
+        };
     }
 
 }

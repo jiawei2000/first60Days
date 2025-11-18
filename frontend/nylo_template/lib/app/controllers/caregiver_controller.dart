@@ -28,7 +28,7 @@ class CaregiverController extends Controller {
     required String phoneNo,
     required String username,
     required List<String> babyIDArr,
-    String? relation, // ← add
+    String? relation,
   }) async {
     try {
       final result = await _caregiverApiService.registerSub(
@@ -37,7 +37,8 @@ class CaregiverController extends Controller {
         phoneNo: phoneNo,
         username: username,
         babyIDArr: babyIDArr,
-        relation: relation, // ← add
+        relation: relation,
+        name: username, // ensure backend "name" is present
       );
       print("✅ Created caregiver: $result");
       return result;
@@ -57,3 +58,4 @@ class CaregiverController extends Controller {
     );
   }
 }
+
