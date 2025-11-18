@@ -101,15 +101,14 @@ class _GenerateScheduleFormState extends NyState<GenerateScheduleForm> {
     // Parse to int
     final totalFeeds = int.tryParse(_totalFeedsController.text) ?? 8;
 
-    final response = await controller.createPlanner(
+    await controller.createPlanner(
         babyId: babyId,
         weekNo: weekNo,
         firstFeedTime: firstFeedTime,
         lastFeedTime: lastFeedTime,
         totalFeeds: totalFeeds);
-
     // Do Error Handling another time
-    final message = response?['message'];
+    // final message = response?['message'];
     // final newPlannerData = response?['planner'];
   }
 
