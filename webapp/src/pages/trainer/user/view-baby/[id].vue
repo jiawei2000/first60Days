@@ -41,9 +41,10 @@
 
           <VList density="compact" lines="two">
             <VListItem>
-              <VListItemTitle>Cycle #</VListItemTitle>
+              <VListItemTitle>📘 Entry #</VListItemTitle>
               <VListItemSubtitle>{{ safe(entryDetails.cycleNo) }}</VListItemSubtitle>
             </VListItem>
+
 
             <VDivider class="my-2" />
 
@@ -74,8 +75,9 @@
 
             <VListItem>
               <VListItemTitle>💤 Sleep Duration</VListItemTitle>
-              <VListItemSubtitle>{{ safe(entryDetails.sleepDuration, ' hrs') }}</VListItemSubtitle>
+              <VListItemSubtitle>{{ formatDurationHours(entryDetails.sleepDuration) }}</VListItemSubtitle>
             </VListItem>
+
 
             <!-- Generic passthrough for any extra fields you might add later -->
             <template v-for="(val, key) in extraFields(entryDetails)" :key="key">
@@ -183,18 +185,55 @@ function extraFields(entry) {
     'awakeTime', 'startFeedTime', 'startPlayTime', 'startSleepTime',
     'sleepDuration', 'feedType',
   ])
+
+  const labelMap = {
+    hasStool: 'Has the baby pooped?',
+    hasUrine: 'Has the baby peed?',
+    remarks: 'Remarks',
+    status: 'Entry Status',
+  }
+
+  const formatValue = (key, val) => {
+    if (key === 'hasStool' || key === 'hasUrine') {
+      return val === true ? 'Yes ✅' : val === false ? 'No ❌' : '—'
+    }
+
+    if (key === 'status') {
+      const map = {
+        COMPLETE: 'The entry is marked as complete ✅',
+        INCOMPLETE: 'The entry is incomplete ⚠️',
+      }
+      return map[val] || val
+    }
+
+    if (typeof val === 'boolean') return val ? 'Yes' : 'No'
+    if (val && typeof val === 'object' && '_seconds' in val) return formatDateTime(val)
+    return typeof val === 'string' || typeof val === 'number' ? val : JSON.stringify(val)
+  }
+
   const out = {}
   for (const k in entry || {}) {
     if (used.has(k)) continue
-    const v = entry[k]
-    if (v && typeof v === 'object' && '_seconds' in v) {
-      out[k] = formatDateTime(v)
-    } else {
-      out[k] = typeof v === 'string' || typeof v === 'number' ? v : JSON.stringify(v)
-    }
+    const label = labelMap[k] || k
+    const value = formatValue(k, entry[k])
+    out[label] = value
   }
+
   return out
 }
+
+function formatDurationHours(hoursFloat) {
+  if (!hoursFloat || typeof hoursFloat !== 'number') return '—'
+
+  const hours = Math.floor(hoursFloat)
+  const minutes = Math.round((hoursFloat - hours) * 60)
+
+  const hourPart = hours > 0 ? `${hours} ${hours === 1 ? 'Hour' : 'Hours'}` : ''
+  const minutePart = minutes > 0 ? `${minutes} ${minutes === 1 ? 'Minute' : 'Minutes'}` : ''
+
+  return [hourPart, minutePart].filter(Boolean).join(' ')
+}
+
 
 /* ---------- Load Baby Info ---------- */
 async function loadBabyInfo() {
