@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { themeConfig } from '@themeConfig'
 import { useRouter } from "vue-router"
+import first60daysLogo from '@/assets/images/cards/first60days_logo.png'
+
 
 const router = useRouter()
 
@@ -71,15 +73,14 @@ async function loginTrainer() {
     <div class="auth-wrapper d-flex align-center justify-center pa-4">
         <div class="position-relative my-sm-16">
             <VCard class="auth-card" max-width="460" :class="$vuetify.display.smAndUp ? 'pa-6' : 'pa-0'">
-                <VCardItem class="justify-center">
-                    <VCardTitle>
-                        <div class="app-logo">
-                            <h1 class="app-logo-title">
-                                {{ themeConfig.app.title }}
-                            </h1>
-                        </div>
-                    </VCardTitle>
-                </VCardItem>
+                    <VCardItem class="justify-center mb-2">
+                        <img
+                        :src="first60daysLogo"
+                        alt="Logo"
+                        style="width: 250px; height: auto; display:block; margin: 20px auto;"
+                        />
+                    </VCardItem>
+
 
                 <VCardText>
                     <h4 class="text-h4 mb-1 text-center">
