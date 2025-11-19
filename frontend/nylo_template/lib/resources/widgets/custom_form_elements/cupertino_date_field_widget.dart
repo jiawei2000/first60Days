@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import 'labeled_field_widget.dart';
 import 'readonly_text_field_widget.dart';
@@ -6,9 +7,10 @@ import 'readonly_text_field_widget.dart';
 class CupertinoDateField extends StatefulWidget {
   final String label;
   final TextEditingController textController;
+  final IconData? icon;
 
   const CupertinoDateField(
-      {super.key, required this.label, required this.textController});
+      {super.key, required this.label, required this.textController, this.icon});
 
   @override
   createState() => _CupertinoDateFieldState();
@@ -23,6 +25,7 @@ class _CupertinoDateFieldState extends NyState<CupertinoDateField> {
     return Container(
         child: LabeledField(
             label: widget.label,
+            icon: widget.icon,
             child: CupertinoButton(
                 padding: EdgeInsets.zero,
                 child: ReadonlyTextField(textController: widget.textController),

@@ -1,29 +1,17 @@
+// services/assistantUsersService.js
 const axios = require('axios');
 require('dotenv').config();
 
-async function askOpenAI(question) {
+async function askUsers(question) {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-  console.log('OpenAI Key (partial):', OPENAI_API_KEY?.slice(0, 10));
+  console.log('[AssistantUsers] Key (partial):', OPENAI_API_KEY?.slice(0, 10));
 
-const prompt = `
-You are an assistant converting natural language questions into Firestore filter queries.
+  const prompt = `
+You are an assistant converting natural language questions into Firestore filter queries
+for the USERS collection.
 
-There are 2 collections:
-1. "babies" with fields:
-- name (string)
-- dob (timestamp)
-- createdAt (timestamp)
-- deletedAt (timestamp or null)
-- expectedDueDate (timestamp)
-- term (number)
-- weight (number)
-- healthConditions (string)
-- gender (string)
-- height (number)
-- vaccination (string)
-- allergies (string)
-
-2. "users" with fields:
+Collection: "users"
+Fields:
 - email (string)
 - password (string)
 - phoneNo (string)
@@ -42,8 +30,8 @@ Given a question, respond ONLY with a JSON like:
 {
   "collection": "users",
   "filters": [
-    { "field": "relation", "op": "==", "value": "parent" },
-    { "field": "deletedAt", "op": "==", "value": null }
+    { "field": "trainerID", "op": "!=", "value": null },
+    { "field": "createdAt", "op": ">=", "value": "2025-01-01T00:00:00Z" }
   ],
   "sort": { "field": "createdAt", "direction": "desc" },
   "limit": 50
@@ -52,20 +40,19 @@ Given a question, respond ONLY with a JSON like:
 Question: "${question}"
 `;
 
-
   const response = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2
+      temperature: 0.2,
     },
     {
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      timeout: 60000
+      timeout: 60000,
     }
   );
 
@@ -75,4 +62,4 @@ Question: "${question}"
   return json;
 }
 
-module.exports = { askGpt: askOpenAI };
+module.exports = { askUsers };

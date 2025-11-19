@@ -100,6 +100,10 @@ class _LoginPageState extends NyPage<LoginPage> {
     if (response != null) {
       await Auth.authenticate(data: {"token": response['token']});
       await Keys.bearerToken.save(response['token']);
+      final dynamic userId = response['user']?["id"];
+      if (userId != null) {
+        await Keys.userId.save(userId.toString());
+      }
       // Persist caregiver/account name for Profile display
       await Keys.caregiverName.save(username);
 

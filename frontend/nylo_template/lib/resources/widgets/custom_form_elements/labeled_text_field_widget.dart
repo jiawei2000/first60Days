@@ -6,12 +6,14 @@ class LabeledTextField extends StatefulWidget {
   final String label;
   final TextEditingController textController;
   final String? hintText;
+  final IconData? icon;
 
   const LabeledTextField(
       {super.key,
       required this.label,
       required this.textController,
-      this.hintText});
+      this.hintText,
+      this.icon});
 
   @override
   createState() => _LabeledTextFieldState();
@@ -26,6 +28,7 @@ class _LabeledTextFieldState extends NyState<LabeledTextField> {
     return Container(
       child: LabeledField(
         label: widget.label,
+        icon: widget.icon,
         child: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(

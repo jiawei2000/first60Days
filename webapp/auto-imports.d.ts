@@ -10,6 +10,7 @@ declare global {
   const COOKIE_MAX_AGE_1_YEAR: typeof import('./src/utils/constants.js')['COOKIE_MAX_AGE_1_YEAR']
   const EffectScope: typeof import('vue')['EffectScope']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
+  const activeRequests: typeof import('./src/utils/loading-indicator.js')['activeRequests']
   const alphaDashValidator: typeof import('./src/@core/utils/validators.js')['alphaDashValidator']
   const alphaValidator: typeof import('./src/@core/utils/validators.js')['alphaValidator']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
@@ -70,6 +71,7 @@ declare global {
   const isReadonly: typeof import('vue')['isReadonly']
   const isRef: typeof import('vue')['isRef']
   const isToday: typeof import('./src/@core/utils/helpers.js')['isToday']
+  const isUiLoading: typeof import('./src/utils/loading-indicator.js')['isUiLoading']
   const kFormatter: typeof import('./src/@core/utils/formatters.js')['kFormatter']
   const lengthValidator: typeof import('./src/@core/utils/validators.js')['lengthValidator']
   const logicAnd: typeof import('@vueuse/math')['logicAnd']
@@ -135,6 +137,8 @@ declare global {
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']
   const shallowRef: typeof import('vue')['shallowRef']
+  const startLoading: typeof import('./src/utils/loading-indicator.js')['startLoading']
+  const stopLoading: typeof import('./src/utils/loading-indicator.js')['stopLoading']
   const storeToRefs: typeof import('pinia')['storeToRefs']
   const syncRef: typeof import('@vueuse/core')['syncRef']
   const syncRefs: typeof import('@vueuse/core')['syncRefs']
@@ -371,6 +375,7 @@ declare module 'vue' {
     readonly COOKIE_MAX_AGE_1_YEAR: UnwrapRef<typeof import('./src/utils/constants.js')['COOKIE_MAX_AGE_1_YEAR']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
+    readonly activeRequests: UnwrapRef<typeof import('./src/utils/loading-indicator.js')['activeRequests']>
     readonly alphaDashValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['alphaDashValidator']>
     readonly alphaValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['alphaValidator']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
@@ -431,6 +436,7 @@ declare module 'vue' {
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
     readonly isRef: UnwrapRef<typeof import('vue')['isRef']>
     readonly isToday: UnwrapRef<typeof import('./src/@core/utils/helpers.js')['isToday']>
+    readonly isUiLoading: UnwrapRef<typeof import('./src/utils/loading-indicator.js')['isUiLoading']>
     readonly kFormatter: UnwrapRef<typeof import('./src/@core/utils/formatters.js')['kFormatter']>
     readonly lengthValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['lengthValidator']>
     readonly logicAnd: UnwrapRef<typeof import('@vueuse/math')['logicAnd']>
@@ -496,6 +502,8 @@ declare module 'vue' {
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
+    readonly startLoading: UnwrapRef<typeof import('./src/utils/loading-indicator.js')['startLoading']>
+    readonly stopLoading: UnwrapRef<typeof import('./src/utils/loading-indicator.js')['stopLoading']>
     readonly storeToRefs: UnwrapRef<typeof import('pinia')['storeToRefs']>
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>

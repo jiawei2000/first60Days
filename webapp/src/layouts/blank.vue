@@ -1,5 +1,6 @@
 <script setup>
 const { injectSkinClasses } = useSkins()
+import { isUiLoading } from '@/utils/loading-indicator'
 
 // ℹ️ This will inject classes in body tag for accurate styling
 injectSkinClasses()
@@ -10,11 +11,17 @@ const refLoadingIndicator = ref(null)
 
 watch([
   isFallbackStateActive,
+  isUiLoading,
   refLoadingIndicator,
 ], () => {
-  if (isFallbackStateActive.value && refLoadingIndicator.value)
+  if (!refLoadingIndicator.value)
+    return
+
+  const shouldShow = isFallbackStateActive.value || isUiLoading.value
+
+  if (shouldShow)
     refLoadingIndicator.value.fallbackHandle()
-  if (!isFallbackStateActive.value && refLoadingIndicator.value)
+  else
     refLoadingIndicator.value.resolveHandle()
 }, { immediate: true })
 // !SECTION
