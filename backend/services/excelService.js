@@ -1339,8 +1339,10 @@ class ExcelService {
     // ---- REMAP DATES TO FAKE YEAR/MONTHS
     // Year: 2025
     // First source month -> September (8)
+    // Max fake date: 21 November 2025
     const BASE_YEAR = 2025;
     const BASE_MONTH_INDEX = 8; // September (0-based)
+    const MAX_FAKE_DATE = new Date(BASE_YEAR, 10, 21, 23, 59, 59, 999); // 2025-11-21
 
     const bySourceChron = raw
       .slice()
@@ -1373,6 +1375,12 @@ class ExcelService {
 
       const fakeDate = new Date(BASE_YEAR, targetMonthIndex, srcDay, 0, 0, 0, 0);
 
+      // --- NEW: skip any rows that would fall after 21 November 2025
+      if (fakeDate.getTime() > MAX_FAKE_DATE.getTime()) {
+        r._skip = true;
+        continue;
+      }
+
       r._dayDate = fakeDate;
       r._dayKey = formatDateKey(fakeDate);
       r.awakeTime      = adjustTimeForDate(r.awakeTime,      fakeDate);
@@ -1387,6 +1395,7 @@ class ExcelService {
     // ---- Group by day and assign cycleNo (using remapped dates)
     const byDay = new Map();
     for (const r of raw) {
+      if (r._skip) continue;              // <-- ignore skipped rows
       if (!byDay.has(r._dayKey)) byDay.set(r._dayKey, []);
       byDay.get(r._dayKey).push(r);
     }
