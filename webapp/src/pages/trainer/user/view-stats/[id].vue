@@ -673,7 +673,13 @@ const chartSeries = computed(() => {
   min: 0,
   tickAmount: 4,
 }
-,
+,tooltip: {
+    theme: 'dark',
+    style: {
+      fontSize: '12px',
+      color: '#FFFFFF'
+    }
+  },
     colors: ['#7367F0'],
   }))
 
