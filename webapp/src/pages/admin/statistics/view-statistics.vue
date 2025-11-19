@@ -158,6 +158,13 @@ const genderChartOptions = computed(() => ({
     min: 0,
     tickAmount: 4,
   },
+  tooltip: {
+  theme: 'dark',
+  style: {
+    fontSize: '12px',
+    color: '#FFFFFF'
+  }
+},
   colors: ['#42A5F5', '#FF7043'],
 }))
 
@@ -218,6 +225,13 @@ const ageChartOptions = computed(() => ({
     min: 0,
     tickAmount: 4,
   },
+  tooltip: {
+  theme: 'dark',
+  style: {
+    fontSize: '12px',
+    color: '#FFFFFF'
+  }
+},
   colors: ['#66BB6A'],
 }))
 
