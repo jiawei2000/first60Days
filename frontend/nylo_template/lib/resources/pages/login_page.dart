@@ -48,10 +48,11 @@ class _LoginPageState extends NyPage<LoginPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Button.primary(
                   text: "Login",
+                  loadingStyle: LoadingStyle.normal(),
                   submitForm: (
                     form,
                     (data) async {
-                      onLogin(data['username'], data['password']);
+                      await onLogin(data['username'], data['password']);
                     }
                   ),
                 ),
@@ -86,31 +87,28 @@ class _LoginPageState extends NyPage<LoginPage> {
     return token;
   }
 
-  void onLogin(String username, String password) async {
+  Future<void> onLogin(String username, String password) async {
     final fcmToken = await _getFcmTokenWithPermission();
 
-    var response =
-        await userApiService.login(username: username, password: password, fcmToken: fcmToken,);
+    final response = await userApiService.login(
+      username: username,
+      password: password,
+      fcmToken: fcmToken,
+    );
 
     // Handle response
     if (response != null) {
-      // showToastSuccess(title: "Login success", description: "Login Successful");
       await Auth.authenticate(data: {"token": response['token']});
       await Keys.bearerToken.save(response['token']);
       // Persist caregiver/account name for Profile display
       await Keys.caregiverName.save(username);
-      // Navigate to navigation hub
 
-      // Test subscribe to daily topic
-      //    so the cron job can reach this device
       if (fcmToken != null) {
         await FirebaseMessaging.instance.subscribeToTopic('daily_baby_journal');
       }
 
-
       routeTo(ChooseBabyPage.path, navigationType: NavigationType.pushAndForgetAll);
     } else {
-      // Show error message
       showToastWarning(title: "Login failed", description: "Please try again");
     }
   }

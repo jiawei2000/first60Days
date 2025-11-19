@@ -1,5 +1,6 @@
 import 'package:nylo_framework/nylo_framework.dart';
 import '/config/keys.dart';
+import '/resources/helpers/loading.dart';
 
 class LogoutEvent implements NyEvent {
   @override
@@ -11,14 +12,19 @@ class LogoutEvent implements NyEvent {
 class DefaultListener extends NyListener {
   @override
   handle(dynamic event) async {
-    await Auth.logout();
-    // Clear any locally stored app-specific keys
+    await LoadingOverlay.show(message: 'Signing out...');
     try {
-      await Keys.caregiverName.save(null);
-      await Keys.selectedBabyId.save(null);
-    } catch (_) {}
+      await Auth.logout();
+      // Clear any locally stored app-specific keys
+      try {
+        await Keys.caregiverName.save(null);
+        await Keys.selectedBabyId.save(null);
+      } catch (_) {}
 
-    routeToInitial();
+      routeToInitial();
+    } finally {
+      LoadingOverlay.hide();
+    }
   }
 }
 
