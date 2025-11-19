@@ -84,7 +84,7 @@
       <VWindow v-model="activeTab" class="pa-4">
 
         <!-- 🧭 Shared Date Picker -->
-        <div class="d-flex align-center justify-end mb-2" style="position: relative; z-index: 10;">
+        <div v-if="timeFrame === 'daily'" class="d-flex align-center justify-end mb-2" style="position: relative; z-index: 10;">
           <VMenu
             v-model="dateMenu.value"
             transition="scale-transition"
@@ -125,6 +125,21 @@
             <h3 class="text-h5 font-weight-medium mb-4">
               {{ timeFrame === 'daily' ? 'Daily Summary' : 'Weekly Summary' }}
             </h3>
+
+            <!-- Week Dropdown (Weekly Only) -->
+<div v-if="timeFrame === 'weekly'" class="mb-4" style="max-width: 200px;">
+  <VSelect
+    v-model="selectedWeek"
+    :items="weekOptions"
+    item-title="title"
+    item-value="value"
+    label="Select Week"
+    density="comfortable"
+    variant="outlined"
+    hide-details
+  />
+</div>
+
 
             <p
               v-if="timeFrame === 'weekly' && currentWeekLabel"
@@ -295,18 +310,20 @@ const router = useRouter()
   const currentWeekLabel = ref(null)
   const dailyThresholds = ref(null)
 const weeklyThresholds = ref(null)
+const selectedWeek = ref(null)
 
   try {
     const res = await $api(`/babies/${babyId}`, { method: 'GET' })
     babyName.value = res.name || 'Baby'
-    const dob = new Date(res.dob._seconds * 1000)
-    const now = new Date()
-    const ageInMs = now - dob
-    const ageInWeeks = Math.floor(ageInMs / (1000 * 60 * 60 * 24 * 7))
-    babyAgeWeeks.value = ageInWeeks
   } catch (e) {
     console.error('Failed to fetch baby profile:', e)
   }
+  const weekOptions = computed(() =>
+  weeklyStats.value.map(w => ({
+    title: `Week ${w.day}`,
+    value: w.day
+  }))
+)
 
   async function updateStatsForSelectedDate() {
   if (timeFrame.value === 'daily') {
@@ -413,26 +430,56 @@ function getThresholdStatus(metricKey) {
 
 
 
-  async function fetchWeeklyStats() {
-    try {
-      const res = await $api(`/statistics/weekly/baby/${babyId}`, { method: 'GET' })
-      weeklyStats.value = res.data?.statistics.map((s, index) => ({
-        day: s.week || index + 1,
-        totalFeeds: s.totalFeeds,
-        totalUrineCount: s.totalUrineCount,
-        totalStoolCount: s.totalStoolCount,
-        totalSleepDuration: s.totalSleepDuration,
-        totalPlayDuration: s.totalPlayDuration,
-        totalCyclesBeyond3Hrs: s.totalCyclesBeyond3Hrs,
-        monInterval: s.averageMonInterval,
-        averageMilkIntake: s.averageMilkIntake,
-        averagePlayDuration: s.averagePlayDuration,
-        averageLapseDuration: s.averageLapseDuration,
-      }))
-    } catch (err) {
-      console.error('Failed to load weekly stats:', err)
-    }
+async function fetchWeeklyStats() {
+  try {
+    const res = await $api(`/statistics/weekly/baby/${babyId}`, { method: 'GET' })
+
+    const statsArr = res.data?.statistics || []
+
+    weeklyStats.value = statsArr.map((s, index) => ({
+      day: s.week || index + 1,
+      totalFeeds: s.totalFeeds,
+      totalUrineCount: s.totalUrineCount,
+      totalStoolCount: s.totalStoolCount,
+      totalSleepDuration: s.totalSleepDuration,
+      totalPlayDuration: s.totalPlayDuration,
+      totalCyclesBeyond3Hrs: s.totalCyclesBeyond3Hrs,
+      monInterval: s.averageMonInterval,
+      averageMilkIntake: s.averageMilkIntake,
+      averagePlayDuration: s.averagePlayDuration,
+      averageLapseDuration: s.averageLapseDuration,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      rawWeek: s.week
+    }))
+
+    // 🔥 SET BABY AGE BASED ON LATEST WEEK NUMBER
+if (statsArr.length > 0) {
+  const latest = statsArr[statsArr.length - 1]
+  babyAgeWeeks.value = latest.week
+
+  // Set dropdown default to the latest week
+  selectedWeek.value = latest.week
+
+  // Set summary stats to that week
+  stats.value = [latest]
+  currentWeekLabel.value = `${latest.startDate} → ${latest.endDate}`
+}
+
+  } catch (err) {
+    console.error('Failed to load weekly stats:', err)
   }
+}
+
+function updateSelectedWeek() {
+  if (!selectedWeek.value) return
+  const selected = weeklyStats.value.find(w => w.day === selectedWeek.value)
+  if (selected) {
+    stats.value = [selected]
+    currentWeekLabel.value = `${selected.startDate} → ${selected.endDate}`
+  }
+}
+
 
   async function fetchDailyStats() {
     try {
@@ -477,6 +524,8 @@ function getThresholdStatus(metricKey) {
 
 
   watch(selectedDate, updateStatsForSelectedDate)
+  watch(selectedWeek, updateSelectedWeek)
+
 
 
   const metricOptions = [
@@ -492,11 +541,17 @@ function getThresholdStatus(metricKey) {
     { title: 'Avg Milk Intake Per Entry', value: 'averageMilkIntake' },
   ]
 
-  const activeStats = computed(() => {
-    const data = timeFrame.value === 'daily' ? stats.value : weeklyStats.value
-    return [...data].sort((a, b) => (a.date || a.day) > (b.date || b.day) ? 1 : -1)
-  })
+const activeStats = computed(() => {
+  if (timeFrame.value === 'daily') {
+    return [...stats.value].sort((a, b) => (a.date > b.date ? 1 : -1))
+  }
 
+  // WEEKLY MODE — use only the selected week's stats
+  const selected = weeklyStats.value.find(w => w.day === selectedWeek.value)
+  if (!selected) return []
+
+  return [selected]
+})
   function parseDuration(str) {
     if (!str || typeof str !== 'string') return 0
     const [h, m] = str.split(':').map(Number)
@@ -527,11 +582,6 @@ function formatMetric(metric, value) {
   return Number(value).toFixed(2)
 }
 
-
-  function getFormattedValue(metric, rawValue) {
-    return formatMetric(metric, rawValue)
-  }
-
   function latestValue(metric) {
     return activeStats.value.at(-1)?.[metric] ?? 0
   }
@@ -550,17 +600,20 @@ function formatMetric(metric, value) {
     return avg.toFixed(2)
   }
 
-  const chartSeries = computed(() => {
-    const metric = selectedMetric.value
-    return [
-      {
-        name: metric,
-        data: activeStats.value.map(s =>
-          isDurationField(metric) ? parseDuration(s[metric]) : Number(s[metric])
-        ),
-      },
-    ]
-  })
+const chartSeries = computed(() => {
+  const metric = selectedMetric.value
+  const source = timeFrame.value === 'weekly' ? weeklyStats.value : activeStats.value
+
+  return [
+    {
+      name: metric,
+      data: source.map(s =>
+        isDurationField(metric) ? parseDuration(s[metric]) : Number(s[metric])
+      ),
+    },
+  ]
+})
+
 
   const chartOptions = computed(() => ({
     chart: {
@@ -570,11 +623,14 @@ function formatMetric(metric, value) {
     },
     stroke: { curve: 'smooth', width: 3 },
     xaxis: {
-      categories: activeStats.value.map((s, i) =>
-        timeFrame.value === 'weekly' ? `Week ${s.day}` : s.date || `Day ${s.day}`
-      ),
-      labels: { style: { colors: '#ccc', fontSize: '12px' } },
-    },
+  categories: (timeFrame.value === 'weekly' ? weeklyStats.value : activeStats.value)
+    .map((s, i) =>
+      timeFrame.value === 'weekly'
+        ? `Week ${s.day}`
+        : s.date || `Day ${s.day}`
+    ),
+  labels: { style: { colors: '#ccc', fontSize: '12px' } },
+},
     yaxis: {
   title: {
     text: currentLabel.value,
