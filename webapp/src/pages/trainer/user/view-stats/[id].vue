@@ -86,7 +86,7 @@
         <!-- 🧭 Shared Date Picker -->
         <div class="d-flex align-center justify-end mb-2" style="position: relative; z-index: 10;">
           <VMenu
-            v-model="dateMenu"
+            v-model="dateMenu.value"
             transition="scale-transition"
             location="bottom end"
             offset-y
@@ -241,13 +241,6 @@
                   width="6"
                 />
                 <div class="text-caption mt-2">
-                  Today:
-                  {{
-                    getFormattedValue(
-                      selectedMetric.value,
-                      activeStats.at(-1)?.[selectedMetric.value]
-                    )
-                  }}
                 </div>
                 <div class="text-caption text-medium-emphasis">
                   Avg: {{ averageDisplay }}
@@ -287,7 +280,7 @@ const router = useRouter()
   const babyId = route.params.id
   const babyName = ref('')
   const babyAgeWeeks = ref(0)
-  const dateMenu = ref(false)
+  const dateMenu = ref({ value: false })
 
   const stats = ref([])
   const weeklyStats = ref([])
@@ -491,11 +484,11 @@ function getThresholdStatus(metricKey) {
     { title: 'Total Urine Count', value: 'totalUrineCount' },
     { title: 'Total Stool Count', value: 'totalStoolCount' },
     { title: 'Cycles Beyond 3 hours', value: 'totalCyclesBeyond3Hrs' },
-    { title: 'Total Sleep Duration', value: 'totalSleepDuration' },
-    { title: 'Total Play Duration', value: 'totalPlayDuration' },
-    { title: 'MON Interval', value: 'monInterval' },
-    { title: 'Avg Play Duration Per Entry', value: 'averagePlayDuration' },
-    { title: 'Lapse Duration', value: 'averageLapseDuration' },
+    { title: 'Total Sleep Duration(HH:MM)', value: 'totalSleepDuration' },
+    { title: 'Total Play Duration(HH:MM)', value: 'totalPlayDuration' },
+    { title: 'MON Interval(HH:MM)', value: 'monInterval' },
+    { title: 'Avg Play Duration Per Entry(HH:MM)', value: 'averagePlayDuration' },
+    { title: 'Lapse Duration(HH:MM)', value: 'averageLapseDuration' },
     { title: 'Avg Milk Intake Per Entry', value: 'averageMilkIntake' },
   ]
 
@@ -519,74 +512,24 @@ function getThresholdStatus(metricKey) {
       'averageLapseDuration',
     ].includes(metric)
   }
-
-  async function updateSummary() {
-  if (timeFrame.value === 'daily') {
-    await fetchDailyStats()
-  } else {
-    const picked = new Date(summaryDate.value)
-    const week = weeklyStats.value.find(w => {
-      const start = new Date(w.startDate)
-      const end = new Date(w.endDate)
-      return picked >= start && picked <= end
-    })
-    if (week) {
-      currentWeekLabel.value = `${week.startDate} → ${week.endDate}`
-      stats.value = [week]
-    } else {
-      currentWeekLabel.value = null
-      stats.value = []
-    }
+function formatMetric(metric, value) {
+  if (!metric || value === undefined || value === null) {
+    return '0'
   }
+
+  if (isDurationField(metric)) {
+    const totalMin = parseDuration(value)
+    const h = Math.floor(totalMin / 60)
+    const m = Math.round(totalMin % 60)
+    return `${h}h ${m}m`
+  }
+
+  return Number(value).toFixed(2)
 }
 
-  function formatMetric(metric, value) {
-    if (isDurationField(metric)) {
-      const totalMin = parseDuration(value)
-      const h = Math.floor(totalMin / 60)
-      const m = Math.round(totalMin % 60)
-      return `${h}h ${m}m`
-    }
-    return value ?? 0
-  }
 
   function getFormattedValue(metric, rawValue) {
     return formatMetric(metric, rawValue)
-  }
-
-  const thresholds = {
-    totalFeeds: { warning: 3, watch: 5 },
-    totalUrineCount: { warning: 2, watch: 4 },
-    totalStoolCount: { warning: 1, watch: 2 },
-    totalSleepDuration: { warning: 600, watch: 720 },
-    totalPlayDuration: { warning: 30, watch: 60 },
-    monInterval: { warning: 0, watch: 30 },
-    averageMilkIntake: { warning: 30, watch: 45 },
-  }
-
-  function getStatus(metric, value) {
-    const t = thresholds[metric]
-    if (!t) return 'normal'
-    const val = isDurationField(metric) ? parseDuration(value) : Number(value)
-    if (val <= t.warning) return 'warning'
-    if (val <= t.watch) return 'watch'
-    return 'normal'
-  }
-
-  function getStatusLabel(metric) {
-    const latest = activeStats.value.at(-1)?.[metric]
-    const level = getStatus(metric, latest)
-    if (level === 'warning') return 'WARNING'
-    if (level === 'watch') return 'WATCH'
-    return 'NORMAL'
-  }
-
-  function getStatusColor(metric) {
-    const latest = activeStats.value.at(-1)?.[metric]
-    const level = getStatus(metric, latest)
-    if (level === 'warning') return 'error'
-    if (level === 'watch') return 'warning'
-    return 'success'
   }
 
   function latestValue(metric) {
@@ -604,7 +547,7 @@ function getThresholdStatus(metricKey) {
       const m = Math.round(avg % 60)
       return `${h}h ${m}m`
     }
-    return avg.toFixed(1)
+    return avg.toFixed(2)
   }
 
   const chartSeries = computed(() => {
@@ -633,18 +576,36 @@ function getThresholdStatus(metricKey) {
       labels: { style: { colors: '#ccc', fontSize: '12px' } },
     },
     yaxis: {
-      title: {
-        text: currentLabel.value,
-        style: {
-          color: '#ccc',
-          fontSize: '14px',
-          fontWeight: 500,
-        },
-      },
-      labels: { style: { colors: '#ccc', fontSize: '12px' } },
-      min: 0,
-      tickAmount: 4,
+  title: {
+    text: currentLabel.value,
+    style: {
+      color: '#ccc',
+      fontSize: '14px',
+      fontWeight: 500,
     },
+  },
+  labels: {
+    style: { colors: '#ccc', fontSize: '12px' },
+    formatter: (val) => {
+      // Duration metrics use minutes internally -> convert to HH:MM
+      if (isDurationField(selectedMetric.value)) {
+        if (!val || isNaN(val)) return '00:00'
+
+        const hours = Math.floor(val / 60)
+        const mins = Math.floor(val % 60)
+        const h = hours.toString().padStart(2, '0')
+        const m = mins.toString().padStart(2, '0')
+        return `${h}:${m}`
+      }
+
+      // Non-duration metrics -> just show raw number
+      return Number(val).toFixed(0)
+    }
+  },
+  min: 0,
+  tickAmount: 4,
+}
+,
     colors: ['#7367F0'],
   }))
 
@@ -664,12 +625,18 @@ function getThresholdStatus(metricKey) {
       const m = total % 60
       return `${h}h ${m}m`
     }
-    return total
+    return total.toFixed(2)
   })
 
   const isStatsPage = computed(() =>
   route.path.includes('/trainer/user/view-stats/')
 )
+
+function getTodayValue(metric) {
+  const todayRow = activeStats.value.at(-1)
+  if (!todayRow) return 0
+  return todayRow[metric] ?? 0
+}
 
 function goToOtherPage() {
   console.log('clicked')
@@ -693,7 +660,7 @@ function goToOtherPage() {
     const t = isDurationField(metric) ? parseDuration(today) : Number(today)
     const p = isDurationField(metric) ? parseDuration(prev) : Number(prev)
     if (isNaN(t) || isNaN(p) || p === 0) return null
-    return parseFloat(((t - p) / p * 100).toFixed(1))
+    return parseFloat(((t - p) / p * 100).toFixed(2))
   })
 
   const circleValue = computed(() => {
