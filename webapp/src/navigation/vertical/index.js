@@ -44,7 +44,7 @@ export default [
         viewBy: 'trainer'
     },
         {
-        title: 'AI ASSistant',
+        title: 'AI Assistant',
         to: { name: 'trainer-journal-entries-journal-entries' },
         icon: { icon: 'bx-user' },
         viewBy: 'trainer'
