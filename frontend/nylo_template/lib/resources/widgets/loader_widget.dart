@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class Loader extends StatelessWidget {
@@ -6,13 +5,11 @@ class Loader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    switch (Theme.of(context).platform) {
-      case TargetPlatform.android:
-        return const Center(child: CircularProgressIndicator());
-      case TargetPlatform.iOS:
-        return const Center(child: CupertinoActivityIndicator());
-      default:
-        return const Center(child: CircularProgressIndicator());
-    }
+    final color = Theme.of(context).colorScheme.primary;
+    return Center(
+      child: CircularProgressIndicator.adaptive(
+        valueColor: AlwaysStoppedAnimation<Color>(color),
+      ),
+    );
   }
 }
