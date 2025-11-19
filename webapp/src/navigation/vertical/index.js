@@ -43,10 +43,10 @@ export default [
         icon: { icon: 'bx-user' },
         viewBy: 'trainer'
     },
-        {
-        title: 'AI Assistant',
-        to: { name: 'trainer-journal-entries-journal-entries' },
-        icon: { icon: 'bx-user' },
-        viewBy: 'trainer'
-    }
+    //     {
+    //     title: 'AI Assistant',
+    //     to: { name: 'trainer-journal-entries-journal-entries' },
+    //     icon: { icon: 'bx-user' },
+    //     viewBy: 'trainer'
+    // }
 ]

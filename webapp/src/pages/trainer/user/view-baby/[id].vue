@@ -1,52 +1,103 @@
 <template>
   <div class="pa-4">
-    <VCard class="pa-2">
-<VCardTitle class="d-flex align-center justify-space-between pr-4">
-  <div class="text-h6">Baby Schedule for {{ babyName || '...' }}</div>
 
-  <div class="d-flex align-center">
-    <!-- Date Picker -->
-    <VMenu v-model="datePickerMenu" :close-on-content-click="false" location="bottom end">
-      <template #activator="{ props }">
-        <VBtn color="primary" v-bind="props" variant="flat" size="small">📅 Jump to Date</VBtn>
-      </template>
-      <VCard class="pa-2">
-        <VDatePicker
-          v-model="selectedDate"
-          show-adjacent-months
-          color="primary"
-          @update:modelValue="onDatePicked"
-        />
-      </VCard>
-    </VMenu>
+    <!-- 🧠 AI Assistant ABOVE CALENDAR -->
+    <VCard class="pa-4 mb-4">
+  <VCardTitle class="text-h6">Baby Health AI Assistant</VCardTitle>
+  <VCardText>
 
-    <!-- 🔄 Toggle -->
-    <VBtn
-      variant="tonal"
-      color="primary"
-      size="small"
-      class="ml-3"
-      @click="goToOtherPage"
+    <!-- Input -->
+    <VTextField
+      v-model="question"
+      label="Ask a question about this baby's health"
+      placeholder="e.g. Why is the baby crying so much?"
+      clearable
+    />
+
+    <!-- Buttons Row -->
+    <VRow class="mt-3" align="center">
+      <VCol cols="auto">
+        <VBtn color="primary" :loading="loading" @click="askAI">
+          Ask AI
+        </VBtn>
+      </VCol>
+
+      <!-- CLEAR BUTTON (only shows when answer exists) -->
+      <VCol cols="auto" v-if="answer">
+        <VBtn
+          color="grey"
+          variant="tonal"
+          @click="clearAI"
+        >
+          Clear
+        </VBtn>
+      </VCol>
+    </VRow>
+
+    <!-- AI Response -->
+    <VAlert
+      v-if="answer"
+      type="info"
+      variant="outlined"
+      class="mt-4"
     >
-      🔄 Switch to Statistics
-    </VBtn>
-  </div>
-</VCardTitle>
+      <strong>AI Response:</strong><br />
+      {{ answer }}
+    </VAlert>
+  </VCardText>
+</VCard>
 
+    <!-- ---------------- CALENDAR CARD ---------------- -->
+    <VCard class="pa-2">
+      <VCardTitle class="d-flex align-center justify-space-between pr-4">
+        <div class="text-h6">Baby Schedule for {{ babyName || '...' }}</div>
+
+        <div class="d-flex align-center">
+          <!-- Date Picker -->
+          <VMenu v-model="datePickerMenu" :close-on-content-click="false" location="bottom end">
+            <template #activator="{ props }">
+              <VBtn color="primary" v-bind="props" variant="flat" size="small">📅 Jump to Date</VBtn>
+            </template>
+            <VCard class="pa-2">
+              <VDatePicker
+                v-model="selectedDate"
+                show-adjacent-months
+                color="primary"
+                @update:modelValue="onDatePicked"
+              />
+            </VCard>
+          </VMenu>
+
+          <!-- Switch Page Button -->
+          <VBtn
+            variant="tonal"
+            color="primary"
+            size="small"
+            class="ml-3"
+            @click="goToOtherPage"
+          >
+            🔄 Switch to Statistics
+          </VBtn>
+        </div>
+      </VCardTitle>
 
       <VCardText>
         <FullCalendar ref="calendarRef" :options="calendarOptions" />
       </VCardText>
     </VCard>
 
-    <!-- Entry Drawer -->
-    <VNavigationDrawer v-model="isDrawerOpen" location="end" temporary width="420">
+    <!-- Entry Drawer (unchanged) -->
+    <VNavigationDrawer
+      v-model="isDrawerOpen"
+      location="end"
+      temporary
+      width="420"
+    >
       <VToolbar density="comfortable" title="Entry Details" />
       <div class="pa-4">
         <div v-if="entryDetails">
           <div class="text-subtitle-1 mb-3">
             {{ formatDateTime(entryDetails.awakeTime) }}
-            <span class="text-medium-emphasis"></span>
           </div>
 
           <VList density="compact" lines="two">
@@ -96,6 +147,7 @@
           </VList>
 
           <VDivider class="my-3" />
+
           <VBtn color="primary" block @click="isDrawerOpen = false">Close</VBtn>
         </div>
 
@@ -104,9 +156,16 @@
         </div>
       </div>
     </VNavigationDrawer>
+
+    <!-- Snackbar for AI -->
+    <VSnackbar v-model="isSnackBarVisible" timeout="5000">
+      {{ snackBarMessage }}
+      <template #actions>
+        <VBtn color="error" @click="isSnackBarVisible = false">Close</VBtn>
+      </template>
+    </VSnackbar>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
   import { useRoute, useRouter } from "vue-router"
@@ -126,6 +185,11 @@ const events = ref([])
 const currentView = ref('dayGridMonth')
 const datePickerMenu = ref(false)
 const selectedDate = ref(null)
+const question = ref("")
+const answer = ref("")
+const loading = ref(false)
+const isSnackBarVisible = ref(false)
+const snackBarMessage = ref("")
 
 /* ---------- Utility Functions ---------- */
 function tsToIso(ts) {
@@ -311,6 +375,35 @@ const calendarOptions = ref({
 const isStatsPage = computed(() =>
   route.path.includes('/trainer/user/view-stats/')
 )
+
+async function askAI() {
+  if (!question.value.trim()) {
+    snackBarMessage.value = "Please enter a question."
+    isSnackBarVisible.value = true
+    return
+  }
+
+  loading.value = true
+  answer.value = ""
+
+  try {
+    const res = await $api(`/assistant/babies/query/${babyId.value}`, {
+      method: "POST",
+      body: { question: question.value }
+    })
+    answer.value = res.answer
+  } catch (err) {
+    snackBarMessage.value = "Error fetching AI response."
+    isSnackBarVisible.value = true
+  } finally {
+    loading.value = false
+  }
+}
+
+function clearAI() {
+  question.value = "";
+  answer.value = "";
+}
 
 function goToOtherPage() {
   console.log('clicked')
