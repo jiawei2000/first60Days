@@ -1,20 +1,33 @@
 <template>
   <div>
     <!-- 🧠 Page Header -->
-    <div class="d-flex align-center justify-space-between mb-4">
-      <h2 class="text-h4 font-weight-bold">Statistics for {{ babyName }}</h2>
+<div class="d-flex align-center justify-space-between mb-4">
+  <h2 class="text-h4 font-weight-bold">Statistics for {{ babyName }}</h2>
 
-      <VBtnToggle
-        v-model="timeFrame"
-        divided
-        color="primary"
-        density="comfortable"
-        class="ml-auto"
-      >
-        <VBtn value="daily">Daily</VBtn>
-        <VBtn value="weekly">Weekly</VBtn>
-      </VBtnToggle>
-    </div>
+  <div class="d-flex align-center">
+    <VBtnToggle
+      v-model="timeFrame"
+      divided
+      color="primary"
+      density="comfortable"
+      class="mr-4"
+    >
+      <VBtn value="daily">Daily</VBtn>
+      <VBtn value="weekly">Weekly</VBtn>
+    </VBtnToggle>
+
+    <!-- 🔄 Toggle -->
+    <VBtn
+      variant="tonal"
+      color="primary"
+      size="small"
+      @click="goToOtherPage"
+    >
+      🔄 Switch to Schedule
+    </VBtn>
+  </div>
+</div>
+
 
     <VCard>
       <VCardText>
@@ -261,15 +274,16 @@
 
   <script setup lang="js">
   import { ref, computed, onMounted, watch } from 'vue'
-  import { useRoute } from 'vue-router'
   import VueApexCharts from 'vue3-apexcharts'
   import upArrow from '@/assets/images/cards/up.png'
   import downArrow from '@/assets/images/cards/down.png'
   import entry from '@/assets/images/cards/fitbit-watch.png'
   import baby from '@/assets/images/cards/chart-success.png'
+  import { useRoute, useRouter } from "vue-router"
 
   const ApexChart = VueApexCharts
-  const route = useRoute()
+const route = useRoute()
+const router = useRouter()
   const babyId = route.params.id
   const babyName = ref('')
   const babyAgeWeeks = ref(0)
@@ -652,6 +666,23 @@ function getThresholdStatus(metricKey) {
     }
     return total
   })
+
+  const isStatsPage = computed(() =>
+  route.path.includes('/trainer/user/view-stats/')
+)
+
+function goToOtherPage() {
+  console.log('clicked')
+  const id = route.params.id
+
+  if (isStatsPage.value) {
+    // go to baby schedule
+    router.push(`/trainer/user/view-baby/${id}`)
+  } else {
+    // go to baby stats
+    router.push(`/trainer/user/view-stats/${id}`)
+  }
+}
 
   const averageDisplay = computed(() => getAverage(selectedMetric.value))
 

@@ -1,25 +1,38 @@
 <template>
   <div class="pa-4">
     <VCard class="pa-2">
-      <VCardTitle class="d-flex align-center justify-space-between pr-4">
-        <div class="text-h6">Baby Schedule for {{ babyName || '...' }}</div>
+<VCardTitle class="d-flex align-center justify-space-between pr-4">
+  <div class="text-h6">Baby Schedule for {{ babyName || '...' }}</div>
 
-        <!-- Date Picker -->
-        <VMenu v-model="datePickerMenu" :close-on-content-click="false" location="bottom end">
-          <template #activator="{ props }">
-            <VBtn color="primary" v-bind="props" variant="flat" size="small">📅 Jump to Date</VBtn>
-          </template>
+  <div class="d-flex align-center">
+    <!-- Date Picker -->
+    <VMenu v-model="datePickerMenu" :close-on-content-click="false" location="bottom end">
+      <template #activator="{ props }">
+        <VBtn color="primary" v-bind="props" variant="flat" size="small">📅 Jump to Date</VBtn>
+      </template>
+      <VCard class="pa-2">
+        <VDatePicker
+          v-model="selectedDate"
+          show-adjacent-months
+          color="primary"
+          @update:modelValue="onDatePicked"
+        />
+      </VCard>
+    </VMenu>
 
-          <VCard class="pa-2">
-            <VDatePicker
-              v-model="selectedDate"
-              show-adjacent-months
-              color="primary"
-              @update:modelValue="onDatePicked"
-            />
-          </VCard>
-        </VMenu>
-      </VCardTitle>
+    <!-- 🔄 Toggle -->
+    <VBtn
+      variant="tonal"
+      color="primary"
+      size="small"
+      class="ml-3"
+      @click="goToOtherPage"
+    >
+      🔄 Switch to Statistics
+    </VBtn>
+  </div>
+</VCardTitle>
+
 
       <VCardText>
         <FullCalendar ref="calendarRef" :options="calendarOptions" />
@@ -96,13 +109,14 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+  import { useRoute, useRouter } from "vue-router"
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import '@core/scss/template/libs/full-calendar.scss'
 
 /* ---------- State ---------- */
 const route = useRoute()
+const router = useRouter()
 const babyId = computed(() => route.params.id)
 const babyName = ref('')
 const calendarRef = ref(null)
@@ -293,6 +307,23 @@ const calendarOptions = ref({
     return { domNodes: [el] }
   },
 })
+
+const isStatsPage = computed(() =>
+  route.path.includes('/trainer/user/view-stats/')
+)
+
+function goToOtherPage() {
+  console.log('clicked')
+  const id = route.params.id
+
+  if (isStatsPage.value) {
+    // go to baby schedule
+    router.push(`/trainer/user/view-baby/${id}`)
+  } else {
+    // go to baby stats
+    router.push(`/trainer/user/view-stats/${id}`)
+  }
+}
 
 /* ---------- Lifecycle ---------- */
 onMounted(async () => {
