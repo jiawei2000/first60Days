@@ -103,7 +103,8 @@
                 rounded="lg"
                 elevation="1"
               >
-                {{ selectedDate ? selectedDate.toISOString().split('T')[0] : 'Select date' }}
+                {{ selectedDate ? formatLocalDate(selectedDate) : 'Select date' }}
+
               </VBtn>
             </template>
 
@@ -207,7 +208,8 @@
           <VCardText>
             <p class="text-caption text-medium-emphasis text-end mb-4">
               Showing last 7 days up to
-              <strong>{{ selectedDate ? selectedDate.toISOString().split('T')[0] : '' }}</strong>
+              <strong>{{ selectedDate ? formatLocalDate(selectedDate) : '' }}</strong>
+
             </p>
 
             <!-- Metric Selector -->
@@ -347,19 +349,29 @@ const selectedWeek = ref(null)
 }
 
   async function fetchJournalEntries() {
-    try {
-      const res = await $api(`/journalEntries/${babyId}`, { method: 'GET' })
-      const entries = res || []
-      currentCycle.value = Math.max(...entries.map(e => e.cycleNo || 0))
-      const today = new Date().toISOString().split('T')[0]
-      entriesToday.value = entries.filter(e => {
-        const awakeDate = new Date(e.awakeTime._seconds * 1000).toISOString().split('T')[0]
-        return awakeDate === today
-      }).length
-    } catch (err) {
-      console.error('Failed to fetch journal entries:', err)
-    }
+  try {
+    const res = await $api(`/journalEntries/${babyId}`, { method: 'GET' })
+    const entries = res || []
+
+    currentCycle.value = Math.max(...entries.map(e => e.cycleNo || 0))
+
+    // ✅ FIXED: use local date instead of UTC ISO
+    const today = formatLocalDate(new Date())
+
+    entriesToday.value = entries.filter(e => {
+      const awakeDate = formatLocalDate(new Date(e.awakeTime._seconds * 1000))
+      return awakeDate === today
+    }).length
+
+  } catch (err) {
+    console.error('Failed to fetch journal entries:', err)
   }
+}
+
+
+  function formatLocalDate(d) {
+  return d.toLocaleDateString('en-CA') // YYYY-MM-DD
+}
 
   async function fetchThresholds() {
   try {
@@ -496,7 +508,7 @@ function updateSelectedWeek() {
         const currentDate = new Date(startDate)
         currentDate.setDate(startDate.getDate() + i)
 
-        const isoDate = currentDate.toISOString().split('T')[0] // convert to YYYY-MM-DD string
+        const isoDate = formatLocalDate(currentDate)// convert to YYYY-MM-DD string
         const dayData = allStats.find(d => d.date === isoDate)  
 
         filteredStats.push(dayData ? { ...dayData, date: isoDate } : {
