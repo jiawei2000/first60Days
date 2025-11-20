@@ -52,7 +52,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/excel', excelRoutes);
 app.use('/api/thresholds', thresholdRoutes);
-app.use('/api/imported-stats', ImportedStatsRoutes);
+// app.use('/api/imported-stats', ImportedStatsRoutes);
 // Error handling middleware
 app.use((req, res, next) => {
   res.status(404).send('Not Found')

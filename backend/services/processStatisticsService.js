@@ -311,10 +311,10 @@ class ProcessStatisticsService {
         let firstFeedTimeIndex;
         if (monInterval1 > monInterval2) {
             firstFeedTimeIndex = 1;
-            statistics.monInterval = this.toHHMM(monInterval1);
+            statistics.monInterval = this.toHHMM(Math.abs(monInterval1));
         } else {
             firstFeedTimeIndex = 0;
-            statistics.monInterval = this.toHHMM(monInterval2);
+            statistics.monInterval = this.toHHMM(Math.abs(monInterval2));
         }
 
         // Count cycles beyond 3 hours
@@ -338,13 +338,15 @@ class ProcessStatisticsService {
 
             // Play duration (in hours)
             if (entry.startPlayTime !== null) {
+                //absolute difference in hours. No negative values
                 statistics.totalPlayDuration +=
-                    (entry.startSleepTime.toDate() - entry.startPlayTime.toDate()) / MS_PER_HOUR || 0;
+                    Math.abs(entry.startSleepTime.toDate() - entry.startPlayTime.toDate()) / MS_PER_HOUR || 0;
             }
 
             // Lapse duration (in hours)
+            //absolute difference in hours. No negative values
             totalLapseDuration +=
-                (entry.startFeedTime.toDate() - entry.awakeTime.toDate()) / MS_PER_HOUR || 0;
+                Math.abs(entry.startFeedTime.toDate() - entry.awakeTime.toDate()) / MS_PER_HOUR || 0;
 
             // Milk intake (ml)
             let entryMilkAmount = 0;
