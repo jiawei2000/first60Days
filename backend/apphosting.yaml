@@ -1,0 +1,13 @@
+# Environment variables and secrets
+env:
+  - variable: JWT_SECRET
+    secret: JWT_SECRET
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+    availability:
+      - BUILD
+      - RUNTIME

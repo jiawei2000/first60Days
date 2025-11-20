@@ -7,12 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 5050",
+    "start": "serve -s dist -l $PORT",
     "lint": "eslint . -c .eslintrc.cjs --fix --ext .ts,.js,.cjs,.vue,.tsx,.jsx",
     "build:icons": "tsx src/plugins/iconify/build-icons.js",
     "msw:init": "msw init public/ --save",
     "postinstall": "npm run build:icons && npm run msw:init"
   },
   "dependencies": {
+    "serve": "^14.2.1",
     "@casl/ability": "6.7.2",
     "@casl/vue": "2.2.2",
     "@floating-ui/dom": "1.6.8",
