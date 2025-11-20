@@ -1,98 +1,65 @@
 <template>
-  <VContainer class="pa-6">
-    <VCard elevation="2" class="pa-4">
-      <VCardTitle class="text-h5 font-weight-bold mb-2">
-        Edit Threshold
-      </VCardTitle>
+    <VContainer class="pa-6">
+        <VCard elevation="2" class="pa-4" title="Edit Threshold">
 
-      <VCardSubtitle class="text-medium-emphasis mb-6">
-        Adjust weekly or daily threshold values for each metric.
-      </VCardSubtitle>
+            <VCardSubtitle class="text-medium-emphasis mb-6">
+                Adjust weekly or daily threshold values for each metric.
+            </VCardSubtitle>
 
-      <VCardText>
-        <VRow class="mb-4">
-          <!-- Table Name (readonly) -->
-          <VCol cols="12" md="4">
-            <VTextField
-              v-model="formattedTableName"
-              label="Table Name"
-              variant="outlined"
-              readonly
-              density="comfortable"
-              class="rounded-lg"
-            />
-          </VCol>
+            <VCardText>
+                <VRow class="mb-4">
+                    <!-- Table Name (readonly) -->
+                    <VCol cols="12" md="4">
+                        <VTextField v-model="formattedTableName" label="Table Name" variant="outlined" readonly
+                            density="comfortable" class="rounded-lg" />
+                    </VCol>
 
-          <!-- Key (readonly) -->
-          <VCol cols="12" md="4">
-            <VTextField
-              v-model="formattedKey"
-              label="Metric Key"
-              variant="outlined"
-              readonly
-              density="comfortable"
-              class="rounded-lg"
-            />
-          </VCol>
-        </VRow>
+                    <!-- Key (readonly) -->
+                    <VCol cols="12" md="4">
+                        <VTextField v-model="formattedKey" label="Metric Key" variant="outlined" readonly
+                            density="comfortable" class="rounded-lg" />
+                    </VCol>
+                </VRow>
 
-        <!-- Description (visible info block) -->
-        <div class="mb-6">
-          <p class="text-caption text-medium-emphasis mb-1">Description</p>
-          <VCard class="pa-4 bg-grey-lighten-4 text-body-2 rounded-lg" elevation="0">
-            {{ description || 'No description available.' }}
-          </VCard>
-        </div>
+                <!-- Description (visible info block) -->
+                <div class="mb-6">
+                    <p class="text-caption text-medium-emphasis mb-1">Description</p>
+                    <VCard class="pa-4 bg-grey-lighten-4 text-body-2 rounded-lg" elevation="0">
+                        {{ description || 'No description available.' }}
+                    </VCard>
+                </div>
 
-        <!-- Editable week/value table -->
-        <h3 class="text-h6 font-weight-medium mb-3">
-          {{ formattedTableName }} Values
-        </h3>
+                <!-- Editable week/value table -->
+                <h3 class="text-h6 font-weight-medium mb-3">
+                    {{ formattedTableName }} Values
+                </h3>
 
-        <VDataTable
-          :headers="headers"
-          :items="weekValues"
-          hide-default-footer
-          class="elevation-1 mb-6"
-        >
-          <template #item.value="{ item }">
-            <VTextField
-              v-model="item.value"
-              density="comfortable"
-              variant="outlined"
-              :error="item.error"
-              :error-messages="item.errorMsg"
-              hide-details="auto"
-              class="rounded-lg"
-              @input="validateValue(item)"
-            />
-          </template>
-        </VDataTable>
-      </VCardText>
+                <VDataTable :headers="headers" :items="weekValues" hide-default-footer class="elevation-1 mb-6">
+                    <template #item.value="{ item }">
+                        <VTextField v-model="item.value" density="comfortable" variant="outlined" :error="item.error"
+                            :error-messages="item.errorMsg" hide-details="auto" class="rounded-lg"
+                            @input="validateValue(item)" />
+                    </template>
+                </VDataTable>
+            </VCardText>
 
-      <!-- Actions -->
-      <VCardActions class="d-flex justify-end">
-        <VBtn color="primary" class="px-6" @click="saveChanges" :loading="saving">
-          Confirm
-        </VBtn>
-        <VBtn color="secondary" variant="tonal" class="px-6" @click="$router.back()">
-          Cancel
-        </VBtn>
-      </VCardActions>
-    </VCard>
+            <!-- Actions -->
+            <VCardActions class="d-flex justify-end">
+                <VBtn color="primary" variant="tonal" class="px-6" @click="saveChanges" :loading="saving">
+                    Confirm
+                </VBtn>
+                <VBtn color="secondary" variant="tonal" class="px-6" @click="$router.back()">
+                    Cancel
+                </VBtn>
+            </VCardActions>
+        </VCard>
 
-    <!-- ✅ Success Snackbar -->
-    <VSnackbar
-      v-model="snackbar"
-      color="success"
-      timeout="3000"
-      rounded="pill"
-      elevation="3"
-      location="bottom center"
-    >
-      Threshold updated successfully!
-    </VSnackbar>
-  </VContainer>
+        <!-- ✅ Success Snackbar -->
+        <VSnackbar v-model="snackbar" color="success" timeout="3000" rounded="pill" elevation="3"
+            location="bottom center">
+            Threshold updated successfully!
+        </VSnackbar>
+    </VContainer>
 </template>
 
 <script setup>

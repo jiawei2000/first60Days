@@ -399,7 +399,7 @@ function getThresholdStatus(metricKey) {
       : metricKey
 
   const weekKey = `week${babyAgeWeeks.value}`
-  console.log('Evaluating threshold for', actualKey, 'at', weekKey)
+    //   console.log('Evaluating threshold for', actualKey, 'at', weekKey)
   const metric = thresholds[actualKey]
   if (!metric || !metric.value || metric.value[weekKey] === undefined)
     return { label: 'UNKNOWN', color: 'grey', message: 'No threshold' }
@@ -498,6 +498,8 @@ function updateSelectedWeek() {
       const res = await $api(`/statistics/daily/baby/${babyId}`, { method: 'GET' })
       const allStats = res.data?.statistics || []
 
+        console.log("All stats:", allStats)
+
       // ensure selectedDate is a Date object
       const endDate = new Date(selectedDate.value)  
       const startDate = new Date(endDate) 
@@ -523,73 +525,79 @@ function updateSelectedWeek() {
           averagePlayDuration: '00:00',
           averageLapseDuration: '00:00',
           averageMilkIntake: 0,
+            totalMilkVolume: 0,
         })
-      }
+        }
 
-      stats.value = filteredStats
-      chartReady.value = true
+        stats.value = filteredStats
+        chartReady.value = true
     } catch (err) {
-      console.error('Failed to load daily stats:', err)
+        console.error('Failed to load daily stats:', err)
     }
-  }
+}
 
 
 
-  watch(selectedDate, updateStatsForSelectedDate)
-  watch(selectedWeek, updateSelectedWeek)
+watch(selectedDate, updateStatsForSelectedDate)
+watch(selectedWeek, updateSelectedWeek)
 
 
 
-  const metricOptions = [
+const metricOptions = [
     { title: 'Total Feeds', value: 'totalFeeds' },
     { title: 'Total Urine Count', value: 'totalUrineCount' },
     { title: 'Total Stool Count', value: 'totalStoolCount' },
     { title: 'Cycles Beyond 3 hours', value: 'totalCyclesBeyond3Hrs' },
-    { title: 'Total Sleep Duration(HH:MM)', value: 'totalSleepDuration' },
-    { title: 'Total Play Duration(HH:MM)', value: 'totalPlayDuration' },
-    { title: 'MON Interval(HH:MM)', value: 'monInterval' },
-    { title: 'Avg Play Duration Per Entry(HH:MM)', value: 'averagePlayDuration' },
-    { title: 'Lapse Duration(HH:MM)', value: 'averageLapseDuration' },
+    { title: 'Total Sleep Duration', value: 'totalSleepDuration' },
+    { title: 'Total Play Duration', value: 'totalPlayDuration' },
+    { title: 'MON Interval', value: 'monInterval' },
+    { title: 'Avg Play Duration Per Entry', value: 'averagePlayDuration' },
+    { title: 'Lapse Duration', value: 'averageLapseDuration' },
     { title: 'Avg Milk Intake Per Entry', value: 'averageMilkIntake' },
-  ]
+    { title: 'Total Milk Volume', value: 'totalMilkVolume' },
+]
 
 const activeStats = computed(() => {
-  if (timeFrame.value === 'daily') {
-    return [...stats.value].sort((a, b) => (a.date > b.date ? 1 : -1))
-  }
+    if (timeFrame.value === 'daily') {
+        return [...stats.value].sort((a, b) => (a.date > b.date ? 1 : -1))
+    }
 
-  // WEEKLY MODE — use only the selected week's stats
-  const selected = weeklyStats.value.find(w => w.day === selectedWeek.value)
-  if (!selected) return []
+    // WEEKLY MODE — use only the selected week's stats
+    const selected = weeklyStats.value.find(w => w.day === selectedWeek.value)
+    if (!selected) return []
 
-  return [selected]
+    return [selected]
 })
-  function parseDuration(str) {
+function parseDuration(str) {
     if (!str || typeof str !== 'string') return 0
     const [h, m] = str.split(':').map(Number)
     return h * 60 + m
-  }
+}
 
-  function isDurationField(metric) {
+function isDurationField(metric) {
     return [
-      'totalSleepDuration',
-      'totalPlayDuration',
-      'monInterval',
-      'averagePlayDuration',
-      'averageLapseDuration',
+        'totalSleepDuration',
+        'totalPlayDuration',
+        'monInterval',
+        'averagePlayDuration',
+        'averageLapseDuration',
     ].includes(metric)
-  }
+}
 function formatMetric(metric, value) {
-  if (!metric || value === undefined || value === null) {
-    return '0'
-  }
+    if (!metric || value === undefined || value === null) {
+        return '0'
+    }
 
-  if (isDurationField(metric)) {
-    const totalMin = parseDuration(value)
-    const h = Math.floor(totalMin / 60)
-    const m = Math.round(totalMin % 60)
-    return `${h}h ${m}m`
-  }
+    if (isDurationField(metric)) {
+        const totalMin = parseDuration(value)
+        const h = Math.floor(totalMin / 60)
+        const m = Math.round(totalMin % 60)
+        return `${h}h ${m}m`
+    }
+
+    if (metric === 'totalMilkVolume') {
+        return `${Number(value).toFixed(2)} ml`
+    }
 
   return Number(value).toFixed(2)
 }

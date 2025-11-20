@@ -1,69 +1,43 @@
 <template>
-  <VCard title="Admin Statistics">
-    <VCardText>
-      <!-- 📊 Tab Switch -->
-      <VTabs v-model="activeTab" background-color="transparent" grow class="mb-4">
-        <VTab value="gender">By Gender</VTab>
-        <VTab value="age">By Age</VTab>
-      </VTabs>
+    <VCard title="Admin Statistics">
+        <VCardText>
+            <!-- 📊 Tab Switch -->
+            <VTabs v-model="activeTab" background-color="transparent" grow class="mb-4">
+                <VTab value="age">By Age</VTab>
+                <VTab value="gender">By Gender</VTab>
+            </VTabs>
 
-      <VDivider class="mb-4" />
+            <VDivider class="mb-4" />
 
-      <VWindow v-model="activeTab">
-        <!-- 🔹 GENDER STATS -->
-        <VWindowItem value="gender">
-          <VSelect
-            v-model="selectedGenderMetric"
-            :items="metricOptions"
-            label="Select Metric"
-            item-title="label"
-            item-value="value"
-            variant="outlined"
-            hide-details
-            class="mb-4"
-          />
+            <VWindow v-model="activeTab">
+                <!-- 🔹 AGE STATS -->
+                <VWindowItem value="age">
+                    <VSelect v-model="selectedAgeMetric" :items="metricOptions" label="Select Metric" item-title="label"
+                        item-value="value" variant="outlined" hide-details class="mb-4 mt-1" />
 
-          <div v-if="chartReady && genderChartSeries?.[0]?.data?.length">
-            <ApexChart
-              type="line"
-              height="300"
-              :options="genderChartOptions"
-              :series="genderChartSeries"
-            />
-          </div>
-          <div v-else class="text-medium-emphasis text-center mt-4">
-            No data available for gender stats.
-          </div>
-        </VWindowItem>
+                    <div v-if="chartReady && ageChartSeries?.[0]?.data?.length">
+                        <ApexChart type="line" height="300" :options="ageChartOptions" :series="ageChartSeries" />
+                    </div>
+                    <div v-else class="text-medium-emphasis text-center mt-4">
+                        No data available for age stats.
+                    </div>
+                </VWindowItem>
 
-        <!-- 🔹 AGE STATS -->
-        <VWindowItem value="age">
-          <VSelect
-            v-model="selectedAgeMetric"
-            :items="metricOptions"
-            label="Select Metric"
-            item-title="label"
-            item-value="value"
-            variant="outlined"
-            hide-details
-            class="mb-4"
-          />
+                <!-- 🔹 GENDER STATS -->
+                <VWindowItem value="gender">
+                    <VSelect v-model="selectedGenderMetric" :items="metricOptions" label="Select Metric"
+                        item-title="label" item-value="value" variant="outlined" hide-details class="mb-4 mt-1" />
 
-          <div v-if="chartReady && ageChartSeries?.[0]?.data?.length">
-            <ApexChart
-              type="line"
-              height="300"
-              :options="ageChartOptions"
-              :series="ageChartSeries"
-            />
-          </div>
-          <div v-else class="text-medium-emphasis text-center mt-4">
-            No data available for age stats.
-          </div>
-        </VWindowItem>
-      </VWindow>
-    </VCardText>
-  </VCard>
+                    <div v-if="chartReady && genderChartSeries?.[0]?.data?.length">
+                        <ApexChart type="line" height="300" :options="genderChartOptions" :series="genderChartSeries" />
+                    </div>
+                    <div v-else class="text-medium-emphasis text-center mt-4">
+                        No data available for gender stats.
+                    </div>
+                </VWindowItem>
+            </VWindow>
+        </VCardText>
+    </VCard>
 </template>
 
 
@@ -74,7 +48,7 @@ import { format } from 'date-fns'
 
 const ApexChart = VueApexCharts
 
-const activeTab = ref('gender')
+const activeTab = ref('age')
 const chartReady = ref(false)
 
 const selectedGenderMetric = ref('averageTotalFeed')
@@ -87,10 +61,11 @@ const metricOptions = [
   { label: 'Average Feeds', value: 'averageTotalFeed' },
   { label: 'Average Urine Count', value: 'averageTotalUrineCount' },
   { label: 'Average Stool Count', value: 'averageTotalStoolCount' },
-  { label: 'Sleep Duration', value: 'averageSleepDuration' },
-  { label: 'Play Duration', value: 'averagePlayDuration' },
-  { label: 'MON Interval', value: 'averageMonInterval' },
-  { label: 'Milk Intake', value: 'averageMilkIntake' },
+    { label: 'Average Sleep Duration', value: 'averageSleepDuration' },
+    { label: 'Average Play Duration', value: 'averagePlayDuration' },
+    { label: 'Average MON Interval', value: 'averageMonInterval' },
+    { label: 'Average Milk Intake', value: 'averageMilkIntake' },
+    { label: 'Total Babies', value: 'totalBabies' },
 ]
 
 function parseDuration(str) {

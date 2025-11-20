@@ -14,8 +14,8 @@ definePage({
 })
 
 const form = ref({
-    username: 'admin2',
-    password: 'admin1',
+    username: '',
+    password: '',
     remember: false,
 })
 

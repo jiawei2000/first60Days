@@ -68,35 +68,36 @@
                             </VCard>
                         </VCol>
                     </VRow>
+                </div>
+            </VCardText>
+        </VCard>
+        <br />
 
-                    <!-- ASSIGNED BABIES TABLE -->
-                    <VCard>
-                        <VCardTitle class="text-subtitle-1 font-weight-bold">
-                            Assigned Babies
-                        </VCardTitle>
+        <!-- ASSIGNED BABIES TABLE -->
+        <VCard title="Assigned Babies">
 
-                        <VCardText>
-                            <VDataTable :headers="headers" :items="assignedBabies" :items-per-page="10">
-                                <!-- ACTIONS -->
-                                <template #item.actions="{ item }">
-                                    <div class="d-flex gap-1">
-                                        <IconBtn :to="`/trainer/user/view-baby/${item.id}`">
-                                            <VIcon icon="bx-calendar" />
-                                        </IconBtn>
+            <VCardText>
+                <VDataTable :headers="headers" :items="assignedBabies" :items-per-page="10">
+                    <!-- ACTIONS -->
+                    <template #item.actions="{ item }">
+                        <div class="d-flex gap-1">
+                            <IconBtn :to="`/trainer/user/view-baby/${item.id}`">
+                                <VIcon icon="bx-calendar" />
+                            </IconBtn>
 
-                                        <IconBtn :to="`/trainer/user/view-stats/${item.id}`">
-                                            <VIcon icon="bx-bar-chart" />
-                                        </IconBtn>
-                                    </div>
-                                </template>
+                            <IconBtn :to="`/trainer/user/view-stats/${item.id}`">
+                                <VIcon icon="bx-bar-chart" />
+                            </IconBtn>
+                        </div>
+                    </template>
 
-                                <!-- ALERT ICON -->
-                                <template #item.hasAlert="{ item }">
-                                    <VChip :color="resolveStatusVariant(item.hasAlert).color" size="small">
-                                        {{ resolveStatusVariant(item.hasAlert).text }}
-                                    </VChip>
-                                </template>
-                                <!-- <template #item.hasAlert="{ item }">
+                    <!-- ALERT ICON -->
+                    <template #item.hasAlert="{ item }">
+                        <VChip :color="resolveStatusVariant(item.hasAlert).color" size="small">
+                            {{ resolveStatusVariant(item.hasAlert).text }}
+                        </VChip>
+                    </template>
+                    <!-- <template #item.hasAlert="{ item }">
                   <VChip v-if="item.hasAlert" color="error" size="small" label>
                     Alert
                   </VChip>
@@ -104,13 +105,10 @@
                     Normal
                   </span>
                 </template> -->
-                            </VDataTable>
-                        </VCardText>
-                    </VCard>
-
-                </div>
+                </VDataTable>
             </VCardText>
         </VCard>
+
 
         <!-- Snackbar -->
         <VSnackbar v-model="isSnackBarVisible" timeout="5000">
