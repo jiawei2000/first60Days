@@ -1,6 +1,5 @@
 ﻿<script setup>
 import { ref } from 'vue'
-import { themeConfig } from '@themeConfig'
 import { useRouter } from "vue-router"
 import first60daysLogo from '@/assets/images/cards/first60days_logo.png'
 
@@ -70,68 +69,62 @@ async function loginTrainer() {
 </script>
 
 <template>
-    <div class="auth-wrapper d-flex align-center justify-center pa-4">
-        <div class="position-relative my-sm-16">
-            <VCard class="auth-card" max-width="460" :class="$vuetify.display.smAndUp ? 'pa-6' : 'pa-0'">
-                    <VCardItem class="justify-center mb-2">
-                        <img
-                        :src="first60daysLogo"
-                        alt="Logo"
-                        style="width: 250px; height: auto; display:block; margin: 20px auto;"
-                        />
-                    </VCardItem>
+    <div class="d-flex align-center justify-center pa-4">
+        <VCard class="auth-card" max-width="460" :class="$vuetify.display.smAndUp ? 'pa-6' : 'pa-0'">
+            <VCardItem class="justify-cente">
+                <img :src="first60daysLogo" alt="Logo"
+                    style="width: 200px; height: auto; display:block; margin: 20px auto;" />
+            </VCardItem>
 
+            <VCardText>
+                <h4 class="text-h4 mb-1 text-center">
+                    Trainer Portal
+                </h4>
+            </VCardText>
 
-                <VCardText>
-                    <h4 class="text-h4 mb-1 text-center">
-                        Trainer Portal
-                    </h4>
-                </VCardText>
+            <VCardText>
+                <VForm @submit.prevent="loginTrainer">
+                    <VRow>
+                        <!-- username -->
+                        <VCol cols="12">
+                            <AppTextField v-model="form.username" autofocus label="Username" type="text" />
+                        </VCol>
 
-                <VCardText>
-                    <VForm @submit.prevent="loginTrainer">
-                        <VRow>
-                            <!-- username -->
-                            <VCol cols="12">
-                                <AppTextField v-model="form.username" autofocus label="Username" type="text" />
-                            </VCol>
+                        <!-- password -->
+                        <VCol cols="12">
+                            <AppTextField v-model="form.password" label="Password" placeholder="············"
+                                :type="isPasswordVisible ? 'text' : 'password'" autocomplete="password"
+                                :append-inner-icon="isPasswordVisible ? 'bx-hide' : 'bx-show'"
+                                @click:append-inner="isPasswordVisible = !isPasswordVisible" />
 
-                            <!-- password -->
-                            <VCol cols="12">
-                                <AppTextField v-model="form.password" label="Password" placeholder="Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·"
-                                    :type="isPasswordVisible ? 'text' : 'password'" autocomplete="password"
-                                    :append-inner-icon="isPasswordVisible ? 'bx-hide' : 'bx-show'"
-                                    @click:append-inner="isPasswordVisible = !isPasswordVisible" />
+                            <!-- remember me checkbox -->
+                            <div class="d-flex align-center justify-space-between flex-wrap my-6">
+                                <VCheckbox v-model="form.remember" label="Remember me" />
 
-                                <!-- remember me checkbox -->
-                                <div class="d-flex align-center justify-space-between flex-wrap my-6">
-                                    <VCheckbox v-model="form.remember" label="Remember me" />
-
-                                    <!-- Forget Password -->
-                                    <!-- <RouterLink class="text-primary">
+                                <!-- Forget Password -->
+                                <!-- <RouterLink class="text-primary">
                                         Forgot Password?
                                     </RouterLink> -->
-                                </div>
+                            </div>
 
-                                <!-- login button -->
-                                <VBtn block type="submit" color="primary">
-                                    Login
-                                </VBtn>
-                            </VCol>
+                            <!-- login button -->
+                            <VBtn block type="submit" color="primary">
+                                Login
+                            </VBtn>
+                        </VCol>
 
-                            <!-- create account -->
-                            <VCol cols="12" class="text-body-1 text-center">
-                                <span class="d-inline-block"> Are you an Admin? </span>
-                                <RouterLink class="text-primary ms-1 d-inline-block text-body-1"
-                                    :to="{ name: 'admin-login' }">
-                                    Admin Login
-                                </RouterLink>
-                            </VCol>
-                        </VRow>
-                    </VForm>
-                </VCardText>
-            </VCard>
-        </div>
+                        <!-- create account -->
+                        <VCol cols="12" class="text-body-1 text-center">
+                            <span class="d-inline-block"> Are you an Admin? </span>
+                            <RouterLink class="text-primary ms-1 d-inline-block text-body-1"
+                                :to="{ name: 'admin-login' }">
+                                Admin Login
+                            </RouterLink>
+                        </VCol>
+                    </VRow>
+                </VForm>
+            </VCardText>
+        </VCard>
     </div>
     <VSnackbar v-model="isSnackBarVisible" timeout="5000">
         {{ snackBarMessage }}
