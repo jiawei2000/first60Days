@@ -1,7 +1,7 @@
 # Environment variables and secrets
 env:
-  - variable: JWT_SECRET
-    secret: JWT_SECRET
+  - variable: VITE_API_BASE_URL
+    secret: VITE_API_BASE_URL
     availability:
       - BUILD
       - RUNTIME
