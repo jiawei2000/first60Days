@@ -1,50 +1,47 @@
-// services/assistantBabiesService.js
 const axios = require('axios');
+const JournalService = require('./journalService'); // 👈 Local service
 require('dotenv').config();
 
-async function askBabies(question) {
+async function analyzeBabyHealth(babyId, question) {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-  console.log('[AssistantBabies] Key (partial):', OPENAI_API_KEY?.slice(0, 10));
+  
 
+  if (!babyId || !question) {
+    throw new Error('Missing babyId or question');
+  }
+
+  // ✅ Fetch journal entries directly via service
+  const journalEntries = await JournalService.getEntries(babyId);
+
+  // 🧼 Clean feedType for better readability
+  const cleanedEntries = journalEntries.map(entry => ({
+    ...entry,
+    feedType: Array.isArray(entry.feedType)
+      ? entry.feedType.map(f => `${f.type} (${f.value} ${f.unit})`)
+      : [],
+  }));
+
+  // 🧠 Prompt for OpenAI
   const prompt = `
-You are an assistant that converts natural language questions about BABIES
-into Firestore filter queries.
+You are a baby health analyzer. You will receive a list of baby journal entries.
+Each entry contains information like feeding, sleeping, stool, and urine events.
 
-Collection: "babies"
-Fields:
-- name (string)
-- dob (timestamp)
-- createdAt (timestamp)
-- deletedAt (timestamp or null)
-- expectedDueDate (timestamp)
-- term (number)
-- weight (number)
-- healthConditions (string)
-- gender (string)
-- height (number)
-- vaccination (string)
-- allergies (string)
+Your job is to analyze the entries and answer a user's question using this data.
+Be concise, insightful, and use bullet points if needed.
 
-Given a question, respond ONLY with a JSON like:
-{
-  "collection": "babies",
-  "filters": [
-    { "field": "gender", "op": "==", "value": "Female" },
-    { "field": "deletedAt", "op": "==", "value": null }
-  ],
-  "sort": { "field": "dob", "direction": "asc" },
-  "limit": 50
-}
+📊 Baby Journal Data:
+${JSON.stringify(cleanedEntries.slice(-30), null, 2)}
 
-Question: "${question}"
+❓ Question: ${question}
 `;
 
+  // 🎯 Call OpenAI
   const response = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2,
+      temperature: 0.3,
     },
     {
       headers: {
@@ -55,10 +52,7 @@ Question: "${question}"
     }
   );
 
-  const text = response.data.choices[0].message.content;
-  const jsonStart = text.indexOf('{');
-  const json = JSON.parse(text.slice(jsonStart));
-  return json;
+  return response.data.choices?.[0]?.message?.content || 'No response.';
 }
 
-module.exports = { askBabies };
+module.exports = { analyzeBabyHealth };

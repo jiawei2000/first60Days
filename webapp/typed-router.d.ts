@@ -33,6 +33,7 @@ declare module 'vue-router/auto-routes' {
     'profile': RouteRecordInfo<'profile', '/profile', Record<never, never>, Record<never, never>>,
     'second-page': RouteRecordInfo<'second-page', '/second-page', Record<never, never>, Record<never, never>>,
     'trainer': RouteRecordInfo<'trainer', '/trainer', Record<never, never>, Record<never, never>>,
+    'trainer-baby-assistant-id': RouteRecordInfo<'trainer-baby-assistant-id', '/trainer/baby_assistant/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'trainer-journal-entries-journal-entries': RouteRecordInfo<'trainer-journal-entries-journal-entries', '/trainer/journal_entries/journal_entries', Record<never, never>, Record<never, never>>,
     'trainer-login': RouteRecordInfo<'trainer-login', '/trainer/login', Record<never, never>, Record<never, never>>,
     'trainer-user-manage-users': RouteRecordInfo<'trainer-user-manage-users', '/trainer/user/manage-users', Record<never, never>, Record<never, never>>,

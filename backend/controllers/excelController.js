@@ -40,6 +40,48 @@ const excelController = {
             });
         }
     },
+    async importJournalEntriesFromExcel(req, res) {
+        const { babyId } = req.params;
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded.' });
+        }
+        try {
+            const importedCount =
+                await ExcelService.importJournalEntriesFromExcel(
+                    babyId,
+                    req.file.buffer
+                );
+            return res.status(200).json({
+                message: `Successfully imported ${importedCount} journal entries.`,
+            });
+        } catch (err) {
+            console.error('Failed to import journal entries:', err);
+            return res.status(500).json({
+                message: 'Failed to import journal entries.',
+            });
+        }
+    },
+    async importFakeDataExcel(req, res) {
+        const { babyId } = req.params;
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded.' });
+        }
+        try {
+            const importedCount =
+                await ExcelService.importFakeDataExcel(
+                    babyId,
+                    req.file.buffer
+                );
+            return res.status(200).json({
+                message: `Successfully imported ${importedCount} journal entries.`,
+            });
+        } catch (err) {
+            console.error('Failed to import journal entries:', err);
+            return res.status(500).json({
+                message: 'Failed to import journal entries.',
+            });
+        }
+    },
 }
 
 module.exports = excelController;

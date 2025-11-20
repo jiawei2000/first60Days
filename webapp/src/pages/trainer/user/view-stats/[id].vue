@@ -1,20 +1,33 @@
 <template>
   <div>
     <!-- 🧠 Page Header -->
-    <div class="d-flex align-center justify-space-between mb-4">
-      <h2 class="text-h4 font-weight-bold">Statistics for {{ babyName }}</h2>
+<div class="d-flex align-center justify-space-between mb-4">
+  <h2 class="text-h4 font-weight-bold">Statistics for {{ babyName }}</h2>
 
-      <VBtnToggle
-        v-model="timeFrame"
-        divided
-        color="primary"
-        density="comfortable"
-        class="ml-auto"
-      >
-        <VBtn value="daily">Daily</VBtn>
-        <VBtn value="weekly">Weekly</VBtn>
-      </VBtnToggle>
-    </div>
+  <div class="d-flex align-center">
+    <VBtnToggle
+      v-model="timeFrame"
+      divided
+      color="primary"
+      density="comfortable"
+      class="mr-4"
+    >
+      <VBtn value="daily">Daily</VBtn>
+      <VBtn value="weekly">Weekly</VBtn>
+    </VBtnToggle>
+
+    <!-- 🔄 Toggle -->
+    <VBtn
+      variant="tonal"
+      color="primary"
+      size="small"
+      @click="goToOtherPage"
+    >
+      🔄 Switch to Schedule
+    </VBtn>
+  </div>
+</div>
+
 
     <VCard>
       <VCardText>
@@ -68,168 +81,202 @@
 
       <VDivider />
 
-        <VWindow v-model="activeTab" class="pa-4">
-  <!-- 🧭 Shared Date Picker (Top for both Summary & Trends) -->
-  <div class="d-flex align-center justify-end mb-2" style="position: relative; z-index: 10;">
-    <VMenu
-      v-model="dateMenu"
-      transition="scale-transition"
-      location="bottom end"
-      offset-y
-      max-width="290"
-      min-width="auto"
-    >
-      <template #activator="{ props }">
-        <VBtn
-          v-bind="props"
-          variant="flat"
-          color="primary"
-          size="small"
-          rounded="lg"
-          elevation="1"
-        >
-          {{ selectedDate ? selectedDate.toISOString().split('T')[0] : 'Select date' }}
-        </VBtn>
-      </template>
+      <VWindow v-model="activeTab" class="pa-4">
 
-      <VDatePicker
-        v-model="selectedDate"
-        color="primary"
-        :max="new Date()"
-        @update:model-value="() => {
-          updateStatsForSelectedDate()
-          dateMenu.value = false
-        }"
-      />
-    </VMenu>
-  </div>
+        <!-- 🧭 Shared Date Picker -->
+        <div v-if="timeFrame === 'daily'" class="d-flex align-center justify-end mb-2" style="position: relative; z-index: 10;">
+          <VMenu
+            v-model="dateMenu.value"
+            transition="scale-transition"
+            location="bottom end"
+            offset-y
+            max-width="290"
+            min-width="auto"
+            :close-on-content-click="false"
+          >
+            <template #activator="{ props }">
+              <VBtn
+                v-bind="props"
+                variant="flat"
+                color="primary"
+                size="small"
+                rounded="lg"
+                elevation="1"
+              >
+                {{ selectedDate ? formatLocalDate(selectedDate) : 'Select date' }}
 
-  <!-- 🟩 SUMMARY TAB -->
-  <VWindowItem value="summary">
-    <VCardText>
-      <h3 class="text-h5 font-weight-medium mb-4">
-        {{ timeFrame === 'daily' ? 'Daily Summary' : 'Weekly Summary' }}
-      </h3>
+              </VBtn>
+            </template>
 
-      <p v-if="timeFrame === 'weekly' && currentWeekLabel" class="text-caption text-medium-emphasis mb-4">
-        Showing week: <strong>{{ currentWeekLabel }}</strong>
-      </p>
+            <VDatePicker
+              v-model="selectedDate"
+              color="primary"
+              :max="new Date()"
+              @update:modelValue="() => {
+                updateStatsForSelectedDate()
+                dateMenu.value = false
+              }"
+            />
+          </VMenu>
+        </div>
 
-      <VRow>
-        <VCol
-          v-for="metric in metricOptions"
-          :key="metric.value"
-          cols="12"
-          sm="6"
-          md="4"
-        >
-          <VCard class="pa-4" elevation="1">
-            <div class="d-flex align-center justify-space-between">
+        <!-- 🟩 SUMMARY TAB -->
+        <VWindowItem value="summary">
+          <VCardText>
+            <h3 class="text-h5 font-weight-medium mb-4">
+              {{ timeFrame === 'daily' ? 'Daily Summary' : 'Weekly Summary' }}
+            </h3>
+
+            <!-- Week Dropdown (Weekly Only) -->
+<div v-if="timeFrame === 'weekly'" class="mb-4" style="max-width: 200px;">
+  <VSelect
+    v-model="selectedWeek"
+    :items="weekOptions"
+    item-title="title"
+    item-value="value"
+    label="Select Week"
+    density="comfortable"
+    variant="outlined"
+    hide-details
+  />
+</div>
+
+
+            <p
+              v-if="timeFrame === 'weekly' && currentWeekLabel"
+              class="text-caption text-medium-emphasis mb-4"
+            >
+              Showing week: <strong>{{ currentWeekLabel }}</strong>
+            </p>
+
+            <VRow>
+              <VCol
+                v-for="metric in metricOptions"
+                :key="metric.value"
+                cols="12"
+                sm="6"
+                md="4"
+              >
+                <VCard class="pa-4" elevation="1">
+                  <div class="d-flex align-center justify-space-between">
+
+                    <!-- ICON + TITLE -->
+                    <div>
+                      <p class="text-subtitle-1 font-weight-medium mb-1">
+                        <!-- 🎨 ICONS INSERTED HERE -->
+                        <span v-if="metric.value === 'totalFeeds'">🍼 </span>
+                        <span v-else-if="metric.value === 'totalUrineCount'">🚽 </span>
+                        <span v-else-if="metric.value === 'totalStoolCount'">💩 </span>
+                        <span v-else-if="metric.value === 'totalSleepDuration'">😴 </span>
+                        <span v-else-if="metric.value === 'totalPlayDuration'">🎈 </span>
+                        <span v-else-if="metric.value === 'monInterval'">⏱ </span>
+                        <span v-else-if="metric.value === 'averagePlayDuration'">🎡 </span>
+                        <span v-else-if="metric.value === 'averageLapseDuration'">⏲ </span>
+                        <span v-else-if="metric.value === 'averageMilkIntake'">🍼 </span>
+                        <span v-else-if="metric.value === 'totalCyclesBeyond3Hrs'">🔁 </span>
+
+                        {{ metric.title }}
+                      </p>
+
+                      <p class="text-body-2 text-medium-emphasis mb-0">
+                        Current: {{ formatMetric(metric.value, latestValue(metric.value)) }}
+                      </p>
+                      <p class="text-body-2 text-medium-emphasis mb-0">
+                        Average To Date: {{ getAverage(metric.value) }}
+                      </p>
+                    </div>
+
+                    <!-- STATUS CHIP -->
+                    <VChip
+                      :color="getThresholdStatus(metric.value).color"
+                      text-color="white"
+                      label
+                      size="small"
+                    >
+                      {{ getThresholdStatus(metric.value).label }}
+                    </VChip>
+
+                  </div>
+                </VCard>
+              </VCol>
+            </VRow>
+          </VCardText>
+        </VWindowItem>
+
+        <!-- 📈 TRENDS TAB -->
+        <VWindowItem value="trends">
+          <VCardText>
+            <p class="text-caption text-medium-emphasis text-end mb-4">
+              Showing last 7 days up to
+              <strong>{{ selectedDate ? formatLocalDate(selectedDate) : '' }}</strong>
+
+            </p>
+
+            <!-- Metric Selector -->
+            <VSelect
+              v-model="selectedMetric"
+              :items="metricOptions"
+              :item-title="item => `${item.title}`"
+              item-value="value"
+              label="Select Metric"
+              density="compact"
+              hide-details
+              variant="outlined"
+              class="mb-4"
+            />
+
+            <!-- Chart Heading -->
+            <div class="d-flex align-center justify-space-between mb-6">
               <div>
-                <p class="text-subtitle-1 font-weight-medium mb-1">
-                  {{ metric.title }}
-                </p>
-                <p class="text-body-2 text-medium-emphasis mb-0">
-                  Current: {{ formatMetric(metric.value, latestValue(metric.value)) }}
-                </p>
-                <p class="text-body-2 text-medium-emphasis mb-0">
-                  Average To Date: {{ getAverage(metric.value) }}
-                </p>
+                <p class="text-body-1 mb-1">{{ currentLabel }}</p>
+                <h2 class="text-h4 font-weight-bold">{{ totalDisplay }}</h2>
+
+                <div
+                  v-if="percentChange !== null"
+                  :class="[
+                    'd-flex align-center gap-1',
+                    percentChange >= 0 ? 'text-success' : 'text-error',
+                  ]"
+                >
+                  <img
+                    :src="percentChange >= 0 ? upArrow : downArrow"
+                    alt="arrow"
+                    style="width: 20px; height: 20px"
+                  />
+                  <span>
+                    {{ Math.abs(percentChange) }}% from previous
+                    {{ timeFrame === 'daily' ? 'day' : 'week' }}
+                  </span>
+                </div>
               </div>
 
-              <VChip
-  :color="getThresholdStatus(metric.value).color"
-  text-color="white"
-  label
-  size="small"
->
-  {{ getThresholdStatus(metric.value).label }}
-</VChip>
+              <div class="text-center">
+                <VCircularProgress
+                  :model-value="circleValue"
+                  color="primary"
+                  size="70"
+                  width="6"
+                />
+                <div class="text-caption mt-2">
+                </div>
+                <div class="text-caption text-medium-emphasis">
+                  Avg: {{ averageDisplay }}
+                </div>
+              </div>
             </div>
-          </VCard>
-        </VCol>
-      </VRow>
-    </VCardText>
-  </VWindowItem>
 
-  <!-- 📈 TRENDS TAB -->
-  <VWindowItem value="trends">
-    <VCardText>
-      <p class="text-caption text-medium-emphasis text-end mb-4">
-        Showing last 7 days up to
-        <strong>{{ selectedDate ? selectedDate.toISOString().split('T')[0] : '' }}</strong>
-      </p>
-
-      <!-- Metric Selector -->
-      <VSelect
-        v-model="selectedMetric"
-        :items="metricOptions"
-        :item-title="item => `${item.title}`"
-        item-value="value"
-        label="Select Metric"
-        density="compact"
-        hide-details
-        variant="outlined"
-        class="mb-4"
-      />
-
-      <!-- Chart Header + Progress -->
-      <div class="d-flex align-center justify-space-between mb-6">
-        <div>
-          <p class="text-body-1 mb-1">{{ currentLabel }}</p>
-          <h2 class="text-h4 font-weight-bold">{{ totalDisplay }}</h2>
-          <div
-            v-if="percentChange !== null"
-            :class="[
-              'd-flex align-center gap-1',
-              percentChange >= 0 ? 'text-success' : 'text-error',
-            ]"
-          >
-            <img
-              :src="percentChange >= 0 ? upArrow : downArrow"
-              alt="arrow"
-              style="width: 20px; height: 20px"
+            <!-- LINE CHART -->
+            <ApexChart
+              v-if="chartReady"
+              type="line"
+              height="250"
+              :options="chartOptions"
+              :series="chartSeries"
             />
-            <span>
-              {{ Math.abs(percentChange) }}% from previous
-              {{ timeFrame === 'daily' ? 'day' : 'week' }}
-            </span>
-          </div>
-        </div>
+          </VCardText>
+        </VWindowItem>
 
-        <div class="text-center">
-          <VCircularProgress
-            :model-value="circleValue"
-            color="primary"
-            size="70"
-            width="6"
-          />
-          <div class="text-caption mt-2">
-            Today:
-            {{
-              getFormattedValue(
-                selectedMetric.value,
-                activeStats.at(-1)?.[selectedMetric.value]
-              )
-            }}
-          </div>
-          <div class="text-caption text-medium-emphasis">
-            Avg: {{ averageDisplay }}
-          </div>
-        </div>
-      </div>
-
-      <!-- 📊 Chart -->
-      <ApexChart
-        v-if="chartReady"
-        type="line"
-        height="250"
-        :options="chartOptions"
-        :series="chartSeries"
-      />
-    </VCardText>
-  </VWindowItem>
-</VWindow>
+      </VWindow>
     </VCard>
   </div>
 </template>
@@ -237,19 +284,20 @@
 
   <script setup lang="js">
   import { ref, computed, onMounted, watch } from 'vue'
-  import { useRoute } from 'vue-router'
   import VueApexCharts from 'vue3-apexcharts'
   import upArrow from '@/assets/images/cards/up.png'
   import downArrow from '@/assets/images/cards/down.png'
   import entry from '@/assets/images/cards/fitbit-watch.png'
   import baby from '@/assets/images/cards/chart-success.png'
+  import { useRoute, useRouter } from "vue-router"
 
   const ApexChart = VueApexCharts
-  const route = useRoute()
+const route = useRoute()
+const router = useRouter()
   const babyId = route.params.id
   const babyName = ref('')
   const babyAgeWeeks = ref(0)
-  const dateMenu = ref(false)
+  const dateMenu = ref({ value: false })
 
   const stats = ref([])
   const weeklyStats = ref([])
@@ -264,18 +312,20 @@
   const currentWeekLabel = ref(null)
   const dailyThresholds = ref(null)
 const weeklyThresholds = ref(null)
+const selectedWeek = ref(null)
 
   try {
     const res = await $api(`/babies/${babyId}`, { method: 'GET' })
     babyName.value = res.name || 'Baby'
-    const dob = new Date(res.dob._seconds * 1000)
-    const now = new Date()
-    const ageInMs = now - dob
-    const ageInWeeks = Math.floor(ageInMs / (1000 * 60 * 60 * 24 * 7))
-    babyAgeWeeks.value = ageInWeeks
   } catch (e) {
     console.error('Failed to fetch baby profile:', e)
   }
+  const weekOptions = computed(() =>
+  weeklyStats.value.map(w => ({
+    title: `Week ${w.day}`,
+    value: w.day
+  }))
+)
 
   async function updateStatsForSelectedDate() {
   if (timeFrame.value === 'daily') {
@@ -299,19 +349,29 @@ const weeklyThresholds = ref(null)
 }
 
   async function fetchJournalEntries() {
-    try {
-      const res = await $api(`/journalEntries/${babyId}`, { method: 'GET' })
-      const entries = res || []
-      currentCycle.value = Math.max(...entries.map(e => e.cycleNo || 0))
-      const today = new Date().toISOString().split('T')[0]
-      entriesToday.value = entries.filter(e => {
-        const awakeDate = new Date(e.awakeTime._seconds * 1000).toISOString().split('T')[0]
-        return awakeDate === today
-      }).length
-    } catch (err) {
-      console.error('Failed to fetch journal entries:', err)
-    }
+  try {
+    const res = await $api(`/journalEntries/${babyId}`, { method: 'GET' })
+    const entries = res || []
+
+    currentCycle.value = Math.max(...entries.map(e => e.cycleNo || 0))
+
+    // ✅ FIXED: use local date instead of UTC ISO
+    const today = formatLocalDate(new Date())
+
+    entriesToday.value = entries.filter(e => {
+      const awakeDate = formatLocalDate(new Date(e.awakeTime._seconds * 1000))
+      return awakeDate === today
+    }).length
+
+  } catch (err) {
+    console.error('Failed to fetch journal entries:', err)
   }
+}
+
+
+  function formatLocalDate(d) {
+  return d.toLocaleDateString('en-CA') // YYYY-MM-DD
+}
 
   async function fetchThresholds() {
   try {
@@ -382,26 +442,56 @@ function getThresholdStatus(metricKey) {
 
 
 
-  async function fetchWeeklyStats() {
-    try {
-      const res = await $api(`/statistics/weekly/baby/${babyId}`, { method: 'GET' })
-      weeklyStats.value = res.data?.statistics.map((s, index) => ({
-        day: s.week || index + 1,
-        totalFeeds: s.totalFeeds,
-        totalUrineCount: s.totalUrineCount,
-        totalStoolCount: s.totalStoolCount,
-        totalSleepDuration: s.totalSleepDuration,
-        totalPlayDuration: s.totalPlayDuration,
-        totalCyclesBeyond3Hrs: s.totalCyclesBeyond3Hrs,
-        monInterval: s.averageMonInterval,
-        averageMilkIntake: s.averageMilkIntake,
-        averagePlayDuration: s.averagePlayDuration,
-        averageLapseDuration: s.averageLapseDuration,
-      }))
-    } catch (err) {
-      console.error('Failed to load weekly stats:', err)
-    }
+async function fetchWeeklyStats() {
+  try {
+    const res = await $api(`/statistics/weekly/baby/${babyId}`, { method: 'GET' })
+
+    const statsArr = res.data?.statistics || []
+
+    weeklyStats.value = statsArr.map((s, index) => ({
+      day: s.week || index + 1,
+      totalFeeds: s.totalFeeds,
+      totalUrineCount: s.totalUrineCount,
+      totalStoolCount: s.totalStoolCount,
+      totalSleepDuration: s.totalSleepDuration,
+      totalPlayDuration: s.totalPlayDuration,
+      totalCyclesBeyond3Hrs: s.totalCyclesBeyond3Hrs,
+      monInterval: s.averageMonInterval,
+      averageMilkIntake: s.averageMilkIntake,
+      averagePlayDuration: s.averagePlayDuration,
+      averageLapseDuration: s.averageLapseDuration,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      rawWeek: s.week
+    }))
+
+    // 🔥 SET BABY AGE BASED ON LATEST WEEK NUMBER
+if (statsArr.length > 0) {
+  const latest = statsArr[statsArr.length - 1]
+  babyAgeWeeks.value = latest.week
+
+  // Set dropdown default to the latest week
+  selectedWeek.value = latest.week
+
+  // Set summary stats to that week
+  stats.value = [latest]
+  currentWeekLabel.value = `${latest.startDate} → ${latest.endDate}`
+}
+
+  } catch (err) {
+    console.error('Failed to load weekly stats:', err)
   }
+}
+
+function updateSelectedWeek() {
+  if (!selectedWeek.value) return
+  const selected = weeklyStats.value.find(w => w.day === selectedWeek.value)
+  if (selected) {
+    stats.value = [selected]
+    currentWeekLabel.value = `${selected.startDate} → ${selected.endDate}`
+  }
+}
+
 
   async function fetchDailyStats() {
     try {
@@ -418,7 +508,7 @@ function getThresholdStatus(metricKey) {
         const currentDate = new Date(startDate)
         currentDate.setDate(startDate.getDate() + i)
 
-        const isoDate = currentDate.toISOString().split('T')[0] // convert to YYYY-MM-DD string
+        const isoDate = formatLocalDate(currentDate)// convert to YYYY-MM-DD string
         const dayData = allStats.find(d => d.date === isoDate)  
 
         filteredStats.push(dayData ? { ...dayData, date: isoDate } : {
@@ -446,6 +536,8 @@ function getThresholdStatus(metricKey) {
 
 
   watch(selectedDate, updateStatsForSelectedDate)
+  watch(selectedWeek, updateSelectedWeek)
+
 
 
   const metricOptions = [
@@ -453,19 +545,25 @@ function getThresholdStatus(metricKey) {
     { title: 'Total Urine Count', value: 'totalUrineCount' },
     { title: 'Total Stool Count', value: 'totalStoolCount' },
     { title: 'Cycles Beyond 3 hours', value: 'totalCyclesBeyond3Hrs' },
-    { title: 'Total Sleep Duration', value: 'totalSleepDuration' },
-    { title: 'Total Play Duration', value: 'totalPlayDuration' },
-    { title: 'MON Interval', value: 'monInterval' },
-    { title: 'Avg Play Duration Per Entry', value: 'averagePlayDuration' },
-    { title: 'Lapse Duration', value: 'averageLapseDuration' },
+    { title: 'Total Sleep Duration(HH:MM)', value: 'totalSleepDuration' },
+    { title: 'Total Play Duration(HH:MM)', value: 'totalPlayDuration' },
+    { title: 'MON Interval(HH:MM)', value: 'monInterval' },
+    { title: 'Avg Play Duration Per Entry(HH:MM)', value: 'averagePlayDuration' },
+    { title: 'Lapse Duration(HH:MM)', value: 'averageLapseDuration' },
     { title: 'Avg Milk Intake Per Entry', value: 'averageMilkIntake' },
   ]
 
-  const activeStats = computed(() => {
-    const data = timeFrame.value === 'daily' ? stats.value : weeklyStats.value
-    return [...data].sort((a, b) => (a.date || a.day) > (b.date || b.day) ? 1 : -1)
-  })
+const activeStats = computed(() => {
+  if (timeFrame.value === 'daily') {
+    return [...stats.value].sort((a, b) => (a.date > b.date ? 1 : -1))
+  }
 
+  // WEEKLY MODE — use only the selected week's stats
+  const selected = weeklyStats.value.find(w => w.day === selectedWeek.value)
+  if (!selected) return []
+
+  return [selected]
+})
   function parseDuration(str) {
     if (!str || typeof str !== 'string') return 0
     const [h, m] = str.split(':').map(Number)
@@ -481,75 +579,20 @@ function getThresholdStatus(metricKey) {
       'averageLapseDuration',
     ].includes(metric)
   }
-
-  async function updateSummary() {
-  if (timeFrame.value === 'daily') {
-    await fetchDailyStats()
-  } else {
-    const picked = new Date(summaryDate.value)
-    const week = weeklyStats.value.find(w => {
-      const start = new Date(w.startDate)
-      const end = new Date(w.endDate)
-      return picked >= start && picked <= end
-    })
-    if (week) {
-      currentWeekLabel.value = `${week.startDate} → ${week.endDate}`
-      stats.value = [week]
-    } else {
-      currentWeekLabel.value = null
-      stats.value = []
-    }
+function formatMetric(metric, value) {
+  if (!metric || value === undefined || value === null) {
+    return '0'
   }
+
+  if (isDurationField(metric)) {
+    const totalMin = parseDuration(value)
+    const h = Math.floor(totalMin / 60)
+    const m = Math.round(totalMin % 60)
+    return `${h}h ${m}m`
+  }
+
+  return Number(value).toFixed(2)
 }
-
-  function formatMetric(metric, value) {
-    if (isDurationField(metric)) {
-      const totalMin = parseDuration(value)
-      const h = Math.floor(totalMin / 60)
-      const m = Math.round(totalMin % 60)
-      return `${h}h ${m}m`
-    }
-    return value ?? 0
-  }
-
-  function getFormattedValue(metric, rawValue) {
-    return formatMetric(metric, rawValue)
-  }
-
-  const thresholds = {
-    totalFeeds: { warning: 3, watch: 5 },
-    totalUrineCount: { warning: 2, watch: 4 },
-    totalStoolCount: { warning: 1, watch: 2 },
-    totalSleepDuration: { warning: 600, watch: 720 },
-    totalPlayDuration: { warning: 30, watch: 60 },
-    monInterval: { warning: 0, watch: 30 },
-    averageMilkIntake: { warning: 30, watch: 45 },
-  }
-
-  function getStatus(metric, value) {
-    const t = thresholds[metric]
-    if (!t) return 'normal'
-    const val = isDurationField(metric) ? parseDuration(value) : Number(value)
-    if (val <= t.warning) return 'warning'
-    if (val <= t.watch) return 'watch'
-    return 'normal'
-  }
-
-  function getStatusLabel(metric) {
-    const latest = activeStats.value.at(-1)?.[metric]
-    const level = getStatus(metric, latest)
-    if (level === 'warning') return 'WARNING'
-    if (level === 'watch') return 'WATCH'
-    return 'NORMAL'
-  }
-
-  function getStatusColor(metric) {
-    const latest = activeStats.value.at(-1)?.[metric]
-    const level = getStatus(metric, latest)
-    if (level === 'warning') return 'error'
-    if (level === 'watch') return 'warning'
-    return 'success'
-  }
 
   function latestValue(metric) {
     return activeStats.value.at(-1)?.[metric] ?? 0
@@ -566,20 +609,23 @@ function getThresholdStatus(metricKey) {
       const m = Math.round(avg % 60)
       return `${h}h ${m}m`
     }
-    return avg.toFixed(1)
+    return avg.toFixed(2)
   }
 
-  const chartSeries = computed(() => {
-    const metric = selectedMetric.value
-    return [
-      {
-        name: metric,
-        data: activeStats.value.map(s =>
-          isDurationField(metric) ? parseDuration(s[metric]) : Number(s[metric])
-        ),
-      },
-    ]
-  })
+const chartSeries = computed(() => {
+  const metric = selectedMetric.value
+  const source = timeFrame.value === 'weekly' ? weeklyStats.value : activeStats.value
+
+  return [
+    {
+      name: metric,
+      data: source.map(s =>
+        isDurationField(metric) ? parseDuration(s[metric]) : Number(s[metric])
+      ),
+    },
+  ]
+})
+
 
   const chartOptions = computed(() => ({
     chart: {
@@ -589,24 +635,51 @@ function getThresholdStatus(metricKey) {
     },
     stroke: { curve: 'smooth', width: 3 },
     xaxis: {
-      categories: activeStats.value.map((s, i) =>
-        timeFrame.value === 'weekly' ? `Week ${s.day}` : s.date || `Day ${s.day}`
-      ),
-      labels: { style: { colors: '#ccc', fontSize: '12px' } },
-    },
+  categories: (timeFrame.value === 'weekly' ? weeklyStats.value : activeStats.value)
+    .map((s, i) =>
+      timeFrame.value === 'weekly'
+        ? `Week ${s.day}`
+        : s.date || `Day ${s.day}`
+    ),
+  labels: { style: { colors: '#ccc', fontSize: '12px' } },
+},
     yaxis: {
-      title: {
-        text: currentLabel.value,
-        style: {
-          color: '#ccc',
-          fontSize: '14px',
-          fontWeight: 500,
-        },
-      },
-      labels: { style: { colors: '#ccc', fontSize: '12px' } },
-      min: 0,
-      tickAmount: 4,
+  title: {
+    text: currentLabel.value,
+    style: {
+      color: '#ccc',
+      fontSize: '14px',
+      fontWeight: 500,
     },
+  },
+  labels: {
+    style: { colors: '#ccc', fontSize: '12px' },
+    formatter: (val) => {
+      // Duration metrics use minutes internally -> convert to HH:MM
+      if (isDurationField(selectedMetric.value)) {
+        if (!val || isNaN(val)) return '00:00'
+
+        const hours = Math.floor(val / 60)
+        const mins = Math.floor(val % 60)
+        const h = hours.toString().padStart(2, '0')
+        const m = mins.toString().padStart(2, '0')
+        return `${h}:${m}`
+      }
+
+      // Non-duration metrics -> just show raw number
+      return Number(val).toFixed(0)
+    }
+  },
+  min: 0,
+  tickAmount: 4,
+}
+,tooltip: {
+    theme: 'dark',
+    style: {
+      fontSize: '12px',
+      color: '#FFFFFF'
+    }
+  },
     colors: ['#7367F0'],
   }))
 
@@ -626,8 +699,31 @@ function getThresholdStatus(metricKey) {
       const m = total % 60
       return `${h}h ${m}m`
     }
-    return total
+    return total.toFixed(2)
   })
+
+  const isStatsPage = computed(() =>
+  route.path.includes('/trainer/user/view-stats/')
+)
+
+function getTodayValue(metric) {
+  const todayRow = activeStats.value.at(-1)
+  if (!todayRow) return 0
+  return todayRow[metric] ?? 0
+}
+
+function goToOtherPage() {
+  console.log('clicked')
+  const id = route.params.id
+
+  if (isStatsPage.value) {
+    // go to baby schedule
+    router.push(`/trainer/user/view-baby/${id}`)
+  } else {
+    // go to baby stats
+    router.push(`/trainer/user/view-stats/${id}`)
+  }
+}
 
   const averageDisplay = computed(() => getAverage(selectedMetric.value))
 
@@ -638,7 +734,7 @@ function getThresholdStatus(metricKey) {
     const t = isDurationField(metric) ? parseDuration(today) : Number(today)
     const p = isDurationField(metric) ? parseDuration(prev) : Number(prev)
     if (isNaN(t) || isNaN(p) || p === 0) return null
-    return parseFloat(((t - p) / p * 100).toFixed(1))
+    return parseFloat(((t - p) / p * 100).toFixed(2))
   })
 
   const circleValue = computed(() => {

@@ -2,6 +2,7 @@
 import { useConfigStore } from '@core/stores/config'
 import { AppContentLayoutNav } from '@layouts/enums'
 import { switchToVerticalNavOnLtOverlayNavBreakpoint } from '@layouts/utils'
+import { isUiLoading } from '@/utils/loading-indicator'
 
 const DefaultLayoutWithHorizontalNav = defineAsyncComponent(() => import('./components/DefaultLayoutWithHorizontalNav.vue'))
 const DefaultLayoutWithVerticalNav = defineAsyncComponent(() => import('./components/DefaultLayoutWithVerticalNav.vue'))
@@ -22,11 +23,17 @@ const refLoadingIndicator = ref(null)
 
 watch([
   isFallbackStateActive,
+  isUiLoading,
   refLoadingIndicator,
 ], () => {
-  if (isFallbackStateActive.value && refLoadingIndicator.value)
+  if (!refLoadingIndicator.value)
+    return
+
+  const shouldShow = isFallbackStateActive.value || isUiLoading.value
+
+  if (shouldShow)
     refLoadingIndicator.value.fallbackHandle()
-  if (!isFallbackStateActive.value && refLoadingIndicator.value)
+  else
     refLoadingIndicator.value.resolveHandle()
 }, { immediate: true })
 // !SECTION

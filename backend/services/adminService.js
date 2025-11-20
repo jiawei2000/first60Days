@@ -77,7 +77,7 @@ class adminService {
         const token = jwt.sign(
             { id: admin.id, username: admin.username, role: 'admin' },
             JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '90m' }
         );
 
         return { token, admin };

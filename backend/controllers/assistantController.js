@@ -2,7 +2,7 @@ const admin = require('firebase-admin');
 const { Timestamp } = require('firebase-admin/firestore');
 
 // Import the 3 separate GPT query services
-const { askBabies } = require('../services/gptQueryServiceBaby');
+const { analyzeBabyHealth } = require('../services/gptQueryServiceBaby');
 const { askUsers } = require('../services/gptQueryServiceUsers');
 const { askTrainers } = require('../services/gptQueryServiceTrainers');
 
@@ -71,17 +71,20 @@ async function executeQuery(interpreted) {
 /**
  * 🍼 Baby Query Handler
  */
-async function handleBabyQuery(req, res) {
+async function handleBabyHealthQuery(req, res) {
+  const babyId = req.params.id;
   const { question } = req.body;
-  if (!question) return res.status(400).json({ error: 'Missing question' });
+
+  if (!babyId || !question) {
+    return res.status(400).json({ error: 'Missing babyId or question' });
+  }
 
   try {
-    const interpreted = await askBabies(question);
-    const results = await executeQuery(interpreted);
-    res.json({ interpreted, results });
+    const answer = await analyzeBabyHealth(babyId, question);
+    res.json({ answer });
   } catch (err) {
-    console.error('❌ Baby Query Error:', err);
-    res.status(500).json({ error: err.message });
+    console.error('❌ Baby Health Query Error:', err);
+    res.status(500).json({ error: 'Failed to analyze baby health data' });
   }
 }
 
@@ -120,7 +123,7 @@ async function handleTrainerQuery(req, res) {
 }
 
 module.exports = {
-  handleBabyQuery,
+  handleBabyHealthQuery,
   handleUserQuery,
   handleTrainerQuery,
 };

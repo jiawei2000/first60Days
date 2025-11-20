@@ -5,30 +5,38 @@ const isFallbackState = ref(false)
 const interval = ref()
 const showProgress = ref(false)
 
-watch([
-  progressValue,
-  isFallbackState,
-], () => {
-  if (progressValue.value > 80 && isFallbackState.value)
-    progressValue.value = 82
-  startBuffer()
-})
 function startBuffer() {
   clearInterval(interval.value)
   interval.value = setInterval(() => {
-    progressValue.value += Math.random() * (15 - 5) + 5
-    bufferValue.value += Math.random() * (15 - 5) + 6
-  }, 800)
+    if (!isFallbackState.value)
+      return
+
+    const progressIncrement = Math.random() * (20 - 8) + 8
+    const bufferIncrement = Math.random() * (20 - 10) + 10
+
+    // Cap while loading so it feels fast but never completes fully
+    progressValue.value = Math.min(progressValue.value + progressIncrement, 95)
+    bufferValue.value = Math.min(bufferValue.value + bufferIncrement, 100)
+  }, 250)
 }
 
 const fallbackHandle = () => {
+  // Already in fallback/loading state: avoid restarting animation
+  if (isFallbackState.value)
+    return
+
   showProgress.value = true
-  progressValue.value = 10
+  // Jump forward a bit so feedback feels instant
+  progressValue.value = Math.max(progressValue.value, 30)
   isFallbackState.value = true
   startBuffer()
 }
 
 const resolveHandle = () => {
+  // Already resolved/hidden: no-op
+  if (!isFallbackState.value && !showProgress.value)
+    return
+
   isFallbackState.value = false
   progressValue.value = 100
   setTimeout(() => {
@@ -36,7 +44,7 @@ const resolveHandle = () => {
     progressValue.value = 0
     bufferValue.value = 20
     showProgress.value = false
-  }, 300)
+  }, 200)
 }
 
 defineExpose({

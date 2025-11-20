@@ -7,7 +7,7 @@
                 <div class="d-flex gap-1">
                 <!-- Edit Baby -->
                 <IconBtn @click="viewBaby(item)">
-                    <VIcon icon="bx-edit" />
+                    <VIcon icon="bx-calendar" />
                 </IconBtn>
 
                 <!-- View Stats -->

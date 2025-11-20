@@ -3,13 +3,13 @@ const router = express.Router();
 
 // Import the three controller handlers
 const {
-  handleBabyQuery,
+  handleBabyHealthQuery,
   handleUserQuery,
   handleTrainerQuery,
 } = require('../controllers/assistantController');
 
 // 👶 Baby GPT Query Endpoint
-router.post('/babies/query', handleBabyQuery);
+router.post('/babies/query/:id', handleBabyHealthQuery);
 
 // 👨‍👩‍👧 User GPT Query Endpoint
 router.post('/users/query', handleUserQuery);
