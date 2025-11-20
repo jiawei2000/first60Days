@@ -6,6 +6,7 @@ import 'package:nylo_framework/nylo_framework.dart';
 import '/app/models/baby.dart';
 import '/app/controllers/home_controller.dart';
 import '/app/controllers/notification_controller.dart';
+import '/app/controllers/ai_controller.dart';
 import '/resources/widgets/safearea_widget.dart';
 import '/resources/pages/create_journal_entry_page.dart';
 import '../widgets/buttons/partials/primary_button_widget.dart';
@@ -28,9 +29,12 @@ class _HomePageState extends NyPage<HomePage> {
   bool _loading = true;
   String? _weeklyMessage;
   String? _nextFeedTime;
+  bool _sendingQuestion = false;
+  final TextEditingController _questionController = TextEditingController();
   final Random _random = Random();
   final NotificationController _notificationController =
       NotificationController();
+  final AiController _aiController = AiController();
   List<dynamic> _notifications = [];
   bool _notificationsLoading = true;
   late final VoidCallback _nextFeedTimeListener;
@@ -38,6 +42,7 @@ class _HomePageState extends NyPage<HomePage> {
   @override
   get init => () async {
         _notificationController.construct(context);
+        _aiController.construct(context);
         _nextFeedTimeListener = () {
           if (!mounted) return;
           setState(() {
@@ -74,13 +79,7 @@ class _HomePageState extends NyPage<HomePage> {
           }
         }
 
-        String? selectedMessage;
-        if (weekNo != null) {
-          final messages = weeklyMessages[weekNo];
-          if (messages != null && messages.isNotEmpty) {
-            selectedMessage = messages[_random.nextInt(messages.length)];
-          }
-        }
+        final selectedMessage = _selectWeeklyMessage(weekNo);
 
         final notifications = _parseNotifications(notificationResponse);
 
@@ -103,6 +102,7 @@ class _HomePageState extends NyPage<HomePage> {
   @override
   void dispose() {
     FeedNotifiers.nextFeedTime.removeListener(_nextFeedTimeListener);
+    _questionController.dispose();
     super.dispose();
   }
 
@@ -189,55 +189,79 @@ class _HomePageState extends NyPage<HomePage> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        // Handle dismiss
-                      },
+                      icon: const Icon(Icons.refresh),
+                      onPressed: _refreshWeeklyMessage,
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 20),
+              // const SizedBox(height: 20),
 
               /// 🟢 Progress Card
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: theme.colorScheme.outlineVariant.withOpacity(0.3),
-                  ),
-                ),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Progression",
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text("Week $displayWeek",
-                        style: theme.textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 12,
-                        color: Colors.blue,
-                        backgroundColor: Colors.grey[300],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Container(
+              //   width: double.infinity,
+              //   decoration: BoxDecoration(
+              //     color: theme.colorScheme.surfaceContainerHighest,
+              //     borderRadius: BorderRadius.circular(10),
+              //     border: Border.all(
+              //       color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+              //     ),
+              //   ),
+              //   padding: const EdgeInsets.all(20),
+              //   child: Column(
+              //     crossAxisAlignment: CrossAxisAlignment.start,
+              //     children: [
+              //       Text(
+              //         "Progression",
+              //         style: theme.textTheme.titleMedium?.copyWith(
+              //           fontWeight: FontWeight.bold,
+              //         ),
+              //       ),
+              //       const SizedBox(height: 8),
+              //       Text("Week $displayWeek",
+              //           style: theme.textTheme.bodyMedium),
+              //       const SizedBox(height: 8),
+              //       ClipRRect(
+              //         borderRadius: BorderRadius.circular(20),
+              //         child: LinearProgressIndicator(
+              //           value: progress,
+              //           minHeight: 12,
+              //           color: Colors.blue,
+              //           backgroundColor: Colors.grey[300],
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
 
               const SizedBox(height: 20),
+
+              /// 🤖 Ask Baby Assistant
+              Text(
+                "Ask Baby Assistant",
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _questionController,
+                decoration: InputDecoration(
+                  hintText: "Try... How has my baby been sleeping?",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                minLines: 1,
+                maxLines: 1,
+              ),
+              const SizedBox(height: 12),
+              PrimaryButton(
+                text: _sendingQuestion ? "Sending..." : "Ask Assistant",
+                onPressed: _sendingQuestion ? null : _sendQuestion,
+              ),
+
+              // const SizedBox(height: 20),
 
               /// 🩵 Log Journal Entry Button (Full width)
               Padding(
@@ -257,7 +281,7 @@ class _HomePageState extends NyPage<HomePage> {
 
               /// 🟡 Reminders (Full width)
               _reminderTile(
-                "$babyName’s next feeding time is at ",
+                "$babyName’s next feeding time is at",
                 _nextFeedTime ?? "",
               ),
               _notificationsSection(theme),
@@ -353,5 +377,92 @@ class _HomePageState extends NyPage<HomePage> {
   Future<void> _refreshNextFeedTime() async {
     final nextFeedTime = await Keys.nextFeedTime.read();
     FeedNotifiers.nextFeedTime.value = nextFeedTime;
+  }
+
+  void _refreshWeeklyMessage() {
+    final newMessage = _selectWeeklyMessage(_weekNo);
+    if (newMessage != null) {
+      setState(() {
+        _weeklyMessage = newMessage;
+      });
+    }
+  }
+
+  String? _selectWeeklyMessage(int? weekNo) {
+    if (weekNo == null) {
+      return null;
+    }
+    final messages = weeklyMessages[weekNo];
+    if (messages == null || messages.isEmpty) {
+      return null;
+    }
+    return messages[_random.nextInt(messages.length)];
+  }
+
+  Future<void> _sendQuestion() async {
+    final question = _questionController.text.trim();
+    if (question.isEmpty) {
+      showToastWarning(
+        title: "Question required",
+        description: "Please enter a question for the assistant.",
+      );
+      return;
+    }
+
+    final babyId = await Keys.selectedBabyId.read();
+    if (babyId == null) {
+      showToastDanger(
+        title: "No baby selected",
+        description: "Please select a baby first.",
+      );
+      return;
+    }
+
+    setState(() {
+      _sendingQuestion = true;
+    });
+
+    try {
+      final response = await _aiController.askAssistant(
+            question: question,
+            babyId: babyId,
+          ) ??
+          {};
+
+      print("Response: $response");
+      String message;
+      if (response is Map && response['answer'] != null) {
+        message = response['answer'].toString();
+      } else if (response is String) {
+        message = response;
+      } else {
+        message = "Received a response.";
+      }
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text("Baby Assistant"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text("Close"),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      showToastDanger(
+        title: "Assistant error",
+        description: "Unable to fetch a response. Please try again.",
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sendingQuestion = false;
+        });
+      }
+    }
   }
 }

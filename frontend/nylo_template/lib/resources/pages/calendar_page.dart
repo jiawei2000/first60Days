@@ -185,7 +185,6 @@ class _CalendarPageState extends State<CalendarPage> {
       feedCount++;
     }
 
-    print("NExt: " + nextFeedingTimeString);
     return dayEvents;
   }
 
