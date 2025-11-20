@@ -27,7 +27,7 @@
 
 // module.exports = db;
 
-Deployment
+// Deployment
 const { initializeApp, applicationDefault, getApps } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
