@@ -51,17 +51,24 @@ class _JournalEntryFormState extends NyState<JournalEntryForm> {
           children: [
             CupertinoDateField(
                 label: 'Wake up Time',
+                icon: Icons.wb_sunny_outlined,
                 textController: widget.wakeTimeController),
             const SizedBox(height: 12),
             LabeledTextField(
               label: 'Sleep Duration (hours)',
               textController: widget.sleepDurationController,
               hintText: "e.g. 3.5",
+              icon: Icons.av_timer,
             ),
             const SizedBox(height: 12),
             CupertinoDateField(
-                label: 'Feed Time', textController: widget.feedTimeController),
-            LabeledField(label: "Feed Type", child: Container()),
+                label: 'Feed Time',
+                icon: Icons.local_cafe_outlined,
+                textController: widget.feedTimeController),
+            LabeledField(
+                label: "Feed Type",
+                icon: Icons.restaurant_menu,
+                child: Container()),
             for (int i = 0; i < widget.feedTypeControllers.length; i++) ...[
               FeedGroupRow(
                 typeController: widget.feedTypeControllers[i],
@@ -78,15 +85,19 @@ class _JournalEntryFormState extends NyState<JournalEntryForm> {
               },
             ),
             CupertinoDateField(
-                label: 'Play Time', textController: widget.playTimeController),
+                label: 'Play Time',
+                icon: Icons.sentiment_satisfied_alt_outlined,
+                textController: widget.playTimeController),
             const SizedBox(height: 12),
             CupertinoDateField(
                 label: 'Sleep Time',
+                icon: Icons.nightlight_round,
                 textController: widget.sleepTimeController),
             LabeledTextField(
                 label: 'Remarks',
                 textController: widget.remarksController,
-                hintText: "Enter remarks"),
+                hintText: "Enter remarks",
+                icon: Icons.note_alt_outlined),
             const SizedBox(height: 12),
             Row(
               children: [

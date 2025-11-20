@@ -4,7 +4,6 @@ const processStatisticsService = require('./processStatisticsService'); // Impor
 
 class ImportedStatsService {
     //a script for computing statistics of imported baby journal entries
-
     static async computeStatisticsForImportedEntries(babyId) {
         const babyRef = db.collection("babies").doc(babyId);
 
@@ -29,47 +28,6 @@ class ImportedStatsService {
             return { id: doc.id, ...doc.data() };
         });
 
-        //can combine jan - june entries together, 
-        //awakeTime, startFeedTime, startPlayTime, startSleepTime needs to be converted to June. day and year kept the same
-        //combine september - december entries together
-        //awakeTime, startFeedTime, startPlayTime, startSleepTime needs to be converted to September. day and year kept the same
-        // journalEntries.forEach(entry => {
-        //     const date = entry.awakeTime.toDate();
-        //     const month = date.getMonth() + 1;
-        //     if (month >= 1 && month <= 6) {
-        //         date.setMonth(5); // June
-        //     } else if (month >= 9 && month <= 12) {
-        //         date.setMonth(8); // September
-        //     }
-        //     entry.awakeTime = Timestamp.fromDate(date);
-        //     if (entry.startFeedTime) {
-        //         const feedDate = entry.startFeedTime.toDate();
-        //         if (month >= 1 && month <= 6) {
-        //             feedDate.setMonth(5);
-        //         } else if (month >= 9 && month <= 12) {
-        //             feedDate.setMonth(8);
-        //         }
-        //         entry.startFeedTime = Timestamp.fromDate(feedDate);
-        //     }
-        //     if (entry.startPlayTime) {
-        //         const playDate = entry.startPlayTime.toDate();
-        //         if (month >= 1 && month <= 6) {
-        //             playDate.setMonth(5);
-        //         } else if (month >= 9 && month <= 12) {
-        //             playDate.setMonth(8);
-        //         }
-        //         entry.startPlayTime = Timestamp.fromDate(playDate);
-        //     }
-        //     if (entry.startSleepTime) {
-        //         const sleepDate = entry.startSleepTime.toDate();
-        //         if (month >= 1 && month <= 6) {
-        //             sleepDate.setMonth(5);
-        //         } else if (month >= 9 && month <= 12) {
-        //             sleepDate.setMonth(8);
-        //         }
-        //         entry.startSleepTime = Timestamp.fromDate(sleepDate);
-        //     }
-        // });
         // console.log('Adjusted journal entries for statistics computation.');
         console.log(`Total entries to process: ${journalEntries.length}`);
 
@@ -93,26 +51,80 @@ class ImportedStatsService {
 
         console.log('Grouped journal entries by day for statistics computation.');
         console.log(`Total days to process: ${Object.keys(dailyEntriesMap).length}`);
-    
+
         // Compute daily statistics for each day
-        // const dailyStatistics = {};
-        // for (const [day, entries] of Object.entries(dailyEntriesMap)) {
-        //     const stats = processStatisticsService.calculateDailyStatistics(entries);
-        //     dailyStatistics[day] = stats;
-        // }
+        const dailyStatistics = {};
+        let dayCounter = 1;
+        for (const [day, entries] of Object.entries(dailyEntriesMap)) {
+            const stats = processStatisticsService.calculateDailyStatistics(entries);
+            stats.day = dayCounter; // add day identifier
+            stats.date = day; // add date for reference
+            stats.babyIDRef = babyRef; // add baby reference
 
-        // // Store computed daily statistics back to Firestore
-        // const statsCollectionRef = babyRef.collection('importedDailyStatistics');
-        // const batch = db.batch();
-        // for (const [day, stats] of Object.entries(dailyStatistics)) {
-        //     const statsDocRef = statsCollectionRef.doc(day);
-        //     batch.set(statsDocRef, stats);
-        // }
-        // await batch.commit();
-        // console.log('Stored computed daily statistics in Firestore.');
+            dailyStatistics[day] = stats;
+            dayCounter++; // increment day counter
+        }
 
-        return { message: 'Successfully computed and stored statistics for imported entries.'};
-        return { message: 'Successfully computed and stored statistics for imported entries.', data: dailyStatistics};
+        // Store computed daily statistics back to Firestore
+        const statsCollectionRef = db.collection('dailyStatistics');
+        const batch = db.batch();
+        for (const [day, stats] of Object.entries(dailyStatistics)) {
+            const statsDocRef = statsCollectionRef.doc(); // Auto-generate ID
+            batch.set(statsDocRef, stats);
+        }
+        await batch.commit();
+        console.log('Stored computed daily statistics in Firestore.');
+
+        // return { message: 'Successfully computed and stored statistics for imported entries.'};
+        return { message: 'Successfully computed and stored statistics for imported entries.', data: dailyStatistics };
+    }
+
+    //a script for computing weekly statistics based on daily statistics
+    static async computeWeeklyStatistics(babyId) {
+        const babyRef = db.collection("babies").doc(babyId);
+        if (!babyRef) {
+            throw new Error('Baby not found');
+        }
+
+        // Fetch all daily statistics for the baby
+        const dailyStatsSnapshot = await db.collection('dailyStatistics')
+            .where('babyIDRef', '==', babyRef)
+            .get();
+
+        //sorted by date
+        dailyStatsSnapshot.docs.sort((a, b) => {
+            return new Date(a.data().date) - new Date(b.data().date);
+        });
+
+        // Convert snapshot to array of daily statistics
+        const dailyStatistics = dailyStatsSnapshot.docs.map(doc => {
+            return { id: doc.id, ...doc.data() };
+        });
+        console.log(`Total daily statistics to process: ${dailyStatistics.length}`);
+
+        // Group daily statistics into weeks (7 days each)
+        const weeklyStatistics = {};
+        let weekCounter = 1;
+        for (let i = 0; i < dailyStatistics.length; i += 7) {
+            const weekDays = dailyStatistics.slice(i, i + 7);
+            const weekStats = processStatisticsService.calculateWeeklyStatistics(weekDays);
+            weekStats.week = weekCounter;
+            weekStats.babyIDRef = babyRef; // add baby reference
+
+            weeklyStatistics[`Week ${weekCounter}`] = weekStats;
+            weekCounter++;
+        }
+
+        // Store computed weekly statistics back to Firestore
+        const statsCollectionRef = db.collection('weeklyStatistics');
+        const batch = db.batch();
+        for (const [week, stats] of Object.entries(weeklyStatistics)) {
+            const statsDocRef = statsCollectionRef.doc(); // Auto-generate ID
+            batch.set(statsDocRef, stats);
+        }
+        await batch.commit();
+        console.log('Stored computed weekly statistics in Firestore.');
+        return { message: 'Successfully computed and stored weekly statistics for imported entries.', data: weeklyStatistics };
     }
 
 

@@ -1,13 +1,18 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 
-import '/config/keys.dart';
 import '/app/models/baby.dart';
 import '/app/controllers/home_controller.dart';
+import '/app/controllers/notification_controller.dart';
 import '/resources/widgets/safearea_widget.dart';
 import '/resources/pages/create_journal_entry_page.dart';
 import '../widgets/buttons/partials/primary_button_widget.dart';
 import '/resources/pages/profile_page.dart';
+import '/config/keys.dart';
+import '/config/weekly_messages.dart';
+import '/app/notifiers/feed_notifier.dart';
 
 class HomePage extends NyStatefulWidget<HomeController> {
   static RouteView path = ("/home", (_) => HomePage());
@@ -21,10 +26,30 @@ class _HomePageState extends NyPage<HomePage> {
   Baby? _baby;
   int? _weekNo;
   bool _loading = true;
+  String? _weeklyMessage;
+  String? _nextFeedTime;
+  final Random _random = Random();
+  final NotificationController _notificationController =
+      NotificationController();
+  List<dynamic> _notifications = [];
+  bool _notificationsLoading = true;
+  late final VoidCallback _nextFeedTimeListener;
 
   @override
   get init => () async {
+        _notificationController.construct(context);
+        _nextFeedTimeListener = () {
+          if (!mounted) return;
+          setState(() {
+            _nextFeedTime = FeedNotifiers.nextFeedTime.value;
+          });
+        };
+        FeedNotifiers.nextFeedTime.addListener(_nextFeedTimeListener);
         final babyId = await Keys.selectedBabyId.read();
+        final userId = await Keys.userId.read();
+        await _refreshNextFeedTime();
+
+        print("UserId: $userId");
 
         if (babyId == null) {
           NyLogger.error("No baby selected.");
@@ -38,13 +63,48 @@ class _HomePageState extends NyPage<HomePage> {
 
         final baby = await controller.fetchBabyById(babyId);
         final weekNo = await controller.fetchWeekNo(babyId);
+        dynamic notificationResponse;
+        if (userId != null) {
+          try {
+            notificationResponse =
+                await _notificationController.fetchNotifications(userId);
+            print("Notifications: $notificationResponse");
+          } catch (error) {
+            print("Error fetching notifications: $error");
+          }
+        }
+
+        String? selectedMessage;
+        if (weekNo != null) {
+          final messages = weeklyMessages[weekNo];
+          if (messages != null && messages.isNotEmpty) {
+            selectedMessage = messages[_random.nextInt(messages.length)];
+          }
+        }
+
+        final notifications = _parseNotifications(notificationResponse);
 
         setState(() {
           _baby = baby;
           _weekNo = weekNo;
+          _weeklyMessage = selectedMessage;
           _loading = false;
+          _notifications = notifications;
+          _notificationsLoading = false;
         });
       };
+
+  @override
+  void activate() {
+    super.activate();
+    _refreshNextFeedTime();
+  }
+
+  @override
+  void dispose() {
+    FeedNotifiers.nextFeedTime.removeListener(_nextFeedTimeListener);
+    super.dispose();
+  }
 
   @override
   LoadingStyle get loadingStyle => LoadingStyle.normal();
@@ -64,6 +124,8 @@ class _HomePageState extends NyPage<HomePage> {
     final progress = (_weekNo != null && _weekNo! > 0 && _weekNo! <= 10)
         ? _weekNo! / 10
         : 0.0;
+    final weeklyMessage =
+        _weeklyMessage ?? "Error loading message. Please try again later.";
 
     return Scaffold(
       appBar: AppBar(
@@ -76,16 +138,15 @@ class _HomePageState extends NyPage<HomePage> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
-            onTap: () {
-              routeTo(ProfilePage.path);
-            },
-            child: const CircleAvatar(
-              radius: 18,
-              backgroundImage:
-                  AssetImage('public/images/baby_icon_animated.png'),
+              onTap: () {
+                routeTo(ProfilePage.path);
+              },
+              child: const CircleAvatar(
+                radius: 18,
+                backgroundImage:
+                    AssetImage('public/images/baby_icon_animated.png'),
+              ),
             ),
-          ),
-
           )
         ],
       ),
@@ -123,7 +184,7 @@ class _HomePageState extends NyPage<HomePage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        "This week your baby will start to lift their head slightly and be able to turn their head towards familiar sounds.",
+                        weeklyMessage,
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),
@@ -196,14 +257,10 @@ class _HomePageState extends NyPage<HomePage> {
 
               /// 🟡 Reminders (Full width)
               _reminderTile(
-                "$babyName’s next feeding time is at",
-                "10:34 AM",
+                "$babyName’s next feeding time is at ",
+                _nextFeedTime ?? "",
               ),
-              const SizedBox(height: 12),
-              _reminderTile(
-                "$babyName’s only had 4 urine records yesterday. Try to increase fluid intake. Aim for 6-8 per day.",
-                "",
-              ),
+              _notificationsSection(theme),
             ],
           ),
         ),
@@ -251,5 +308,50 @@ class _HomePageState extends NyPage<HomePage> {
         ],
       ),
     );
+  }
+
+  List<dynamic> _parseNotifications(dynamic response) {
+    if (response is List) {
+      return response;
+    }
+    if (response is Map && response['data'] is List) {
+      return List<dynamic>.from(response['data']);
+    }
+    return [];
+  }
+
+  Widget _notificationsSection(ThemeData theme) {
+    if (_notificationsLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        if (_notifications.isEmpty)
+          _reminderTile("No notifications yet.", "")
+        else
+          ..._notifications.map(
+            (notification) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _reminderTile(
+                _formatNotificationMessage(notification),
+                "",
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _formatNotificationMessage(dynamic notification) {
+    final message = notification?['message']?.toString() ?? "No message";
+    return message;
+  }
+
+  Future<void> _refreshNextFeedTime() async {
+    final nextFeedTime = await Keys.nextFeedTime.read();
+    FeedNotifiers.nextFeedTime.value = nextFeedTime;
   }
 }

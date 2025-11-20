@@ -5,11 +5,10 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 
 // protected
 //create ageGroupStatistics record
-router.post('/ageGroup', authenticateToken, statisticsController.createAgeGroupStatistics);
+router.post('/ageGroup', statisticsController.createAgeGroupStatistics);
 
 //create StatisticsbyGender record
 router.post('/gender', statisticsController.createStatisticsByGender);
-
 
 //get ageGroupStatistics record by Id
 router.get('/ageGroup/:statisticId', authenticateToken,statisticsController.getAgeGroupStatisticsById);
@@ -33,9 +32,9 @@ router.get('/gender/:statisticId', authenticateToken, statisticsController.getSt
 router.get('/ageGroup', authenticateToken, statisticsController.getAllAgeGroupStatistics);
 
 // // get all StatisticsbyGender records
-// router.get('/gender', authenticateToken, statisticsController.getAllGenderStatistics);
+router.get('/gender', authenticateToken, statisticsController.getAllGenderStatistics);
 
 // // recompute and store daily statistics by statisticId
-// router.post('/recompute/daily/:statisticId', statisticsController.recomputeDailyStatisticsById);
+router.post('/recompute/daily/:statisticId', statisticsController.recomputeDailyStatisticsById);
 
 module.exports = router

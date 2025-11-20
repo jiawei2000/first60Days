@@ -1,7 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import 'package:flutter/material.dart';
-import '/resources/widgets/buttons/buttons.dart';
 
 /* JournalEntry Form
 |--------------------------------------------------------------------------

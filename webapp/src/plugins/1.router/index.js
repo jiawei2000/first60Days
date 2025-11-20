@@ -1,5 +1,6 @@
 import { setupLayouts } from 'virtual:generated-layouts'
 import { createRouter, createWebHistory } from 'vue-router/auto'
+import { setupGuards } from './guards'
 
 function recursiveLayouts(route) {
   if (route.children) {
@@ -25,6 +26,7 @@ const router = createRouter({
   ],
 })
 
+setupGuards(router)
 export { router }
 export default function (app) {
   app.use(router)
