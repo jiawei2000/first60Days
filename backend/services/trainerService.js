@@ -29,7 +29,7 @@ class TrainerService {
         const token = jwt.sign(
             { id: trainer.id, username: trainer.username, role: 'trainer' },
             JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '90m' }
         );
 
         return { token, trainer };

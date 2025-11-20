@@ -106,7 +106,7 @@ class UserService {
         const token = jwt.sign(
             { id: user.id, username: user.username, role:'user' },
             JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '90m' }
         );
 
         return { token, user, permission };
