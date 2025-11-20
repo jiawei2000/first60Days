@@ -123,7 +123,7 @@ class _ProfilePageState extends NyPage<ProfilePage> {
 
             // Manage Babies (expandable -> will navigate to list page later)
             FilledButton.tonalIcon(
-              onPressed: () => routeTo(BabyPage.path),
+              onPressed: _showDisabledFeatureToast,
               icon: const Icon(Icons.child_care_outlined),
               label: const Text("Manage Babies"),
               style: FilledButton.styleFrom(
@@ -139,7 +139,7 @@ class _ProfilePageState extends NyPage<ProfilePage> {
 
             // Manage Caregivers (expandable & visible by default)
             FilledButton.tonalIcon(
-              onPressed: () => routeTo(CaregiverPage.path),
+              onPressed: _showDisabledFeatureToast,
               icon: const Icon(Icons.elderly_outlined),
               label: const Text("Manage Caregivers"),
               style: FilledButton.styleFrom(
@@ -165,6 +165,13 @@ class _ProfilePageState extends NyPage<ProfilePage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showDisabledFeatureToast() {
+    showToastInfo(
+      title: "Feature disabled",
+      description: "Feature disabled for demo mode.",
     );
   }
 }
