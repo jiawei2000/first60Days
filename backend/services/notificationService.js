@@ -13,7 +13,6 @@ class NotificationService {
 
   static _ensureUserRef(userId) {
     if (!userId) return null;
-    // Heuristic: DocumentReference has a get() function and a path
     if (typeof userId === 'object' && typeof userId.get === 'function' && userId.path) {
       return userId; // already a DocumentReference
     }
@@ -25,7 +24,7 @@ class NotificationService {
     return notificationsRef.doc().id;
   }
 
-  static async _logNotification(notificationId, { userId, message, topic = null }) {
+  static async _logNotification(notificationId,{ userId, message, topic = null, level = 'normal' } = {}) {
     const notificationRef = notificationsRef.doc(notificationId);
     const userRef = this._ensureUserRef(userId);
 
@@ -36,6 +35,7 @@ class NotificationService {
       createdAt: FieldValue.serverTimestamp(),
       deletedAt: null,
       topic,
+      level,
     });
 
     await notificationRef.set(notification.toFirestore());
@@ -101,12 +101,13 @@ class NotificationService {
     try {
       fcmId = await getMessaging().send(message);
 
-      // Log on successful send
-      notificationId = await this._logNotification(notificationIdSeed, 
-        { userId: null, 
-          message: body, 
-          topic 
-        });
+      // Log on successful send (topic-level, no userId)
+      notificationId = await this._logNotification(notificationIdSeed, {
+        userId: null,
+        message: body,
+        topic,
+        level: 'normal', // or 'important' if you prefer
+      });
     } catch (err) {
       console.error('Topic send failed:', err?.code || err?.message || err);
     }
@@ -119,10 +120,18 @@ class NotificationService {
     const tokens = await this._getUserTokens(userRef);
 
     if (!tokens.length) {
-      return { notificationId: null, fcmResponse: null, info: 'No tokens for user; not sent, not logged.' };
+      return {
+        notificationId: null,
+        fcmResponse: null,
+        info: 'No tokens for user; not sent, not logged.',
+      };
     }
 
     const notificationIdSeed = this._newNotificationId();
+
+    // Grab level from data if provided; default to "normal"
+    const level = data.level || 'normal';
+
     const normalizedData = Object.fromEntries(
       Object.entries(data).map(([k, v]) => [k, v == null ? '' : String(v)])
     );
@@ -145,16 +154,87 @@ class NotificationService {
 
       if (fcmResponse.successCount > 0) {
         // At least one success => log a single in-app notification
-        notificationId = await this._logNotification(notificationIdSeed,
-          { userId: userRef, 
-            message: body 
-          });
+        notificationId = await this._logNotification(notificationIdSeed, {
+          userId: userRef,
+          message: body,
+          level,
+        });
       }
     } catch (err) {
       console.error('Multicast send failed:', err?.code || err?.message || err);
     }
 
     return { notificationId, fcmResponse };
+  }
+
+  // ----------------------------- Retrievals ---------------------------------
+
+  static async getAllNotificationsForUser(userId) {
+    const userRef = this._ensureUserRef(userId);
+    if (!userRef) return [];
+    const snapshot = await notificationsRef
+      .where('userId', '==', userRef)
+      .where('deletedAt', '==', null)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    return snapshot.docs.map((doc) => Notification.fromFirestore(doc));
+  }
+
+  /**
+   * Query unread notifications, optionally filtered by level.
+   * Returns array of Notification instances.
+   */
+  static async _queryUnreadByLevel(userId, level = null) {
+    const userRef = this._ensureUserRef(userId);
+    if (!userRef) return [];
+
+    let query = notificationsRef
+      .where('userId', '==', userRef)
+      .where('deletedAt', '==', null)
+      .where('readAt', '==', null);
+
+    if (level) {
+      query = query.where('level', '==', level);
+    }
+
+    // You may need a composite index for these where+orderBy combos in Firestore.
+    const snapshot = await query
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    return snapshot.docs.map((doc) => Notification.fromFirestore(doc));
+  }
+
+  /**
+   * Get all unread notifications for a user (any level).
+   */
+  static async getUnreadNotifications(userId) {
+    return this._queryUnreadByLevel(userId, null);
+  }
+
+  /**
+   * Get unread notifications for a user filtered by a specific level.
+   * level: "normal" | "important" | "critical"
+   */
+  static async getUnreadNotificationsByLevel(userId, level) {
+    return this._queryUnreadByLevel(userId, level);
+  }
+
+  /**
+   * Convenience helpers for each level of alert
+   */
+
+  static async getUnreadNormalNotifications(userId) {
+    return this._queryUnreadByLevel(userId, 'normal');
+  }
+
+  static async getUnreadImportantNotifications(userId) {
+    return this._queryUnreadByLevel(userId, 'important');
+  }
+
+  static async getUnreadCriticalNotifications(userId) {
+    return this._queryUnreadByLevel(userId, 'critical');
   }
 
   // ----------------------------- Updates ------------------------------------
@@ -164,9 +244,9 @@ class NotificationService {
       readAt: FieldValue.serverTimestamp(),
     });
     return {
-            message: 'Notification marked as read',
-            notificationId
-          };
+      message: 'Notification marked as read',
+      notificationId,
+    };
   }
 
   static async softDelete(notificationId) {
@@ -175,7 +255,7 @@ class NotificationService {
     });
     return {
       message: 'Notification soft-deleted',
-      notificationId
+      notificationId,
     };
   }
 }

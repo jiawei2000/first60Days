@@ -1,7 +1,7 @@
 const { Timestamp } = require('firebase-admin/firestore');
 
 class Baby {
-    constructor(id, { name, dob, createdAt, deletedAt, expectedDueDate, term, weight, healthConditions, gender, height, vaccination, allergies }) {
+    constructor(id, { name, dob, createdAt, deletedAt, expectedDueDate, term, weight, healthConditions, gender, height }) {
         this.id = id;
         // optional fields
         this.gender = gender ? String(gender) : null;
@@ -19,9 +19,6 @@ class Baby {
         this.weight = weight ? Number(weight) : null;
         this.healthConditions = healthConditions ? String(healthConditions) : null;
 
-        this.vaccination = vaccination ? String(vaccination) : null;
-        this.allergies = allergies ? String(allergies) : null;
-
         // System fields
         this.createdAt = Baby.toTimestamp(createdAt) || Timestamp.now();
         this.deletedAt = Baby.toTimestamp(deletedAt); // null if not delet
@@ -38,9 +35,7 @@ class Baby {
             weight: this.weight,
             healthConditions: this.healthConditions,
             height: this.height,
-            gender: this.gender,
-            vaccination: this.vaccination,
-            allergies: this.allergies
+            gender: this.gender
         };
     }
 

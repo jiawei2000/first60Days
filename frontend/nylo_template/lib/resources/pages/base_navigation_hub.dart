@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/resources/pages/create_journal_entry_page.dart';
 import 'package:flutter_app/resources/pages/feeding_schedule_page.dart';
 import 'package:flutter_app/resources/pages/profile_page.dart';
-import 'package:flutter_app/resources/widgets/splash_screen.dart';
 import 'package:nylo_framework/nylo_framework.dart';
 import 'package:flutter_app/resources/pages/calendar_page.dart';
 import '/resources/pages/home_page.dart';
+import '/app/notifiers/feed_notifier.dart';
+import '/config/keys.dart';
 
 
 class BaseNavigationHub extends NyStatefulWidget with BottomNavPageControls {
@@ -72,5 +72,13 @@ class _BaseNavigationHubState extends NavigationHub<BaseNavigationHub> {
   @override
   onTap(int index) {
     super.onTap(index);
+    if (index == 0) {
+      _refreshNextFeedTime();
+    }
+  }
+
+  Future<void> _refreshNextFeedTime() async {
+    final nextFeedTime = await Keys.nextFeedTime.read();
+    FeedNotifiers.nextFeedTime.value = nextFeedTime;
   }
 }
