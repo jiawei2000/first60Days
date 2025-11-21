@@ -88,7 +88,6 @@ class _CalendarPageState extends State<CalendarPage> {
     final matchingPlans =
         _feedingPlanners.where((planner) => planner.weekNo == weekNo);
     if (matchingPlans.isEmpty) {
-      debugPrint("No feeding plan found for Week $weekNo");
       return new EntryPlanner();
     }
 
@@ -587,7 +586,9 @@ class _CalendarPageState extends State<CalendarPage> {
         hour == null ||
         minute == null) return null;
 
-    return DateTime(year, month, day, hour, minute);
+    // Remove 8 hours to convert to UTC
+    return DateTime(year, month, day, hour, minute)
+        .subtract(const Duration(hours: 8));
   }
 
   DateTime? _parseStringtoDateTime(String value) {
