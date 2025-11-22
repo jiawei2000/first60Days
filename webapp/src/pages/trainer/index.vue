@@ -218,7 +218,8 @@ async function fetchTrainerDashboard() {
 
         metrics.value.parentsAssigned = users.length
         metrics.value.babiesAssigned = babiesList.length
-        metrics.value.babiesWithAlerts = alertsSet.size
+        // metrics.value.babiesWithAlerts = alertsSet.size
+        metrics.value.babiesWithAlerts = 0
 
     } catch (err) {
         console.error(err)
